@@ -368,34 +368,6 @@ public class EditorScreen extends Screen {
         }
     }
 
-    private void handleTextButtonClick(int btnId) {
-        if (tSel == null) return;
-        switch (btnId) {
-            case TopBar.BTN_B: tSel.negrita = !tSel.negrita; break;
-            case TopBar.BTN_I: tSel.cursiva = !tSel.cursiva; break;
-            case TopBar.BTN_U: tSel.subrayado = !tSel.subrayado; break;
-            case TopBar.BTN_S: tSel.tachado = !tSel.tachado; break;
-            case TopBar.BTN_CASE: tSel.mayusculas = !tSel.mayusculas; break;
-            case TopBar.BTN_SPACING:
-                spacingPanelVisible = true;
-                spacingPanelX = (int)Minecraft.getInstance().mouseHandler.xpos();
-                spacingPanelY = (int)Minecraft.getInstance().mouseHandler.ypos();
-                break;
-            case TopBar.BTN_LETTER_SPACING_PLUS:
-                if (tSel.espaciadoLetras < 5) {
-                    tSel.espaciadoLetras++;
-                    tSel.interletrado = tSel.espaciadoLetras * 0.5f;
-                }
-                break;
-            case TopBar.BTN_LETTER_SPACING_MINUS:
-                if (tSel.espaciadoLetras > 0) {
-                    tSel.espaciadoLetras--;
-                    tSel.interletrado = tSel.espaciadoLetras * 0.5f;
-                }
-                break;
-        }
-    }
-
     private void handleDrawingButtonClick(int btnId) {
         if (pSel == null) return;
         int barX = LeftSidebar.getSidebarWidth();
@@ -993,9 +965,7 @@ public class EditorScreen extends Screen {
             }
             if (super.mouseClicked(mx, my, btn)) return true;
 
-            int btnId = TopBar.getTextButtonAt((int)mx, (int)my, this.width, 5, tSel);
-            if (btnId != -1) { handleTextButtonClick(btnId); return true; }
-            btnId = TopBar.getDrawingButtonAt((int)mx, (int)my, this.width, 5, pSel);
+            int btnId = TopBar.getDrawingButtonAt((int)mx, (int)my, this.width, 5, pSel);
             if (btnId != -1) { handleDrawingButtonClick(btnId); return true; }
         }
 

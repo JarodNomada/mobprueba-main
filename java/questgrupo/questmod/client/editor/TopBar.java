@@ -27,35 +27,22 @@ public class TopBar {
     public static final int BTN_MISSION_TEXT_COLOR = 46;
     public static final int BTN_LETTER_SPACING_PLUS = 60;
     public static final int BTN_LETTER_SPACING_MINUS = 61;
+    
+    public static final int BTN_BOLD = 70, BTN_ITALIC = 71, BTN_UPPERCASE = 72, BTN_SHADOW = 73;
+    public static final int BTN_Y_UP = 74, BTN_Y_DOWN = 75;
+    public static final int BTN_UNDERLINE = 76, BTN_STRIKETHROUGH = 77;
+    public static final int BTN_X_LEFT = 78, BTN_X_RIGHT = 79;
+    public static final int BTN_SPACING_PLUS = 80, BTN_SPACING_MINUS = 81;
 
     public static record ButtonInfo(int x, int width, String text) {}
-
-    public static List<ButtonInfo> getTextButtonInfos(int guiWidth, GlobalGuiSettings.TextConfig tSel) {
-        List<ButtonInfo> infos = new ArrayList<>();
-        if (!textToolsVisible || tSel == null) return infos;
-        int barX = LeftSidebar.getSidebarWidth();
-        int barW = calculateBarWidth(true, false, tSel, null);
-        if (barW == 0) return infos;
-        int barStartX = barX + (guiWidth - barX - barW) / 2;
-        // FIX: Correct initial position: leftPadding(10) + previewWidth(15) + gapAfterPreview(5) = 30
-        int curX = barStartX + 10 + 15 + 5;
-        // FIX: Use fixed 20px width to match calculateBarWidth() which assumes 20px per button
-        String[] btnTexts = {"B", "I", "U", "S", "aA", "↔", "Sh"};
-        for (String text : btnTexts) {
-            int w = 20; // Fixed width to match calculateBarWidth()
-            infos.add(new ButtonInfo(curX, w, text));
-            curX += w + 2; // 20px width + 2px gap
-        }
-        return infos;
-    }
 
     public static void setVisible(boolean v) { visible = v; }
     public static boolean isVisible() { return visible; }
 
     public static int getHeight() {
         if (!visible) return 0;
-        if (textToolsVisible) return 26; // 4px top + 18px button + 4px bottom = 26px
-        if (drawingToolsVisible) return 45; // Original height for drawing tools
+        if (textToolsVisible) return 45;
+        if (drawingToolsVisible) return 45;
         return 0;
     }
 
@@ -156,39 +143,12 @@ public class TopBar {
     }
 
     private static void renderTextTools(GuiGraphics g, int barX, int y, GlobalGuiSettings.TextConfig tSel) {
-        Font font = Minecraft.getInstance().font;
         int curX = barX + 10;
         int row1Y = y + 5;
-        int row2Y = y + 22;
 
-        // --- COLUMNA 1: COLOR (abarca ambas filas) ---
-        g.fill(curX, row1Y, curX + 15, row2Y + 15, tSel.colorARGB);
-        g.renderOutline(curX - 1, row1Y - 1, 17, 32, 0xFF000000);
-        curX += 25;
-
-        // --- FILA 1: Funciones ---
-        int fX = curX;
-        drawToolBtn(g, font, "B", fX, row1Y, tSel.negrita ? 0xFF00FF00 : 0xFFFFFFFF); fX += 20;
-        drawToolBtn(g, font, "I", fX, row1Y, tSel.cursiva ? 0xFF00FF00 : 0xFFFFFFFF); fX += 20;
-        drawToolBtn(g, font, "aA", fX, row1Y, 0xFFFFFFFF); fX += 20;
-        drawToolBtn(g, font, "Sh", fX, row1Y, tSel.sombra ? 0xFF00FF00 : 0xFFFFFFFF); fX += 20;
-        drawToolBtn(g, font, "—", fX, row1Y, tSel.subrayado ? 0xFF00FF00 : 0xFFFFFFFF); fX += 20;
-        drawToolBtn(g, font, "+", fX, row1Y, 0xFFFFFFFF);
-
-        // --- FILA 2: Funciones ---
-        fX = curX;
-        drawToolBtn(g, font, "U", fX, row2Y, 0xFFFFFFFF); fX += 20;
-        drawToolBtn(g, font, "S", fX, row2Y, 0xFFFFFFFF); fX += 20;
-        drawToolBtn(g, font, "-", fX, row2Y, 0xFFFFFFFF); fX += 20;
-        drawToolBtn(g, font, "+", fX, row2Y, 0xFFFFFFFF); fX += 20;
-        drawToolBtn(g, font, "< >", fX, row2Y, 0xFFFFFFFF); fX += 25;
-        drawToolBtn(g, font, "><", fX, row2Y, 0xFFFFFFFF);
-    }
-
-    private static void drawToolBtn(GuiGraphics g, Font font, String text, int x, int y, int color) {
-        g.fill(x, y, x + 18, y + 16, 0xFF333333);
-        g.renderOutline(x, y, 18, 16, 0xFF000000);
-        g.drawString(font, text, x + 2, y + 4, color, false);
+        // --- COLUMNA 1: COLOR ---
+        g.fill(curX, row1Y, curX + 15, row1Y + 16, tSel.colorARGB);
+        g.renderOutline(curX - 1, row1Y - 1, 17, 18, 0xFF000000);
     }
 
     private static void drawSectionTitle(GuiGraphics g, Font font, String title, int x, int y, int width) {
@@ -350,19 +310,4 @@ public class TopBar {
 
         return -1;
     }
-
-    public static int getTextButtonAt(int mx, int my, int guiWidth, int y, GlobalGuiSettings.TextConfig tSel) {
-        if (!textToolsVisible || tSel == null || my < y || my > y + getHeight()) return -1;
-        var btnInfos = getTextButtonInfos(guiWidth, tSel);
-        int[] btnIds = {BTN_B, BTN_I, BTN_U, BTN_S, BTN_CASE, BTN_SPACING};
-        for (int i = 0; i < Math.min(btnInfos.size(), btnIds.length); i++) {
-            var info = btnInfos.get(i);
-            if (mx >= info.x() && mx <= info.x() + info.width()) {
-                return btnIds[i];
-            }
-        }
-        return -1;
-    }
-
-
 }

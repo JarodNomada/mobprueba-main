@@ -44,92 +44,15 @@ public class TextoEdit {
     }
 
     public static void inicializarOActualizarBotones(int guiWidth, int y, java.util.function.Consumer<Button> adder, java.util.function.Supplier<GlobalGuiSettings.TextConfig> tSelSupplier, Runnable spacingCallback) {
-        // Use shared button positions from TopBar for perfect synchronization
         GlobalGuiSettings.TextConfig tSel = tSelSupplier.get();
-        var btnInfos = TopBar.getTextButtonInfos(guiWidth, tSel);
-
         Font font = Minecraft.getInstance().font;
-        int w;
 
-        // B button
-        int idx = 0;
-        w = btnInfos.size() > idx ? btnInfos.get(idx).width() : font.width("B") + 6;
-        int curX = btnInfos.size() > idx ? btnInfos.get(idx).x() : 0;
-        btnNegrita = Button.builder(Component.literal("B"), b -> {
-            GlobalGuiSettings.TextConfig t = tSelSupplier.get();
-            if (t != null) t.negrita = !t.negrita;
-        }).bounds(curX, y, w, 18).build();
-        idx++;
-
-        // I button
-        w = btnInfos.size() > idx ? btnInfos.get(idx).width() : font.width("I") + 6;
-        curX = btnInfos.size() > idx ? btnInfos.get(idx).x() : 0;
-        btnCursiva = Button.builder(Component.literal("I"), b -> {
-            GlobalGuiSettings.TextConfig t = tSelSupplier.get();
-            if (t != null) t.cursiva = !t.cursiva;
-        }).bounds(curX, y, w, 18).build();
-        idx++;
-
-        // U button
-        w = btnInfos.size() > idx ? btnInfos.get(idx).width() : font.width("U") + 6;
-        curX = btnInfos.size() > idx ? btnInfos.get(idx).x() : 0;
-        btnSubrayado = Button.builder(Component.literal("U"), b -> {
-            GlobalGuiSettings.TextConfig t = tSelSupplier.get();
-            if (t != null) t.subrayado = !t.subrayado;
-        }).bounds(curX, y, w, 18).build();
-        idx++;
-
-        // S button
-        w = btnInfos.size() > idx ? btnInfos.get(idx).width() : font.width("S") + 6;
-        curX = btnInfos.size() > idx ? btnInfos.get(idx).x() : 0;
-        btnTachado = Button.builder(Component.literal("S"), b -> {
-            GlobalGuiSettings.TextConfig t = tSelSupplier.get();
-            if (t != null) t.tachado = !t.tachado;
-        }).bounds(curX, y, w, 18).build();
-        idx++;
-
-        // aA button
-        w = btnInfos.size() > idx ? btnInfos.get(idx).width() : font.width("aA") + 6;
-        curX = btnInfos.size() > idx ? btnInfos.get(idx).x() : 0;
-        btnMayusculas = Button.builder(Component.literal("aA"), b -> {
-            GlobalGuiSettings.TextConfig t = tSelSupplier.get();
-            if (t != null) t.mayusculas = !t.mayusculas;
-        }).bounds(curX, y, w, 18).build();
-        idx++;
-
-        // ↔ button (spacing)
-        w = btnInfos.size() > idx ? btnInfos.get(idx).width() : font.width("↔") + 6;
-        curX = btnInfos.size() > idx ? btnInfos.get(idx).x() : 0;
-        btnEspaciado = Button.builder(Component.literal("↔"), b -> {
-            if (spacingCallback != null) spacingCallback.run();
-        }).bounds(curX, y, w, 18).build();
-        idx++;
-
-        // Sh button (shadow)
-        w = btnInfos.size() > idx ? btnInfos.get(idx).width() : font.width("Sh") + 6;
-        curX = btnInfos.size() > idx ? btnInfos.get(idx).x() : 0;
-        btnSombra = Button.builder(Component.literal("Sh"), b -> {
-            GlobalGuiSettings.TextConfig t = tSelSupplier.get();
-            if (t != null) t.sombra = !t.sombra;
-        }).bounds(curX, y, w, 18).build();
-        idx++;
-
-        // - and + buttons (keep at end, after all text buttons)
         int barX = LeftSidebar.getSidebarWidth();
         int barW = TopBar.getWidth();
         int barStartX = barX + (guiWidth - barX - barW) / 2;
-        curX = barStartX + 10 + 15 + 5; // leftPadding(10) + previewWidth(15) + gap(5), matches getTextButtonInfos()
-        // Use btnInfos to calculate position after all text buttons - handle empty list case
-        if (!btnInfos.isEmpty()) {
-            // Position after last text button (Sh) + gap
-            ButtonInfo lastBtn = btnInfos.get(btnInfos.size() - 1);
-            curX = lastBtn.x() + lastBtn.width() + 2;
-        } else {
-            // Fallback: position after 7 text buttons with fixed 20px width + 2px gap each
-            curX = barStartX + 10 + 15 + 5 + 7 * (20 + 2);
-        }
+        int curX = barStartX + 10 + 15 + 5;
 
-        w = font.width("-") + 6;
+        int w = font.width("-") + 6;
         btnMenos = Button.builder(Component.literal("-"), b -> {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();
             if (t != null) t.escala = Math.max(0.1f, t.escala - 0.1f);
@@ -143,22 +66,12 @@ public class TextoEdit {
         }).bounds(curX, y, w, 18).build();
 
         actualizarEstadoBotones(tSelSupplier.get());
-
-        adder.accept(btnNegrita);
-        adder.accept(btnCursiva);
-        adder.accept(btnSubrayado);
-        adder.accept(btnTachado);
-        adder.accept(btnMayusculas);
-        adder.accept(btnEspaciado);
-        adder.accept(btnSombra);
-        adder.accept(btnMas);
-        adder.accept(btnMenos);
     }
 
     public static void actualizarEstadoBotones(GlobalGuiSettings.TextConfig tSel) {
         boolean visible = (tSel != null) && TopBar.isVisible();
-        if (btnNegrita != null) {
-            btnNegrita.visible = btnCursiva.visible = btnSubrayado.visible = btnTachado.visible = btnMayusculas.visible = btnEspaciado.visible = btnSombra.visible = btnMas.visible = btnMenos.visible = visible;
+        if (btnMas != null) {
+            btnMas.visible = btnMenos.visible = visible;
         }
     }
 
