@@ -17,7 +17,7 @@ import java.util.Collections;
 public class TextoEdit {
     public static boolean editandoColor = false;
     public static Button btnNegrita, btnCursiva, btnSubrayado, btnTachado, btnMayusculas, btnEspaciado, btnSombra;
-    public static Button btnMas, btnMenos;
+    public static Button btnMas, btnMenos, btnMasEspaciado, btnMenosEspaciado;
     private static long ultimoClic = 0;
     private static GlobalGuiSettings.TextConfig ultimoTextoClickeado = null;
 
@@ -78,6 +78,12 @@ public class TextoEdit {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();
             if (t != null) t.tachado = !t.tachado;
         }).bounds(curX, y, btnSize, btnSize).build();
+        curX += btnSize + btnGap;
+
+        btnMasEspaciado = Button.builder(Component.literal("<-"), b -> {
+            GlobalGuiSettings.TextConfig t = tSelSupplier.get();
+            if (t != null) t.interletrado += 0.5f;
+        }).bounds(curX, y, btnSize, btnSize).build();
 
         curX = barStartX + 10 + 15 + 3;
         int row2Y = y + rowHeight;
@@ -104,6 +110,12 @@ public class TextoEdit {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();
             if (t != null) t.escala = Math.min(10.0f, t.escala + 0.1f);
         }).bounds(curX, row2Y, btnSize, btnSize).build();
+        curX += btnSize + btnGap;
+
+        btnMenosEspaciado = Button.builder(Component.literal("->"), b -> {
+            GlobalGuiSettings.TextConfig t = tSelSupplier.get();
+            if (t != null) t.interletrado = Math.max(0.0f, t.interletrado - 0.5f);
+        }).bounds(curX, row2Y, btnSize, btnSize).build();
 
         actualizarEstadoBotones(tSelSupplier.get());
 
@@ -115,12 +127,14 @@ public class TextoEdit {
         adder.accept(btnSombra);
         adder.accept(btnMenos);
         adder.accept(btnMas);
+        adder.accept(btnMasEspaciado);
+        adder.accept(btnMenosEspaciado);
     }
 
     public static void actualizarEstadoBotones(GlobalGuiSettings.TextConfig tSel) {
         boolean visible = (tSel != null) && TopBar.isVisible();
         if (btnNegrita != null) {
-            btnNegrita.visible = btnCursiva.visible = btnSubrayado.visible = btnTachado.visible = btnMayusculas.visible = btnSombra.visible = btnMas.visible = btnMenos.visible = visible;
+            btnNegrita.visible = btnCursiva.visible = btnSubrayado.visible = btnTachado.visible = btnMayusculas.visible = btnSombra.visible = btnMas.visible = btnMenos.visible = btnMasEspaciado.visible = btnMenosEspaciado.visible = visible;
         }
     }
 
