@@ -105,8 +105,13 @@ public class TopBar {
     }
 
     private static int calculateBarWidth(boolean textTools, boolean drawTools, GlobalGuiSettings.TextConfig tSel, GlobalGuiSettings.PanelConfig pSel) {
-        if (textTools && tSel != null) {
-            return 180;
+        if (textTools) {
+            int w = 10; // Padding
+            w += 14; // Color swatch
+            w += 3;  // Gap
+            w += 4 * 14 + 3 * 2; // 4 buttons × 14px + 3 gaps × 2px
+            w += 10; // Padding
+            return w;
         } else if (drawTools && pSel != null) {
             if (pSel.tipo.startsWith("DESPLEGABLE")) {
                 int w = 10; // Padding
@@ -144,10 +149,10 @@ public class TopBar {
 
     private static void renderTextTools(GuiGraphics g, int barX, int y, GlobalGuiSettings.TextConfig tSel) {
         int curX = barX + 10;
-        int rowY = y + 4;
+        int rowY = y + 15;
 
-        g.fill(curX, rowY, curX + 15, rowY + 18, tSel.colorARGB);
-        g.renderOutline(curX - 1, rowY - 1, 17, 20, 0xFF000000);
+        g.fill(curX, rowY, curX + 14, rowY + 14, tSel.colorARGB);
+        g.renderOutline(curX - 1, rowY - 1, 16, 16, 0xFF000000);
     }
 
     private static void drawSectionTitle(GuiGraphics g, Font font, String title, int x, int y, int width) {

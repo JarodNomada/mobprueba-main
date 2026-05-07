@@ -24,9 +24,10 @@ public class TextoEdit {
     public static int getAnclajeX(int guiWidth) { return LeftSidebar.getSidebarWidth() + 5; }
     public static int getAnclajeY() { return 25; }
 
-    public static void crearNuevoTexto(int x, int y) {
+    public static GlobalGuiSettings.TextConfig crearNuevoTexto(int x, int y) {
         GlobalGuiSettings.TextConfig nuevo = new GlobalGuiSettings.TextConfig("Nuevo Texto", x, y);
         GlobalGuiSettings.TEXTOS.add(nuevo);
+        return nuevo;
     }
 
     public static void eliminarTexto(GlobalGuiSettings.TextConfig t) {
@@ -50,28 +51,76 @@ public class TextoEdit {
         int barX = LeftSidebar.getSidebarWidth();
         int barW = TopBar.getWidth();
         int barStartX = barX + (guiWidth - barX - barW) / 2;
-        int curX = barStartX + 10 + 15 + 5;
+        int curX = barStartX + 10 + 15 + 3;
+        int btnSize = 14;
+        int btnGap = 2;
+        int rowHeight = btnSize + btnGap;
 
-        int w = font.width("-") + 6;
+        btnNegrita = Button.builder(Component.literal("B"), b -> {
+            GlobalGuiSettings.TextConfig t = tSelSupplier.get();
+            if (t != null) t.negrita = !t.negrita;
+        }).bounds(curX, y, btnSize, btnSize).build();
+        curX += btnSize + btnGap;
+
+        btnCursiva = Button.builder(Component.literal("I"), b -> {
+            GlobalGuiSettings.TextConfig t = tSelSupplier.get();
+            if (t != null) t.cursiva = !t.cursiva;
+        }).bounds(curX, y, btnSize, btnSize).build();
+        curX += btnSize + btnGap;
+
+        btnSubrayado = Button.builder(Component.literal("U"), b -> {
+            GlobalGuiSettings.TextConfig t = tSelSupplier.get();
+            if (t != null) t.subrayado = !t.subrayado;
+        }).bounds(curX, y, btnSize, btnSize).build();
+        curX += btnSize + btnGap;
+
+        btnTachado = Button.builder(Component.literal("S"), b -> {
+            GlobalGuiSettings.TextConfig t = tSelSupplier.get();
+            if (t != null) t.tachado = !t.tachado;
+        }).bounds(curX, y, btnSize, btnSize).build();
+
+        curX = barStartX + 10 + 15 + 3;
+        int row2Y = y + rowHeight;
+
+        btnMayusculas = Button.builder(Component.literal("aA"), b -> {
+            GlobalGuiSettings.TextConfig t = tSelSupplier.get();
+            if (t != null) t.mayusculas = !t.mayusculas;
+        }).bounds(curX, row2Y, btnSize, btnSize).build();
+        curX += btnSize + btnGap;
+
+        btnSombra = Button.builder(Component.literal("Sh"), b -> {
+            GlobalGuiSettings.TextConfig t = tSelSupplier.get();
+            if (t != null) t.sombra = !t.sombra;
+        }).bounds(curX, row2Y, btnSize, btnSize).build();
+        curX += btnSize + btnGap;
+
         btnMenos = Button.builder(Component.literal("-"), b -> {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();
             if (t != null) t.escala = Math.max(0.1f, t.escala - 0.1f);
-        }).bounds(curX, y, w, 18).build();
-        curX += w + 2;
+        }).bounds(curX, row2Y, btnSize, btnSize).build();
+        curX += btnSize + btnGap;
 
-        w = font.width("+") + 6;
         btnMas = Button.builder(Component.literal("+"), b -> {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();
             if (t != null) t.escala = Math.min(10.0f, t.escala + 0.1f);
-        }).bounds(curX, y, w, 18).build();
+        }).bounds(curX, row2Y, btnSize, btnSize).build();
 
         actualizarEstadoBotones(tSelSupplier.get());
+
+        adder.accept(btnNegrita);
+        adder.accept(btnCursiva);
+        adder.accept(btnSubrayado);
+        adder.accept(btnTachado);
+        adder.accept(btnMayusculas);
+        adder.accept(btnSombra);
+        adder.accept(btnMenos);
+        adder.accept(btnMas);
     }
 
     public static void actualizarEstadoBotones(GlobalGuiSettings.TextConfig tSel) {
         boolean visible = (tSel != null) && TopBar.isVisible();
-        if (btnMas != null) {
-            btnMas.visible = btnMenos.visible = visible;
+        if (btnNegrita != null) {
+            btnNegrita.visible = btnCursiva.visible = btnSubrayado.visible = btnTachado.visible = btnMayusculas.visible = btnSombra.visible = btnMas.visible = btnMenos.visible = visible;
         }
     }
 

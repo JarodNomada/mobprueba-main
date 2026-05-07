@@ -1029,6 +1029,10 @@ public class EditorScreen extends Screen {
         // 4. Interacción en MODO ON (Editor activo)
         if (mx < sidebarReserved) {
             if (LeftSidebar.handleClick(mx, my, this.height, this.width, tSel, pSel)) {
+                if (!GlobalGuiSettings.TEXTOS.isEmpty()) {
+                    this.tSel = GlobalGuiSettings.TEXTOS.get(GlobalGuiSettings.TEXTOS.size() - 1);
+                    this.pSel = null;
+                }
                 this.init();
                 return true;
             }
