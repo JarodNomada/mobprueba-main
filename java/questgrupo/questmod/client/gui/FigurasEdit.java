@@ -286,20 +286,23 @@ public class FigurasEdit {
         } else if (p.tipo.equals("MISION_TITULO")) {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
             Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
-            String texto = (data != null) ? data.nombre : "Titulo de Mision";
+            String texto = (data != null) ? data.nombre : "Titulo (Toca una mision)";
             
             g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
             g.renderOutline(p.x, p.y, p.ancho, p.alto, p.colorBorde);
             
             g.pose().pushPose();
-            g.pose().translate(p.x + 5, p.y + (p.alto/2f) - 4, 0);
-            g.pose().scale(p.escalaTexto, p.escalaTexto, 1);
-            g.drawString(font, "§l" + texto, 0, 0, p.colorTexto, false);
+            float nScale = p.escalaTexto;
+            float nX = p.x + (p.ancho / 2f) - (font.width(texto) * nScale / 2f) + p.offsetXTexto;
+            float nY = p.y + (p.alto / 2f) - (font.lineHeight * nScale / 2f) + p.offsetYTexto;
+            g.pose().translate(nX, nY, 0);
+            g.pose().scale(nScale, nScale, 1);
+            g.drawString(font, texto, 0, 0, p.colorTexto, false);
             g.pose().popPose();
         } else if (p.tipo.equals("MISION_DESCRIPCION")) {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
             Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
-            String texto = (data != null) ? data.descripcion : "Descripcion de la mision aqui...";
+            String texto = (data != null) ? data.descripcion : "Descripcion (Toca una mision)";
             
             g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
             g.renderOutline(p.x, p.y, p.ancho, p.alto, p.colorBorde);
@@ -309,7 +312,7 @@ public class FigurasEdit {
             g.pose().scale(p.escalaTexto, p.escalaTexto, 1);
             g.drawWordWrap(font, net.minecraft.network.chat.Component.literal(texto), 0, 0, (int)(p.ancho / p.escalaTexto), p.colorTexto);
             g.pose().popPose();
-        } else if (p.tipo.equals("MISION_OBJETIVOS")) {
+} else if (p.tipo.equals("MISION_OBJETIVOS")) {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
             Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
             

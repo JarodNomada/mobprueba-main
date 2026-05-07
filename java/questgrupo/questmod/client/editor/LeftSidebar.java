@@ -113,7 +113,7 @@ public class LeftSidebar {
         } else if (selectedModule == 2) {
             panelWidth = 140;
             subpanelWidth = panelWidth;
-            panelHeight = 85;
+            panelHeight = 100;
             
             g.fill(panelX, sidebarY, panelX + panelWidth, sidebarY + panelHeight, 0xFFFFFFFF);
             g.renderOutline(panelX, sidebarY, panelWidth, panelHeight, 0xFF000000);
@@ -223,32 +223,32 @@ public class LeftSidebar {
                         selectedModule = -1;
                         return true;
                     }
-                    if (localY >= 5 && localY <= 15) {
+                    if (localY >= 0 && localY <= 15) {
                         FigurasEdit.crearDesplegable(centerX - 80, centerY - 100, 2);
                         selectedModule = -1;
                         return true;
                     }
-                    if (localY >= 20 && localY <= 30) {
+                    if (localY >= 15 && localY <= 30) {
                         FigurasEdit.crearDesplegable(centerX - 80, centerY - 100, 0);
                         selectedModule = -1;
                         return true;
                     }
-                    if (localY >= 35 && localY <= 45) {
+                    if (localY >= 30 && localY <= 45) {
                         FigurasEdit.crearDesplegable(centerX - 80, centerY - 100, 1);
                         selectedModule = -1;
                         return true;
                     }
-                    if (localY >= 50 && localY <= 60) {
+                    if (localY >= 45 && localY <= 60) {
                         FigurasEdit.crearPiezaMision("MISION_TITULO", centerX - 75, centerY - 15);
                         selectedModule = -1;
                         return true;
                     }
-                    if (localY >= 65 && localY <= 75) {
+                    if (localY >= 60 && localY <= 75) {
                         FigurasEdit.crearPiezaMision("MISION_DESCRIPCION", centerX - 75, centerY - 30);
                         selectedModule = -1;
                         return true;
                     }
-                    if (localY >= 80 && localY <= 90) {
+                    if (localY >= 75 && localY <= 95) {
                         FigurasEdit.crearPiezaMision("MISION_OBJETIVOS", centerX - 75, centerY - 50);
                         selectedModule = -1;
                         return true;
