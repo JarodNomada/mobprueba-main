@@ -1028,7 +1028,10 @@ public class EditorScreen extends Screen {
 
         // 4. Interacción en MODO ON (Editor activo)
         if (mx < sidebarReserved) {
-            LeftSidebar.handleClick(mx, my, this.height, this.width, tSel, pSel);
+            if (LeftSidebar.handleClick(mx, my, this.height, this.width, tSel, pSel)) {
+                this.init();
+                return true;
+            }
             return true;
         }
 

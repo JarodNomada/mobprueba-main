@@ -144,11 +144,10 @@ public class TopBar {
 
     private static void renderTextTools(GuiGraphics g, int barX, int y, GlobalGuiSettings.TextConfig tSel) {
         int curX = barX + 10;
-        int row1Y = y + 5;
+        int rowY = y + 4;
 
-        // --- COLUMNA 1: COLOR ---
-        g.fill(curX, row1Y, curX + 15, row1Y + 16, tSel.colorARGB);
-        g.renderOutline(curX - 1, row1Y - 1, 17, 18, 0xFF000000);
+        g.fill(curX, rowY, curX + 15, rowY + 18, tSel.colorARGB);
+        g.renderOutline(curX - 1, rowY - 1, 17, 20, 0xFF000000);
     }
 
     private static void drawSectionTitle(GuiGraphics g, Font font, String title, int x, int y, int width) {
