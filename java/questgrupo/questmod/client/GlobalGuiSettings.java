@@ -1,0 +1,99 @@
+package questgrupo.questmod.client;
+
+import java.util.ArrayList;
+import java.util.List;
+import net.minecraft.resources.ResourceLocation;
+
+public class GlobalGuiSettings {
+    public static boolean editorActivo = false;
+    
+    public static java.util.Set<String> misionesAceptadasCliente = new java.util.HashSet<>();
+    public static String misionSeleccionadaGlobal = "";
+
+    public static class PanelConfig {
+        public int x, y, ancho, alto;
+        public int x2, y2; // For LINEA: endpoint
+        public int colorARGB = 0xAA000000;
+        public int colorBorde = 0xFFFFFFFF;
+        public int colorTexto = 0xFFFFFFFF;
+        public int colorFondoMision = 0xFF444444;
+        public int colorBordeMision = 0xFFAAAAAA;
+        public int colorFondoCabecera = 0xFF222222;
+        public int colorBordeCabecera = 0xFFFFFFFF;
+        public String tipo = "CUADRADO";
+        public int grosor = 2; // Para pincel y formas
+        public String textoAsociado = null;
+        public ResourceLocation iconoRL = null;
+        public float escalaTexto = 1.0f;
+        public float escalaIcono = 1.0f;
+        public float offsetXTexto = 0.0f;
+        public float offsetYTexto = 0.0f;
+        public float escalaTextoMision = 1.0f;
+        public float offsetXTextoMision = 0.0f;
+        public float offsetYTextoMision = 0.0f;
+        public float offsetXIcono = 0.0f;
+        public float offsetYIcono = 0.0f;
+        public int colorTextoMision = 0xFFFFFFFF;
+
+        // Sub-secciones editables para DETALLE_MISION
+        public int subElementoSel = 0;
+        public float offXDesc = 0.0f, offYDesc = 0.0f, scaleDesc = 1.0f;
+        public float offXIcon = 0.0f, offYIcon = 0.0f, scaleIcon = 1.0f;
+        public float offXObj = 0.0f, offYObj = 0.0f, scaleObj = 1.0f;
+        public float offXRec = 0.0f, offYRec = 0.0f, scaleRec = 1.0f;
+        public int colorDesc = 0xFFFFFFFF;
+        public int colorObj = 0xFFFFFFFF;
+        public int colorRec = 0xFFFFFFFF;
+
+        public boolean desplegado = true;
+        public boolean principalesAbierto = true;
+        public boolean secundariasAbierto = true;
+        public String tituloPrincipales = "Principales";
+        public String tituloSecundarias = "Secundarias";
+        public int scrollY = 0;
+        public List<String> listaPrincipales = new ArrayList<>();
+        public List<String> listaSecundarias = new ArrayList<>();
+
+        public PanelConfig(int x, int y, int ancho, int alto) {
+            this.x = x;
+            this.y = y;
+            this.ancho = ancho;
+            this.alto = alto;
+        }
+    }
+
+    public static class BrushStroke {
+        public List<int[]> puntos = new ArrayList<>(); // x, y
+        public int colorARGB = 0xFF000000;
+        public int grosor = 2;
+
+        public void agregarPunto(int x, int y) {
+            puntos.add(new int[]{x, y});
+        }
+    }
+
+    public static class TextConfig {
+        public String contenido;
+        public int x, y;
+        public float escala = 1.0f;
+        public int colorARGB = 0xFFFFFFFF;
+        public boolean negrita = false, cursiva = false, subrayado = false, tachado = false;
+        public boolean sombra = true;
+        public boolean mayusculas = false;
+        public float rotacion = 0.0f;
+        public float interletrado = 0.0f;
+        public float interlineado = 1.0f;
+
+        public TextConfig(String txt, int x, int y) {
+            this.contenido = txt;
+            this.x = x;
+            this.y = y;
+        }
+    }
+
+    public static final List<PanelConfig> PANELES = new ArrayList<>();
+    public static final List<TextConfig> TEXTOS = new ArrayList<>();
+    public static final List<BrushStroke> TRAZOS = new ArrayList<>();
+    public static int grosorPincel = 2;
+    public static int colorHerramientas = 0xFF000000;
+}
