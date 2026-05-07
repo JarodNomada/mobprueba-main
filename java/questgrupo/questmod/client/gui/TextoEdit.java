@@ -49,9 +49,9 @@ public class TextoEdit {
         Font font = Minecraft.getInstance().font;
 
         int barX = LeftSidebar.getSidebarWidth();
-        int barW = TopBar.getWidth();
+        int barW = TopBar.calculateBarWidth(true, false, tSel, null);
         int barStartX = barX + (guiWidth - barX - barW) / 2;
-        int curX = barStartX + 10 + 15 + 3;
+        int curX = barStartX + 10 + 14 + 3;
         int btnSize = 14;
         int btnGap = 2;
         int rowHeight = btnSize + btnGap;

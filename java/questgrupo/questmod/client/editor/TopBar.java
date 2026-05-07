@@ -104,7 +104,7 @@ public class TopBar {
         }
     }
 
-    private static int calculateBarWidth(boolean textTools, boolean drawTools, GlobalGuiSettings.TextConfig tSel, GlobalGuiSettings.PanelConfig pSel) {
+    public static int calculateBarWidth(boolean textTools, boolean drawTools, GlobalGuiSettings.TextConfig tSel, GlobalGuiSettings.PanelConfig pSel) {
         if (textTools) {
             int w = 10; // Padding
             w += 14; // Color swatch
