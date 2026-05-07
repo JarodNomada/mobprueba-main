@@ -381,6 +381,12 @@ public class EditorScreen extends Screen {
                 spacingPanelX = (int)Minecraft.getInstance().mouseHandler.xpos();
                 spacingPanelY = (int)Minecraft.getInstance().mouseHandler.ypos();
                 break;
+            case TopBar.BTN_LETTER_SPACING_PLUS:
+                if (tSel.interletrado < 5) tSel.interletrado += 0.5f;
+                break;
+            case TopBar.BTN_LETTER_SPACING_MINUS:
+                if (tSel.interletrado > 0) tSel.interletrado -= 0.5f;
+                break;
         }
     }
 

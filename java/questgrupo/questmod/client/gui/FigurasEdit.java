@@ -595,4 +595,13 @@ int currentY = bodyY + 5;
             Collections.swap(GlobalGuiSettings.PANELES, idx, idx - 1);
         }
     }
+
+    public static void drawStringCustom(GuiGraphics g, net.minecraft.client.gui.Font font, String text, float x, float y, int color, float spacing) {
+        float curX = x;
+        for (char c : text.toCharArray()) {
+            String s = String.valueOf(c);
+            g.drawString(font, s, (int)curX, (int)y, color, false);
+            curX += font.width(s) + spacing;
+        }
+    }
 }

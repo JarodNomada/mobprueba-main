@@ -25,6 +25,8 @@ public class TopBar {
     public static final int BTN_MOVE_MISSION_TEXT_UP = 42, BTN_MOVE_MISSION_TEXT_DOWN = 43;
     public static final int BTN_MOVE_ICON_UP = 44, BTN_MOVE_ICON_DOWN = 45;
     public static final int BTN_MISSION_TEXT_COLOR = 46;
+    public static final int BTN_LETTER_SPACING_PLUS = 60;
+    public static final int BTN_LETTER_SPACING_MINUS = 61;
 
     public static record ButtonInfo(int x, int width, String text) {}
 
@@ -170,11 +172,39 @@ public class TopBar {
     }
 
     private static void renderTextTools(GuiGraphics g, int barX, int y, GlobalGuiSettings.TextConfig tSel) {
+        Font font = Minecraft.getInstance().font;
         int curX = barX + 10;
-        // Keep only the color preview box - aligned with buttons (4px top padding + button height 18px = 22px bottom, color preview at 5-20 fits inside)
-        g.fill(curX, y + 5, curX + 15, y + 20, tSel.colorARGB);
-        g.renderOutline(curX - 1, y + 4, 17, 17, 0xFF000000);
-        // All button drawing removed - handled by widgets
+        int row1Y = y + 5;
+        int row2Y = y + 22;
+
+        // --- COLUMNA 1: COLOR (abarca ambas filas) ---
+        g.fill(curX, row1Y, curX + 15, row2Y + 15, tSel.colorARGB);
+        g.renderOutline(curX - 1, row1Y - 1, 17, 32, 0xFF000000);
+        curX += 25;
+
+        // --- FILA 1: Funciones ---
+        int fX = curX;
+        drawToolBtn(g, font, "B", fX, row1Y, tSel.negrita ? 0xFF00FF00 : 0xFFFFFFFF); fX += 20;
+        drawToolBtn(g, font, "I", fX, row1Y, tSel.cursiva ? 0xFF00FF00 : 0xFFFFFFFF); fX += 20;
+        drawToolBtn(g, font, "aA", fX, row1Y, 0xFFFFFFFF); fX += 20;
+        drawToolBtn(g, font, "Sh", fX, row1Y, tSel.sombra ? 0xFF00FF00 : 0xFFFFFFFF); fX += 20;
+        drawToolBtn(g, font, "—", fX, row1Y, tSel.subrayado ? 0xFF00FF00 : 0xFFFFFFFF); fX += 20;
+        drawToolBtn(g, font, "+", fX, row1Y, 0xFFFFFFFF);
+
+        // --- FILA 2: Funciones ---
+        fX = curX;
+        drawToolBtn(g, font, "U", fX, row2Y, 0xFFFFFFFF); fX += 20;
+        drawToolBtn(g, font, "S", fX, row2Y, 0xFFFFFFFF); fX += 20;
+        drawToolBtn(g, font, "-", fX, row2Y, 0xFFFFFFFF); fX += 20;
+        drawToolBtn(g, font, "+", fX, row2Y, 0xFFFFFFFF); fX += 20;
+        drawToolBtn(g, font, "< >", fX, row2Y, 0xFFFFFFFF); fX += 25;
+        drawToolBtn(g, font, "><", fX, row2Y, 0xFFFFFFFF);
+    }
+
+    private static void drawToolBtn(GuiGraphics g, Font font, String text, int x, int y, int color) {
+        g.fill(x, y, x + 18, y + 16, 0xFF333333);
+        g.renderOutline(x, y, 18, 16, 0xFF000000);
+        g.drawString(font, text, x + 2, y + 4, color, false);
     }
 
     private static void drawSectionTitle(GuiGraphics g, Font font, String title, int x, int y, int width) {
