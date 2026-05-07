@@ -382,10 +382,16 @@ public class EditorScreen extends Screen {
                 spacingPanelY = (int)Minecraft.getInstance().mouseHandler.ypos();
                 break;
             case TopBar.BTN_LETTER_SPACING_PLUS:
-                if (tSel.interletrado < 5) tSel.interletrado += 0.5f;
+                if (tSel.espaciadoLetras < 5) {
+                    tSel.espaciadoLetras++;
+                    tSel.interletrado = tSel.espaciadoLetras * 0.5f;
+                }
                 break;
             case TopBar.BTN_LETTER_SPACING_MINUS:
-                if (tSel.interletrado > 0) tSel.interletrado -= 0.5f;
+                if (tSel.espaciadoLetras > 0) {
+                    tSel.espaciadoLetras--;
+                    tSel.interletrado = tSel.espaciadoLetras * 0.5f;
+                }
                 break;
         }
     }

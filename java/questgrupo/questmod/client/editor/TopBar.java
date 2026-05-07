@@ -119,23 +119,7 @@ public class TopBar {
 
     private static int calculateBarWidth(boolean textTools, boolean drawTools, GlobalGuiSettings.TextConfig tSel, GlobalGuiSettings.PanelConfig pSel) {
         if (textTools && tSel != null) {
-            // Constants for text tools bar layout
-            int leftPadding = 10;
-            int previewWidth = 15;
-            int gapAfterPreview = 5;
-            int buttonWidth = 20; // Fixed width to match getTextButtonInfos()
-            int gapBetweenButtons = 2;
-            int rightPadding = 10;
-            int numButtons = 7; // B, I, U, S, aA, ↔, Sh
-            
-            // Calculate width of - and + buttons (same as TextoEdit.java)
-            int minusWidth = net.minecraft.client.Minecraft.getInstance().font.width("-") + 6;
-            int plusWidth = net.minecraft.client.Minecraft.getInstance().font.width("+") + 6;
-            
-            // Total width: leftPadding + preview + gap + 7 buttons + gaps + "-" button + gap + "+" button + rightPadding
-            return leftPadding + previewWidth + gapAfterPreview 
-                + (numButtons * buttonWidth) + ((numButtons - 1) * gapBetweenButtons)
-                + 2 + minusWidth + 2 + plusWidth + rightPadding;
+            return 180;
         } else if (drawTools && pSel != null) {
             if (pSel.tipo.startsWith("DESPLEGABLE")) {
                 int w = 10; // Padding

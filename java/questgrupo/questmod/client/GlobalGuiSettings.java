@@ -83,6 +83,7 @@ public class GlobalGuiSettings {
         public float rotacion = 0.0f;
         public float interletrado = 0.0f;
         public float interlineado = 1.0f;
+        public int espaciadoLetras = 0;
 
         public TextConfig(String txt, int x, int y) {
             this.contenido = txt;
