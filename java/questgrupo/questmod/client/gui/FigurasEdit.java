@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class FigurasEdit {
-    public static int editandoColorIndex = 0; // 0=Fondo, 1=Borde, 2=Texto, 3=FondoMision, 4=BordeMision
+    public static int editandoColorIndex = 0; // 0=Fondo, 1=Borde, 2=Texto, 3=FondoMision, 4=BordeMision, 7=RecuadroMisionTexto, 8=BordeMisionTexto, 9=TextoMision
     public static int EditandoMaestroTitle = 0; // 0=Normal, 1=Principales, 2=Secundarias
 
     private static long ultimoClicPanel = 0;
@@ -287,30 +287,38 @@ public class FigurasEdit {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
             Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
             String texto = (data != null) ? data.nombre : "Titulo (Toca una mision)";
-            
+            if (p.mayusculas) texto = texto.toUpperCase();
+
             g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
             g.renderOutline(p.x, p.y, p.ancho, p.alto, p.colorBorde);
-            
+
+            net.minecraft.network.chat.Style estilo = net.minecraft.network.chat.Style.EMPTY
+                .withBold(p.negrita).withItalic(p.cursiva).withUnderlined(p.subrayado).withStrikethrough(p.tachado);
+
             g.pose().pushPose();
             float nScale = p.escalaTexto;
             float nX = p.x + (p.ancho / 2f) - (font.width(texto) * nScale / 2f) + p.offsetXTexto;
             float nY = p.y + (p.alto / 2f) - (font.lineHeight * nScale / 2f) + p.offsetYTexto;
             g.pose().translate(nX, nY, 0);
             g.pose().scale(nScale, nScale, 1);
-            g.drawString(font, texto, 0, 0, p.colorTexto, false);
+            g.drawString(font, net.minecraft.network.chat.Component.literal(texto).setStyle(estilo), 0, 0, p.colorTexto, p.sombra);
             g.pose().popPose();
         } else if (p.tipo.equals("MISION_DESCRIPCION")) {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
             Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
             String texto = (data != null) ? data.descripcion : "Descripcion (Toca una mision)";
-            
+            if (p.mayusculas) texto = texto.toUpperCase();
+
             g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
             g.renderOutline(p.x, p.y, p.ancho, p.alto, p.colorBorde);
-            
+
+            net.minecraft.network.chat.Style estilo = net.minecraft.network.chat.Style.EMPTY
+                .withBold(p.negrita).withItalic(p.cursiva).withUnderlined(p.subrayado).withStrikethrough(p.tachado);
+
             g.pose().pushPose();
             g.pose().translate(p.x + 5, p.y + 5, 0);
-            g.pose().scale(p.escalaTexto, p.escalaTexto, 1);
-            g.drawWordWrap(font, net.minecraft.network.chat.Component.literal(texto), 0, 0, (int)(p.ancho / p.escalaTexto), p.colorTexto);
+            g.pose().scale(p.scaleDesc, p.scaleDesc, 1);
+            g.drawWordWrap(font, net.minecraft.network.chat.Component.literal(texto).setStyle(estilo), 0, 0, (int)((p.ancho - 10) / p.scaleDesc), p.colorTexto);
             g.pose().popPose();
 } else if (p.tipo.equals("MISION_OBJETIVOS")) {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;

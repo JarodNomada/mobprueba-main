@@ -20,9 +20,6 @@ public class EditorScreen extends Screen {
     private GlobalGuiSettings.TextConfig tSel = null;
     private GlobalGuiSettings.PanelConfig pSel = null;
 
-    private Button btnMenosT, btnMasT, btnMenosI, btnMasI, btnMenosTM, btnMasTM;
-    private Button btnMoverTextoIzq, btnMoverTextoDer, btnMoverIconoIzq, btnMoverIconoDer, btnMoverTMIzq, btnMoverTMDher;
-    private Button btnMoverTextoUp, btnMoverTextoDown, btnMoverTMIzqUp, btnMoverTMDherDown, btnMoverIconoUp, btnMoverIconoDown;
     private Button btnAceptarColor, btnCancelarColor;
     private int colorOriginalGuardado = 0;
     private int colorPopupX, colorPopupY;
@@ -53,45 +50,22 @@ public class EditorScreen extends Screen {
     private void updateTopBarVisibility() {
         if (!GlobalGuiSettings.editorActivo) {
             TopBar.setVisible(false);
-            btnMenosT.visible = btnMasT.visible = btnMenosI.visible = btnMasI.visible = false;
-            btnMenosTM.visible = btnMasTM.visible = false;
-            btnMoverTextoIzq.visible = btnMoverTextoDer.visible = btnMoverIconoIzq.visible = btnMoverIconoDer.visible = false;
-            btnMoverTMIzq.visible = btnMoverTMDher.visible = false;
             return;
         }
+
+        boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
 
         if (tSel != null) {
             TopBar.setVisible(true);
             TopBar.setTextToolsVisible(true);
-            btnMenosT.visible = btnMasT.visible = btnMenosI.visible = btnMasI.visible = false;
-            btnMenosTM.visible = btnMasTM.visible = false;
-            btnMoverTextoIzq.visible = btnMoverTextoDer.visible = btnMoverIconoIzq.visible = btnMoverIconoDer.visible = false;
-            btnMoverTMIzq.visible = btnMoverTMDher.visible = false;
+        } else if (esMisionTexto) {
+            TopBar.setVisible(true);
+            TopBar.setTextToolsVisible(true);
         } else if (pSel != null) {
             TopBar.setVisible(true);
             TopBar.setDrawingToolsVisible(true);
-            if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
-                btnMenosT.visible = btnMasT.visible = btnMenosI.visible = btnMasI.visible = true;
-                btnMoverTextoIzq.visible = btnMoverTextoDer.visible = btnMoverIconoIzq.visible = btnMoverIconoDer.visible = true;
-                if (pSel.tipo.startsWith("DESPLEGABLE")) {
-                    btnMenosTM.visible = btnMasTM.visible = true;
-                    btnMoverTMIzq.visible = btnMoverTMDher.visible = true;
-                } else {
-                    btnMenosTM.visible = btnMasTM.visible = false;
-                    btnMoverTMIzq.visible = btnMoverTMDher.visible = false;
-                }
-            } else {
-                btnMenosT.visible = btnMasT.visible = btnMenosI.visible = btnMasI.visible = false;
-                btnMenosTM.visible = btnMasTM.visible = false;
-                btnMoverTextoIzq.visible = btnMoverTextoDer.visible = btnMoverIconoIzq.visible = btnMoverIconoDer.visible = false;
-                btnMoverTMIzq.visible = btnMoverTMDher.visible = false;
-            }
         } else {
             TopBar.setVisible(false);
-            btnMenosT.visible = btnMasT.visible = btnMenosI.visible = btnMasI.visible = false;
-            btnMenosTM.visible = btnMasTM.visible = false;
-            btnMoverTextoIzq.visible = btnMoverTextoDer.visible = btnMoverIconoIzq.visible = btnMoverIconoDer.visible = false;
-            btnMoverTMIzq.visible = btnMoverTMDher.visible = false;
         }
     }
 
@@ -110,23 +84,16 @@ public class EditorScreen extends Screen {
                     int color = (int) Long.parseLong(s, 16);
                     if (tSel != null) tSel.colorARGB = color;
                     if (pSel != null) {
-                        if (pSel.tipo.equals("DETALLE_MISION")) {
-                            switch (pSel.subElementoSel) {
-                                case 1: pSel.colorTexto = color; break;
-                                case 3: pSel.colorDesc = color; break;
-                                case 4: pSel.colorObj = color; break;
-                                case 5: pSel.colorRec = color; break;
-                                default: pSel.colorTexto = color;
-                            }
-                        } else {
-                            if (FigurasEdit.editandoColorIndex == 0) pSel.colorARGB = color;
-                            else if (FigurasEdit.editandoColorIndex == 1) pSel.colorBorde = color;
-                            else if (FigurasEdit.editandoColorIndex == 2) pSel.colorTexto = color;
-                            else if (FigurasEdit.editandoColorIndex == 3) pSel.colorFondoMision = color;
-                            else if (FigurasEdit.editandoColorIndex == 4) pSel.colorBordeMision = color;
-                            else if (FigurasEdit.editandoColorIndex == 5) pSel.colorFondoCabecera = color;
-                            else if (FigurasEdit.editandoColorIndex == 6) pSel.colorBordeCabecera = color;
-                        }
+                        if (FigurasEdit.editandoColorIndex == 0) pSel.colorARGB = color;
+                        else if (FigurasEdit.editandoColorIndex == 1) pSel.colorBorde = color;
+                        else if (FigurasEdit.editandoColorIndex == 2) pSel.colorTexto = color;
+                        else if (FigurasEdit.editandoColorIndex == 3) pSel.colorFondoMision = color;
+                        else if (FigurasEdit.editandoColorIndex == 4) pSel.colorBordeMision = color;
+                        else if (FigurasEdit.editandoColorIndex == 5) pSel.colorFondoCabecera = color;
+                        else if (FigurasEdit.editandoColorIndex == 6) pSel.colorBordeCabecera = color;
+                        else if (FigurasEdit.editandoColorIndex == 7) pSel.colorARGB = color;
+                        else if (FigurasEdit.editandoColorIndex == 8) pSel.colorBorde = color;
+                        else if (FigurasEdit.editandoColorIndex == 9) pSel.colorTexto = color;
                     }
                     if (editandoColorHerramientas) {
                         GlobalGuiSettings.colorHerramientas = color;
@@ -134,7 +101,7 @@ public class EditorScreen extends Screen {
                 } catch (NumberFormatException e) {
                 }
             }
-        });
+});
         this.inputColor.visible = false;
         this.addRenderableWidget(inputColor);
 
@@ -149,7 +116,6 @@ public class EditorScreen extends Screen {
         this.addRenderableWidget(btnAceptarColor);
 
         btnCancelarColor = Button.builder(Component.literal("Cancelar"), b -> {
-            // Restore original color
             if (tSel != null) tSel.colorARGB = colorOriginalGuardado;
             else if (pSel != null) {
                 if (FigurasEdit.editandoColorIndex == 0) pSel.colorARGB = colorOriginalGuardado;
@@ -159,10 +125,12 @@ public class EditorScreen extends Screen {
                 else if (FigurasEdit.editandoColorIndex == 4) pSel.colorBordeMision = colorOriginalGuardado;
                 else if (FigurasEdit.editandoColorIndex == 5) pSel.colorFondoCabecera = colorOriginalGuardado;
                 else if (FigurasEdit.editandoColorIndex == 6) pSel.colorBordeCabecera = colorOriginalGuardado;
+                else if (FigurasEdit.editandoColorIndex == 7) pSel.colorARGB = colorOriginalGuardado;
+                else if (FigurasEdit.editandoColorIndex == 8) pSel.colorBorde = colorOriginalGuardado;
+                else if (FigurasEdit.editandoColorIndex == 9) pSel.colorTexto = colorOriginalGuardado;
             } else if (editandoColorHerramientas) {
                 GlobalGuiSettings.colorHerramientas = colorOriginalGuardado;
             }
-            
             inputColor.visible = false;
             inputColor.setFocused(false);
             editandoColorHerramientas = false;
@@ -172,199 +140,36 @@ public class EditorScreen extends Screen {
         btnCancelarColor.visible = false;
         this.addRenderableWidget(btnCancelarColor);
 
-        // Handle color edit request from sidebar
-        if (LeftSidebar.editColorRequested) {
-            LeftSidebar.editColorRequested = false;
-            colorOriginalGuardado = GlobalGuiSettings.colorHerramientas;
-            inputColor.setValue(String.format("%08X", GlobalGuiSettings.colorHerramientas));
-            editandoColorHerramientas = true; // Moved this line after setValue
-            inputColor.visible = true; btnAceptarColor.visible = true; btnCancelarColor.visible = true;
-            inputColor.setFocused(true);
-        }
-
-        String txtEditor = GlobalGuiSettings.editorActivo ? "ON" : "OFF";
-        this.addRenderableWidget(Button.builder(Component.literal("Modo: " + txtEditor), b -> {
-            GlobalGuiSettings.editorActivo = !GlobalGuiSettings.editorActivo;
-            this.init();
-        }).bounds(this.width - 80, 5, 75, 20).build());
-        
-        // Scale buttons for mission cards
-        int barX = LeftSidebar.getSidebarWidth();
-        int barW = TopBar.getWidth(); // This needs to be calculated dynamically in render
-        int barStartX = barX + (this.width - barX - barW) / 2;
-        int curX = barStartX + 5 + 15 + 5; // Start after color box
-        
-        btnMenosT = Button.builder(Component.literal("-"), b -> {
-            if (pSel != null && pSel.textoAsociado != null) {
-                pSel.escalaTexto = Math.max(0.1f, pSel.escalaTexto - 0.1f);
+        // Botón ON/OFF en la esquina superior derecha
+        Button btnEditorOnOff = Button.builder(
+            Component.literal(GlobalGuiSettings.editorActivo ? "OFF" : "ON"),
+            b -> {
+                GlobalGuiSettings.editorActivo = !GlobalGuiSettings.editorActivo;
+                LeftSidebar.sidebarVisible = GlobalGuiSettings.editorActivo;
+                this.init();
             }
-        }).bounds(curX, 5, 12, 12).build();
-        this.addRenderableWidget(btnMenosT);
-        curX += 12 + 2;
+        ).bounds(this.width - 80, 5, 75, 20).build();
+        this.addRenderableWidget(btnEditorOnOff);
 
-        btnMasT = Button.builder(Component.literal("+"), b -> {
-            if (pSel != null && pSel.textoAsociado != null) {
-                pSel.escalaTexto = Math.min(10.0f, pSel.escalaTexto + 0.1f);
-            }
-        }).bounds(curX, 5, 12, 12).build();
-        this.addRenderableWidget(btnMasT);
-        curX += 12 + 2;
-
-        btnMoverTextoIzq = Button.builder(Component.literal("←"), b -> {
-            if (pSel != null && pSel.textoAsociado != null) {
-                pSel.offsetXTexto -= 2.0f;
-            }
-        }).bounds(curX, 5, 12, 12).build();
-        this.addRenderableWidget(btnMoverTextoIzq);
-        curX += 12 + 2;
-
-        btnMoverTextoDer = Button.builder(Component.literal("→"), b -> {
-            if (pSel != null && pSel.textoAsociado != null) {
-                pSel.offsetXTexto += 2.0f;
-            }
-        }).bounds(curX, 5, 12, 12).build();
-        this.addRenderableWidget(btnMoverTextoDer);
-        curX += 12 + 2;
-
-        curX += 10; // Espacio entre grupos
-
-        btnMenosTM = Button.builder(Component.literal("-"), b -> {
-            if (pSel != null && pSel.tipo.startsWith("DESPLEGABLE")) {
-                pSel.escalaTextoMision = Math.max(0.1f, pSel.escalaTextoMision - 0.1f);
-            }
-        }).bounds(curX, 5, 12, 12).build();
-        this.addRenderableWidget(btnMenosTM);
-        curX += 12 + 2;
-
-        btnMasTM = Button.builder(Component.literal("+"), b -> {
-            if (pSel != null && pSel.tipo.startsWith("DESPLEGABLE")) {
-                pSel.escalaTextoMision = Math.min(10.0f, pSel.escalaTextoMision + 0.1f);
-            }
-        }).bounds(curX, 5, 12, 12).build();
-        this.addRenderableWidget(btnMasTM);
-        curX += 12 + 2;
-
-        btnMoverTMIzq = Button.builder(Component.literal("←"), b -> {
-            if (pSel != null && pSel.tipo.startsWith("DESPLEGABLE")) {
-                pSel.offsetXTextoMision -= 2.0f;
-            }
-        }).bounds(curX, 5, 12, 12).build();
-        this.addRenderableWidget(btnMoverTMIzq);
-        curX += 12 + 2;
-
-        btnMoverTMDher = Button.builder(Component.literal("→"), b -> {
-            if (pSel != null && pSel.tipo.startsWith("DESPLEGABLE")) {
-                pSel.offsetXTextoMision += 2.0f;
-            }
-        }).bounds(curX, 5, 12, 12).build();
-        this.addRenderableWidget(btnMoverTMDher);
-        curX += 12 + 2;
-
-        curX += 10; // Espacio entre grupos
-
-        btnMenosI = Button.builder(Component.literal("-"), b -> {
-            if (pSel != null && pSel.textoAsociado != null) {
-                pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f);
-            }
-        }).bounds(curX, 5, 12, 12).build();
-        this.addRenderableWidget(btnMenosI);
-        curX += 12 + 2;
-
-        btnMasI = Button.builder(Component.literal("+"), b -> {
-            if (pSel != null && pSel.textoAsociado != null) {
-                pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f);
-            }
-        }).bounds(curX, 5, 12, 12).build();
-        this.addRenderableWidget(btnMasI);
-        curX += 12 + 2;
-
-        btnMoverIconoIzq = Button.builder(Component.literal("←"), b -> {
-            if (pSel != null && pSel.textoAsociado != null) {
-                pSel.offsetXIcono -= 2.0f;
-            }
-        }).bounds(curX, 5, 12, 12).build();
-        this.addRenderableWidget(btnMoverIconoIzq);
-        curX += 12 + 2;
-
-        btnMoverIconoDer = Button.builder(Component.literal("→"), b -> {
-            if (pSel != null && pSel.textoAsociado != null) {
-                pSel.offsetXIcono += 2.0f;
-            }
-        }).bounds(curX, 5, 12, 12).build();
-        this.addRenderableWidget(btnMoverIconoDer);
-
-        // Botones de movimiento vertical (↑ ↓)
-        Button btnMoverTextoUp, btnMoverTextoDown;
-        Button btnMoverTMIzqUp, btnMoverTMDherDown;
-        Button btnMoverIconoUp, btnMoverIconoDown;
-
-        curX += 20; curX += 10; // Espacio
-
-        btnMoverTextoUp = Button.builder(Component.literal("↑"), b -> {
-            if (pSel != null && pSel.textoAsociado != null) {
-                pSel.offsetYTexto -= 2.0f;
-            }
-        }).bounds(curX, 5, 12, 12).build();
-        this.addRenderableWidget(btnMoverTextoUp);
-
-        btnMoverTextoDown = Button.builder(Component.literal("↓"), b -> {
-            if (pSel != null && pSel.textoAsociado != null) {
-                pSel.offsetYTexto += 2.0f;
-            }
-        }).bounds(curX, 5, 12, 12).build();
-        this.addRenderableWidget(btnMoverTextoDown);
-        curX += 20; curX += 10;
-
-        btnMoverTMIzqUp = Button.builder(Component.literal("↑"), b -> {
-            if (pSel != null && pSel.tipo.startsWith("DESPLEGABLE")) {
-                pSel.offsetYTextoMision -= 2.0f;
-            }
-        }).bounds(curX, 5, 12, 12).build();
-        this.addRenderableWidget(btnMoverTMIzqUp);
-
-        btnMoverTMDherDown = Button.builder(Component.literal("↓"), b -> {
-            if (pSel != null && pSel.tipo.startsWith("DESPLEGABLE")) {
-                pSel.offsetYTextoMision += 2.0f;
-            }
-        }).bounds(curX, 5, 12, 12).build();
-        this.addRenderableWidget(btnMoverTMDherDown);
-        curX += 20; curX += 10;
-
-        btnMoverIconoUp = Button.builder(Component.literal("↑"), b -> {
-            if (pSel != null && pSel.textoAsociado != null) {
-                pSel.offsetYIcono -= 2.0f;
-            }
-        }).bounds(curX, 5, 12, 12).build();
-        this.addRenderableWidget(btnMoverIconoUp);
-
-        btnMoverIconoDown = Button.builder(Component.literal("↓"), b -> {
-            if (pSel != null && pSel.textoAsociado != null) {
-                pSel.offsetYIcono += 2.0f;
-            }
-        }).bounds(curX, 5, 12, 12).build();
-        this.addRenderableWidget(btnMoverIconoDown);
-        
-        // Hide by default
-        btnMenosT.visible = btnMasT.visible = btnMenosI.visible = btnMasI.visible = false;
-        btnMoverTextoIzq.visible = btnMoverTextoDer.visible = btnMoverIconoIzq.visible = btnMoverIconoDer.visible = false;
-        
         LeftSidebar.sidebarVisible = GlobalGuiSettings.editorActivo;
 
         updateTopBarVisibility();
 
-        if (TopBar.isTextToolsVisible() && tSel != null) {
-            // Calculate y-position: align buttons with 4px top/bottom padding in top bar
-            int barY = 5; // Same as passed to TopBar.render(g, this.width, 5, tSel, pSel)
-            // 4px separation from top of top bar, buttons have height 18
-            int buttonY = barY + 9; // Ajuste para centrado con botones de 12px
-            
+        if (TopBar.isTextToolsVisible() && (tSel != null || pSel != null)) {
+            int barY = 5;
+            int buttonY = barY + 9;
+
             TextoEdit.inicializarOActualizarBotones(
-                    this.width, buttonY, this::addRenderableWidget, () -> tSel, () -> {
+                    this.width, buttonY, this::addRenderableWidget, () -> tSel, () -> pSel, () -> {
                         spacingPanelVisible = true;
                         spacingPanelX = (int)Minecraft.getInstance().mouseHandler.xpos();
                         spacingPanelY = (int)Minecraft.getInstance().mouseHandler.ypos();
                     }
             );
+        }
+
+        if (TopBar.isDrawingToolsVisible() && pSel != null && pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
+            TopBar.inicializarBotonesMision(this.width, 5, this::addRenderableWidget, pSel);
         }
     }
 
@@ -714,44 +519,6 @@ public class EditorScreen extends Screen {
             }
 
             curX += 10; // Gap before T
-            
-            // T Grid: 2x2 buttons of 14x14 size, gap 2px. Center in 30px width.
-            int btnSize = 12;
-            int gap = 2;
-            int gridX = curX + (30 - (btnSize*2 + gap)) / 2;
-            int topY = 5 + 16;
-            int botY = topY + btnSize + gap;
-
-            btnMenosT.setWidth(btnSize); btnMenosT.setX(gridX); btnMenosT.setY(topY);
-            btnMasT.setWidth(btnSize); btnMasT.setX(gridX + btnSize + gap); btnMasT.setY(topY);
-            btnMoverTextoIzq.setWidth(btnSize); btnMoverTextoIzq.setX(gridX); btnMoverTextoIzq.setY(botY);
-            btnMoverTextoDer.setWidth(btnSize); btnMoverTextoDer.setX(gridX + btnSize + gap); btnMoverTextoDer.setY(botY);
-            
-            curX += 30; // T section width
-            curX += 10; // Gap before TM or I
-
-            if (pSel.tipo.startsWith("DESPLEGABLE")) {
-                // TM Grid
-                gridX = curX + (30 - (btnSize*2 + gap)) / 2;
-                
-                btnMenosTM.setWidth(btnSize); btnMenosTM.setX(gridX); btnMenosTM.setY(topY);
-                btnMasTM.setWidth(btnSize); btnMasTM.setX(gridX + btnSize + gap); btnMasTM.setY(topY);
-                btnMoverTMIzq.setWidth(btnSize); btnMoverTMIzq.setX(gridX); btnMoverTMIzq.setY(botY);
-                btnMoverTMDher.setWidth(btnSize); btnMoverTMDher.setX(gridX + btnSize + gap); btnMoverTMDher.setY(botY);
-                
-                curX += 30; // TM section width
-                curX += 10; // Gap before I
-            }
-
-            // I Grid
-            gridX = curX + (30 - (btnSize*2 + gap)) / 2;
-            
-            btnMenosI.setWidth(btnSize); btnMenosI.setX(gridX); btnMenosI.setY(topY);
-            btnMasI.setWidth(btnSize); btnMasI.setX(gridX + btnSize + gap); btnMasI.setY(topY);
-            btnMoverIconoIzq.setWidth(btnSize); btnMoverIconoIzq.setX(gridX); btnMoverIconoIzq.setY(botY);
-            btnMoverIconoDer.setWidth(btnSize); btnMoverIconoDer.setX(gridX + btnSize + gap); btnMoverIconoDer.setY(botY);
-            
-            curX += 30; // I section width
         }
 
         actualizarVisibilidadYBotones();
@@ -900,7 +667,7 @@ public class EditorScreen extends Screen {
     }
 
     private void actualizarVisibilidadYBotones() {
-        TextoEdit.actualizarEstadoBotones(tSel);
+        TextoEdit.actualizarEstadoBotones(tSel, pSel);
     }
 
     private void renderBrushStroke(GuiGraphics g, GlobalGuiSettings.BrushStroke stroke) {
@@ -936,6 +703,9 @@ public class EditorScreen extends Screen {
                     else if (FigurasEdit.editandoColorIndex == 4) pSel.colorBordeMision = colorOriginalGuardado;
                     else if (FigurasEdit.editandoColorIndex == 5) pSel.colorFondoCabecera = colorOriginalGuardado;
                     else if (FigurasEdit.editandoColorIndex == 6) pSel.colorBordeCabecera = colorOriginalGuardado;
+                    else if (FigurasEdit.editandoColorIndex == 7) pSel.colorARGB = colorOriginalGuardado;
+                    else if (FigurasEdit.editandoColorIndex == 8) pSel.colorBorde = colorOriginalGuardado;
+                    else if (FigurasEdit.editandoColorIndex == 9) pSel.colorTexto = colorOriginalGuardado;
                 } else if (editandoColorHerramientas) {
                     GlobalGuiSettings.colorHerramientas = colorOriginalGuardado;
                 }
@@ -950,14 +720,24 @@ public class EditorScreen extends Screen {
 
         // 2. Interacción con la TopBar (Herramientas de Texto y Dibujo)
         if (my >= 5 && my <= topBarBottom && mx >= sidebarReserved) {
-            if (tSel != null) {
-                int barX = LeftSidebar.getSidebarWidth();
-                int barStartX = barX + (this.width - barX - TopBar.getWidth()) / 2;
-                int colorX = barStartX + 5;
-                if (mx >= colorX && mx <= colorX + 15) {
-                    TextoEdit.editandoColor = true; LeftSidebar.selectedModule = -1;
-                    colorOriginalGuardado = tSel.colorARGB;
-                    inputColor.setValue(String.format("%08X", tSel.colorARGB));
+            boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
+
+            if (tSel != null || esMisionTexto) {
+                int colorClick = TopBar.getColorClick((int)mx, (int)my, this.width, 5, tSel, pSel);
+                if (colorClick != -1) {
+                    FigurasEdit.editandoColorIndex = colorClick;
+                    LeftSidebar.selectedModule = -1;
+                    if (colorClick == 0 && tSel != null) {
+                        colorOriginalGuardado = tSel.colorARGB;
+                        inputColor.setValue(String.format("%08X", tSel.colorARGB));
+                    } else if (esMisionTexto) {
+                        if (colorClick == 7) colorOriginalGuardado = pSel.colorARGB;
+                        else if (colorClick == 8) colorOriginalGuardado = pSel.colorBorde;
+                        else if (colorClick == 9) colorOriginalGuardado = pSel.colorTexto;
+                        if (colorClick == 7) inputColor.setValue(String.format("%08X", pSel.colorARGB));
+                        else if (colorClick == 8) inputColor.setValue(String.format("%08X", pSel.colorBorde));
+                        else if (colorClick == 9) inputColor.setValue(String.format("%08X", pSel.colorTexto));
+                    }
                     inputColor.visible = true; btnAceptarColor.visible = true; btnCancelarColor.visible = true;
                     inputColor.setFocused(true);
                     return true;

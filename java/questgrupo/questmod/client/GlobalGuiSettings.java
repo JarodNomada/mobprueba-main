@@ -35,6 +35,15 @@ public class GlobalGuiSettings {
         public float offsetYIcono = 0.0f;
         public int colorTextoMision = 0xFFFFFFFF;
 
+        // Propiedades de formato de texto para MISION_TITULO y MISION_DESCRIPCION
+        public boolean negrita = false;
+        public boolean cursiva = false;
+        public boolean subrayado = false;
+        public boolean tachado = false;
+        public boolean mayusculas = false;
+        public boolean sombra = false;
+        public float interletrado = 0.0f;
+
         // Sub-secciones editables para DETALLE_MISION
         public int subElementoSel = 0;
         public float offXDesc = 0.0f, offYDesc = 0.0f, scaleDesc = 1.0f;

@@ -44,13 +44,18 @@ public class TextoEdit {
         return esDoble;
     }
 
-    public static void inicializarOActualizarBotones(int guiWidth, int y, java.util.function.Consumer<Button> adder, java.util.function.Supplier<GlobalGuiSettings.TextConfig> tSelSupplier, Runnable spacingCallback) {
+    public static void inicializarOActualizarBotones(int guiWidth, int y, java.util.function.Consumer<Button> adder, java.util.function.Supplier<GlobalGuiSettings.TextConfig> tSelSupplier, java.util.function.Supplier<GlobalGuiSettings.PanelConfig> pSelSupplier, Runnable spacingCallback) {
         GlobalGuiSettings.TextConfig tSel = tSelSupplier.get();
+        GlobalGuiSettings.PanelConfig pSel = pSelSupplier.get();
+
+        boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
 
         int barX = LeftSidebar.getSidebarWidth();
-        int barW = TopBar.calculateBarWidth(true, false, tSel, null);
+        int barW = TopBar.calculateBarWidth(true, false, tSel, pSel);
         int barStartX = barX + (guiWidth - barX - barW) / 2;
-        int curX = barStartX + 10 + 14 + 3;
+
+        int colorOffset = esMisionTexto ? (12 * 3 + 2 * 2) : 12;
+        int curX = barStartX + 10 + colorOffset + 3;
         int btnSize = 12;
         int btnGap = 2;
         int rowHeight = btnSize + btnGap;
@@ -58,65 +63,91 @@ public class TextoEdit {
 
         btnNegrita = Button.builder(Component.literal("B"), b -> {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();
+            GlobalGuiSettings.PanelConfig p = pSelSupplier.get();
             if (t != null) t.negrita = !t.negrita;
+            else if (p != null) p.negrita = !p.negrita;
         }).bounds(curX, y, btnSize, btnSize).build();
         curX += btnSize + btnGap;
 
         btnCursiva = Button.builder(Component.literal("I"), b -> {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();
+            GlobalGuiSettings.PanelConfig p = pSelSupplier.get();
             if (t != null) t.cursiva = !t.cursiva;
+            else if (p != null) p.cursiva = !p.cursiva;
         }).bounds(curX, y, btnSize, btnSize).build();
         curX += btnSize + btnGap;
 
         btnSubrayado = Button.builder(Component.literal("U"), b -> {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();
+            GlobalGuiSettings.PanelConfig p = pSelSupplier.get();
             if (t != null) t.subrayado = !t.subrayado;
+            else if (p != null) p.subrayado = !p.subrayado;
         }).bounds(curX, y, btnSize, btnSize).build();
         curX += btnSize + btnGap;
 
         btnMas = Button.builder(Component.literal("+"), b -> {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();
+            GlobalGuiSettings.PanelConfig p = pSelSupplier.get();
             if (t != null) t.escala = Math.min(10.0f, t.escala + 0.1f);
+            else if (p != null) {
+                if (p.tipo.equals("MISION_TITULO")) p.escalaTexto = Math.min(10.0f, p.escalaTexto + 0.1f);
+                else if (p.tipo.equals("MISION_DESCRIPCION")) p.scaleDesc = Math.min(10.0f, p.scaleDesc + 0.1f);
+            }
         }).bounds(curX, y, btnSize, btnSize).build();
         curX += btnSize + btnGap;
 
         btnMasEspaciado = Button.builder(Component.literal("→"), b -> {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();
+            GlobalGuiSettings.PanelConfig p = pSelSupplier.get();
             if (t != null) t.interletrado += 0.5f;
+            else if (p != null) p.interletrado += 0.5f;
         }).bounds(curX, y, btnSize, btnSize).build();
 
-        curX = barStartX + 10 + 14 + 3;
+        curX = barStartX + 10 + colorOffset + 3;
 
         btnMayusculas = Button.builder(Component.literal("aA"), b -> {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();
+            GlobalGuiSettings.PanelConfig p = pSelSupplier.get();
             if (t != null) t.mayusculas = !t.mayusculas;
+            else if (p != null) p.mayusculas = !p.mayusculas;
         }).bounds(curX, row2Y, btnSize, btnSize).build();
         curX += btnSize + btnGap;
 
         btnSombra = Button.builder(Component.literal("Sh"), b -> {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();
+            GlobalGuiSettings.PanelConfig p = pSelSupplier.get();
             if (t != null) t.sombra = !t.sombra;
+            else if (p != null) p.sombra = !p.sombra;
         }).bounds(curX, row2Y, btnSize, btnSize).build();
         curX += btnSize + btnGap;
 
         btnTachado = Button.builder(Component.literal("S"), b -> {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();
+            GlobalGuiSettings.PanelConfig p = pSelSupplier.get();
             if (t != null) t.tachado = !t.tachado;
+            else if (p != null) p.tachado = !p.tachado;
         }).bounds(curX, row2Y, btnSize, btnSize).build();
         curX += btnSize + btnGap;
 
         btnMenos = Button.builder(Component.literal("-"), b -> {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();
+            GlobalGuiSettings.PanelConfig p = pSelSupplier.get();
             if (t != null) t.escala = Math.max(0.1f, t.escala - 0.1f);
+            else if (p != null) {
+                if (p.tipo.equals("MISION_TITULO")) p.escalaTexto = Math.max(0.1f, p.escalaTexto - 0.1f);
+                else if (p.tipo.equals("MISION_DESCRIPCION")) p.scaleDesc = Math.max(0.1f, p.scaleDesc - 0.1f);
+            }
         }).bounds(curX, row2Y, btnSize, btnSize).build();
         curX += btnSize + btnGap;
 
         btnMenosEspaciado = Button.builder(Component.literal("←"), b -> {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();
+            GlobalGuiSettings.PanelConfig p = pSelSupplier.get();
             if (t != null) t.interletrado = Math.max(0.0f, t.interletrado - 0.5f);
+            else if (p != null) p.interletrado = Math.max(0.0f, p.interletrado - 0.5f);
         }).bounds(curX, row2Y, btnSize, btnSize).build();
 
-        actualizarEstadoBotones(tSelSupplier.get());
+        actualizarEstadoBotones(tSel, pSel);
 
         adder.accept(btnNegrita);
         adder.accept(btnCursiva);
@@ -130,9 +161,12 @@ public class TextoEdit {
         adder.accept(btnMenosEspaciado);
     }
 
-    public static void actualizarEstadoBotones(GlobalGuiSettings.TextConfig tSel) {
-        boolean visible = (tSel != null) && TopBar.isVisible();
+    public static void actualizarEstadoBotones(GlobalGuiSettings.TextConfig tSel, GlobalGuiSettings.PanelConfig pSel) {
+        boolean visibleTexto = (tSel != null) && TopBar.isVisible();
+        boolean visibleMision = (pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"))) && TopBar.isVisible();
+
         if (btnNegrita != null) {
+            boolean visible = visibleTexto || visibleMision;
             btnNegrita.visible = btnCursiva.visible = btnSubrayado.visible = btnTachado.visible = btnMayusculas.visible = btnSombra.visible = btnMas.visible = btnMenos.visible = btnMasEspaciado.visible = btnMenosEspaciado.visible = visible;
         }
     }
