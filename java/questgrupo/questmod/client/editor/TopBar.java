@@ -107,9 +107,9 @@ public class TopBar {
 public static int calculateBarWidth(boolean textTools, boolean drawTools, GlobalGuiSettings.TextConfig tSel, GlobalGuiSettings.PanelConfig pSel) {
         if (textTools) {
             int w = 10; // Padding
-            w += 14; // Color swatch
+            w += 12; // Color swatch
             w += 3;  // Gap
-            w += 5 * 14 + 4 * 2; // 5 buttons × 14px + 4 gaps × 2px
+            w += 5 * 12 + 4 * 2; // 5 buttons × 12px + 4 gaps × 2px
             w += 10; // Padding
             return w;
         } else if (drawTools && pSel != null) {

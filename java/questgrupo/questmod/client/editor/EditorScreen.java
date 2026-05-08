@@ -356,7 +356,7 @@ public class EditorScreen extends Screen {
             // Calculate y-position: align buttons with 4px top/bottom padding in top bar
             int barY = 5; // Same as passed to TopBar.render(g, this.width, 5, tSel, pSel)
             // 4px separation from top of top bar, buttons have height 18
-            int buttonY = barY + 4; // 4px separation from top of top bar
+            int buttonY = barY + 9; // Ajuste para centrado con botones de 12px
             
             TextoEdit.inicializarOActualizarBotones(
                     this.width, buttonY, this::addRenderableWidget, () -> tSel, () -> {

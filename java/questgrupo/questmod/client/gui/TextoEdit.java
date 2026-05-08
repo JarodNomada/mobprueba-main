@@ -46,15 +46,15 @@ public class TextoEdit {
 
     public static void inicializarOActualizarBotones(int guiWidth, int y, java.util.function.Consumer<Button> adder, java.util.function.Supplier<GlobalGuiSettings.TextConfig> tSelSupplier, Runnable spacingCallback) {
         GlobalGuiSettings.TextConfig tSel = tSelSupplier.get();
-        Font font = Minecraft.getInstance().font;
 
         int barX = LeftSidebar.getSidebarWidth();
         int barW = TopBar.calculateBarWidth(true, false, tSel, null);
         int barStartX = barX + (guiWidth - barX - barW) / 2;
         int curX = barStartX + 10 + 14 + 3;
-        int btnSize = 14;
+        int btnSize = 12;
         int btnGap = 2;
         int rowHeight = btnSize + btnGap;
+        int row2Y = y + rowHeight;
 
         btnNegrita = Button.builder(Component.literal("B"), b -> {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();
@@ -74,19 +74,18 @@ public class TextoEdit {
         }).bounds(curX, y, btnSize, btnSize).build();
         curX += btnSize + btnGap;
 
-        btnTachado = Button.builder(Component.literal("S"), b -> {
+        btnMas = Button.builder(Component.literal("+"), b -> {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();
-            if (t != null) t.tachado = !t.tachado;
+            if (t != null) t.escala = Math.min(10.0f, t.escala + 0.1f);
         }).bounds(curX, y, btnSize, btnSize).build();
         curX += btnSize + btnGap;
 
-        btnMasEspaciado = Button.builder(Component.literal("<-"), b -> {
+        btnMasEspaciado = Button.builder(Component.literal("→"), b -> {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();
             if (t != null) t.interletrado += 0.5f;
         }).bounds(curX, y, btnSize, btnSize).build();
 
-        curX = barStartX + 10 + 15 + 3;
-        int row2Y = y + rowHeight;
+        curX = barStartX + 10 + 14 + 3;
 
         btnMayusculas = Button.builder(Component.literal("aA"), b -> {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();
@@ -100,19 +99,19 @@ public class TextoEdit {
         }).bounds(curX, row2Y, btnSize, btnSize).build();
         curX += btnSize + btnGap;
 
+        btnTachado = Button.builder(Component.literal("S"), b -> {
+            GlobalGuiSettings.TextConfig t = tSelSupplier.get();
+            if (t != null) t.tachado = !t.tachado;
+        }).bounds(curX, row2Y, btnSize, btnSize).build();
+        curX += btnSize + btnGap;
+
         btnMenos = Button.builder(Component.literal("-"), b -> {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();
             if (t != null) t.escala = Math.max(0.1f, t.escala - 0.1f);
         }).bounds(curX, row2Y, btnSize, btnSize).build();
         curX += btnSize + btnGap;
 
-        btnMas = Button.builder(Component.literal("+"), b -> {
-            GlobalGuiSettings.TextConfig t = tSelSupplier.get();
-            if (t != null) t.escala = Math.min(10.0f, t.escala + 0.1f);
-        }).bounds(curX, row2Y, btnSize, btnSize).build();
-        curX += btnSize + btnGap;
-
-        btnMenosEspaciado = Button.builder(Component.literal("->"), b -> {
+        btnMenosEspaciado = Button.builder(Component.literal("←"), b -> {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();
             if (t != null) t.interletrado = Math.max(0.0f, t.interletrado - 0.5f);
         }).bounds(curX, row2Y, btnSize, btnSize).build();
@@ -122,12 +121,12 @@ public class TextoEdit {
         adder.accept(btnNegrita);
         adder.accept(btnCursiva);
         adder.accept(btnSubrayado);
-        adder.accept(btnTachado);
-        adder.accept(btnMayusculas);
-        adder.accept(btnSombra);
-        adder.accept(btnMenos);
         adder.accept(btnMas);
         adder.accept(btnMasEspaciado);
+        adder.accept(btnMayusculas);
+        adder.accept(btnSombra);
+        adder.accept(btnTachado);
+        adder.accept(btnMenos);
         adder.accept(btnMenosEspaciado);
     }
 
