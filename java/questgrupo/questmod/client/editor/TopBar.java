@@ -335,8 +335,9 @@ if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
     public static int getDrawingButtonAt(int mx, int my, int guiWidth, int y, GlobalGuiSettings.PanelConfig pSel) {
         if (!drawingToolsVisible || pSel == null || my < y || my > y + getHeight()) return -1;
 
-        int barX = LeftSidebar.getSidebarWidth();
-        int barW = getWidth();
+int barX = LeftSidebar.getSidebarWidth();
+        int barW = calculateBarWidth(false, true, null, pSel);
+        barWidth = barW;
         int barStartX = barX + (guiWidth - barX - barW) / 2;
         int curX = barStartX + 10;
         int btnW = 20;
@@ -383,20 +384,28 @@ if (!pSel.tipo.equals("LINEA") && !pSel.tipo.equals("TRIANGULO")) {
         return -1;
     }
 
-    public static void inicializarBotonesMision(int guiWidth, int y, Consumer<Button> adder, GlobalGuiSettings.PanelConfig pSel) {
+public static void inicializarBotonesMision(int guiWidth, int y, Consumer<Button> adder, GlobalGuiSettings.PanelConfig pSel) {
         if (pSel == null || pSel.textoAsociado == null || pSel.textoAsociado.isEmpty()) return;
 
+        // Forzar el cálculo correcto del ancho de la barra para herramientas de dibujo
         int barX = LeftSidebar.getSidebarWidth();
-        int barW = getWidth();
-        int barStartX = barX + (guiWidth - barX - barW) / 2;
-        int btnY = y + 22;
+
+        // Calcular el ancho exactamente como en render() para herramientas de dibujo
+        int expectedBarW;
+        if (pSel.tipo.startsWith("DESPLEGABLE")) {
+            expectedBarW = 10 + 91 + 10 + 50 + 10 + 30 + 10 + 30 + 10 + 30 + 10;
+        } else {
+            expectedBarW = 10 + 20 + (pSel.tipo.equals("LINEA") || pSel.tipo.equals("TRIANGULO") ? 0 : 20) + 10 + 30 + 10 + 30 + 10;
+        }
+        int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
+        int btnY = y + 15;
 
         // Calcular posiciones de la misma manera que renderDrawingTools
         int curX = barStartX + 10 + 91 + 10 + 50 + 10; // Después de COLORES y BLOQUES
 
         if (!pSel.tipo.startsWith("DESPLEGABLE")) {
             // Para no-DESPLEGABLE: T e I
-            int tSectionX = curX;
+            int tSectionX = curX + 3;
             curX += 30 + 10; // T + gap
 
             Button btnTLeft = Button.builder(Component.literal("←"), b -> pSel.offsetXTexto -= 2.0f).bounds(tSectionX, btnY, 12, 12).build();
@@ -405,7 +414,7 @@ if (!pSel.tipo.equals("LINEA") && !pSel.tipo.equals("TRIANGULO")) {
             Button btnTPlus = Button.builder(Component.literal("+"), b -> pSel.escalaTexto = Math.min(10.0f, pSel.escalaTexto + 0.1f)).bounds(tSectionX + 14, btnY + 14, 12, 12).build();
             adder.accept(btnTLeft); adder.accept(btnTRight); adder.accept(btnTMinus); adder.accept(btnTPlus);
 
-            int iSectionX = curX + 30;
+            int iSectionX = curX + 30 + 3;
             Button btnILeft = Button.builder(Component.literal("←"), b -> pSel.offsetXIcono -= 2.0f).bounds(iSectionX, btnY, 12, 12).build();
             Button btnIRight = Button.builder(Component.literal("→"), b -> pSel.offsetXIcono += 2.0f).bounds(iSectionX + 14, btnY, 12, 12).build();
             Button btnIMinus = Button.builder(Component.literal("-"), b -> pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f)).bounds(iSectionX, btnY + 14, 12, 12).build();
@@ -413,7 +422,7 @@ if (!pSel.tipo.equals("LINEA") && !pSel.tipo.equals("TRIANGULO")) {
             adder.accept(btnILeft); adder.accept(btnIRight); adder.accept(btnIMinus); adder.accept(btnIPlus);
         } else {
             // Para DESPLEGABLE: T, TM, I
-            int tSectionX = curX;
+            int tSectionX = curX + 3;
 
             Button btnTLeft = Button.builder(Component.literal("←"), b -> pSel.offsetXTexto -= 2.0f).bounds(tSectionX, btnY, 12, 12).build();
             Button btnTRight = Button.builder(Component.literal("→"), b -> pSel.offsetXTexto += 2.0f).bounds(tSectionX + 14, btnY, 12, 12).build();
@@ -423,7 +432,7 @@ if (!pSel.tipo.equals("LINEA") && !pSel.tipo.equals("TRIANGULO")) {
 
             curX += 30 + 10; // T + gap
 
-            int tmSectionX = curX;
+            int tmSectionX = curX + 3;
             Button btnTMLeft = Button.builder(Component.literal("←"), b -> pSel.offsetXTextoMision -= 2.0f).bounds(tmSectionX, btnY, 12, 12).build();
             Button btnTMRight = Button.builder(Component.literal("→"), b -> pSel.offsetXTextoMision += 2.0f).bounds(tmSectionX + 14, btnY, 12, 12).build();
             Button btnTMMinus = Button.builder(Component.literal("-"), b -> pSel.escalaTextoMision = Math.max(0.1f, pSel.escalaTextoMision - 0.1f)).bounds(tmSectionX, btnY + 14, 12, 12).build();
@@ -432,12 +441,12 @@ if (!pSel.tipo.equals("LINEA") && !pSel.tipo.equals("TRIANGULO")) {
 
             curX += 30 + 10; // TM + gap
 
-            int iSectionX = curX;
+            int iSectionX = curX + 3;
             Button btnILeft = Button.builder(Component.literal("←"), b -> pSel.offsetXIcono -= 2.0f).bounds(iSectionX, btnY, 12, 12).build();
             Button btnIRight = Button.builder(Component.literal("→"), b -> pSel.offsetXIcono += 2.0f).bounds(iSectionX + 14, btnY, 12, 12).build();
             Button btnIMinus = Button.builder(Component.literal("-"), b -> pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f)).bounds(iSectionX, btnY + 14, 12, 12).build();
             Button btnIPlus = Button.builder(Component.literal("+"), b -> pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f)).bounds(iSectionX + 14, btnY + 14, 12, 12).build();
             adder.accept(btnILeft); adder.accept(btnIRight); adder.accept(btnIMinus); adder.accept(btnIPlus);
-        }
+}
     }
 }
