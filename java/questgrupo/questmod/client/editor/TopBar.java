@@ -152,7 +152,7 @@ private static void renderTextTools(GuiGraphics g, int barX, int y, GlobalGuiSet
         boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
 
         if (esMisionTexto) {
-            int swatchSize = 11;
+            int swatchSize = 10;
             int gap = 4;
             int startX = barX + 10;
 
@@ -164,7 +164,7 @@ private static void renderTextTools(GuiGraphics g, int barX, int y, GlobalGuiSet
             g.renderOutline(startX + swatchSize + gap - 1, rowY - 1, swatchSize + 2, swatchSize + 2, 0xFF000000);
 
             // Fila 2: [texto] debajo de recuadro
-            int rowY2 = rowY + swatchSize + gap;
+            int rowY2 = rowY + 14;
             g.fill(startX, rowY2, startX + swatchSize, rowY2 + swatchSize, pSel.colorTexto);
             g.renderOutline(startX - 1, rowY2 - 1, swatchSize + 2, swatchSize + 2, 0xFF000000);
         } else {
@@ -184,10 +184,10 @@ g.fill(curX, rowY, curX + 12, rowY + 12, tSel.colorARGB);
         boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
 
         if (esMisionTexto) {
-            int swatchSize = 11;
+            int swatchSize = 10;
             int gap = 4;
             int startX = barStartX + 10;
-            int rowY2 = y + 15 + swatchSize + gap;
+            int rowY2 = y + 15 + 14;
 
             // Recuadro (colorARGB)
             if (mx >= startX && mx <= startX + swatchSize && my >= y + 15 && my <= y + 15 + swatchSize) {
