@@ -54,8 +54,8 @@ public class TextoEdit {
         int barW = TopBar.calculateBarWidth(true, false, tSel, pSel);
         int barStartX = barX + (guiWidth - barX - barW) / 2;
 
-        int colorOffset = esMisionTexto ? (12 * 3 + 2 * 2) : 12;
-        int curX = barStartX + 10 + colorOffset + 3;
+        int colorSectionWidth = esMisionTexto ? (12 + 2 + 12) : 12; // 26px si hay dos colores, 12px si hay uno
+        int curX = barStartX + 10 + colorSectionWidth + 6; // 10px de padding izquierdo + ancho de colores + 6px de brecha
         int btnSize = 12;
         int btnGap = 2;
         int rowHeight = btnSize + btnGap;
@@ -103,7 +103,7 @@ public class TextoEdit {
             else if (p != null) p.interletrado += 0.5f;
         }).bounds(curX, y, btnSize, btnSize).build();
 
-        curX = barStartX + 10 + colorOffset + 3;
+        curX = barStartX + 10 + colorSectionWidth + 6;
 
         btnMayusculas = Button.builder(Component.literal("aA"), b -> {
             GlobalGuiSettings.TextConfig t = tSelSupplier.get();

@@ -104,11 +104,11 @@ public static int calculateBarWidth(boolean textTools, boolean drawTools, Global
         boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
 
         if (textTools || esMisionTexto) {
-            int w = 10; // Padding
-            w += 12; // Color swatch
-            w += 3;  // Gap
-            w += 5 * 12 + 4 * 2; // 5 buttons × 12px + 4 gaps × 2px
-            w += 10; // Padding
+            int w = 10; // Padding izquierdo
+            w += esMisionTexto ? (12 + 2 + 12) : 12; // Sección Colores: (12px recuadro + 2px gap + 12px borde) ó 12px
+            w += 6;  // Gap visual entre los colores y los botones de texto
+            w += (5 * 12) + (4 * 2); // Botones: 5 botones × 12px + 4 espacios × 2px = 68px
+            w += 10; // Padding derecho
             return w;
         } else if (drawTools && pSel != null) {
             if (pSel.tipo.startsWith("DESPLEGABLE")) {
@@ -146,31 +146,31 @@ public static int calculateBarWidth(boolean textTools, boolean drawTools, Global
     }
 
 private static void renderTextTools(GuiGraphics g, int barX, int y, GlobalGuiSettings.TextConfig tSel, GlobalGuiSettings.PanelConfig pSel) {
-        int curX = barX + 10;
-        int rowY = y + 15;
+        int swatchSize = 10; // 10px + 2px de borde = 12px (igual al tamaño de los botones)
+        int startX = barX + 10;
+        int rowY = y + 9; // Alineamos a la misma "Y" que los botones
 
         boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
 
         if (esMisionTexto) {
-            int swatchSize = 10;
-            int gap = 4;
-            int startX = barX + 10;
-
+            int gap = 2; // Mismo espacio que entre botones
+            
             // Fila 1: [recuadro] [borde]
-            g.fill(startX, rowY, startX + swatchSize, rowY + swatchSize, pSel.colorARGB);
-            g.renderOutline(startX - 1, rowY - 1, swatchSize + 2, swatchSize + 2, 0xFF000000);
+            g.fill(startX + 1, rowY + 1, startX + 1 + swatchSize, rowY + 1 + swatchSize, pSel.colorARGB);
+            g.renderOutline(startX, rowY, swatchSize + 2, swatchSize + 2, 0xFF000000); 
 
-            g.fill(startX + swatchSize + gap, rowY, startX + swatchSize + gap + swatchSize, rowY + swatchSize, pSel.colorBorde);
-            g.renderOutline(startX + swatchSize + gap - 1, rowY - 1, swatchSize + 2, swatchSize + 2, 0xFF000000);
+            int swatch2X = startX + 12 + gap;
+            g.fill(swatch2X + 1, rowY + 1, swatch2X + 1 + swatchSize, rowY + 1 + swatchSize, pSel.colorBorde);
+            g.renderOutline(swatch2X, rowY, swatchSize + 2, swatchSize + 2, 0xFF000000);
 
-            // Fila 2: [texto] debajo de recuadro
-            int rowY2 = rowY + 14;
-            g.fill(startX, rowY2, startX + swatchSize, rowY2 + swatchSize, pSel.colorTexto);
-            g.renderOutline(startX - 1, rowY2 - 1, swatchSize + 2, swatchSize + 2, 0xFF000000);
+            // Fila 2: [texto]
+            int rowY2 = rowY + 12 + gap; // Fila inferior idéntica a la posición de la segunda fila de botones
+            g.fill(startX + 1, rowY2 + 1, startX + 1 + swatchSize, rowY2 + 1 + swatchSize, pSel.colorTexto);
+            g.renderOutline(startX, rowY2, swatchSize + 2, swatchSize + 2, 0xFF000000);
         } else {
             // Un solo color para texto libre
-g.fill(curX, rowY, curX + 12, rowY + 12, tSel.colorARGB);
-            g.renderOutline(curX - 1, rowY - 1, 14, 14, 0xFF000000);
+            g.fill(startX + 1, rowY + 1, startX + 1 + swatchSize, rowY + 1 + swatchSize, tSel.colorARGB);
+            g.renderOutline(startX, rowY, swatchSize + 2, swatchSize + 2, 0xFF000000);
         }
     }
 
@@ -183,30 +183,23 @@ g.fill(curX, rowY, curX + 12, rowY + 12, tSel.colorARGB);
 
         boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
 
+        int rowY = y + 9;
+        int startX = barStartX + 10;
+        int gap = 2;
+
         if (esMisionTexto) {
-            int swatchSize = 10;
-            int gap = 4;
-            int startX = barStartX + 10;
-            int rowY2 = y + 15 + 14;
+            int swatch2X = startX + 12 + gap;
+            int rowY2 = rowY + 12 + gap;
 
             // Recuadro (colorARGB)
-            if (mx >= startX && mx <= startX + swatchSize && my >= y + 15 && my <= y + 15 + swatchSize) {
-                return 7;
-            }
+            if (mx >= startX && mx <= startX + 12 && my >= rowY && my <= rowY + 12) return 7;
             // Borde (colorBorde)
-            if (mx >= startX + swatchSize + gap && mx <= startX + swatchSize + gap + swatchSize && my >= y + 15 && my <= y + 15 + swatchSize) {
-                return 8;
-            }
+            if (mx >= swatch2X && mx <= swatch2X + 12 && my >= rowY && my <= rowY + 12) return 8;
             // Texto (colorTexto)
-            if (mx >= startX && mx <= startX + swatchSize && my >= rowY2 && my <= rowY2 + swatchSize) {
-                return 9;
-            }
+            if (mx >= startX && mx <= startX + 12 && my >= rowY2 && my <= rowY2 + 12) return 9;
         } else if (tSel != null) {
             // Un solo color para texto libre
-            int rowY = y + 15;
-            if (mx >= barStartX + 10 && mx <= barStartX + 10 + 12 && my >= rowY && my <= rowY + 12) {
-                return 0; // colorARGB del TextConfig
-            }
+            if (mx >= startX && mx <= startX + 12 && my >= rowY && my <= rowY + 12) return 0;
         }
         return -1;
     }
