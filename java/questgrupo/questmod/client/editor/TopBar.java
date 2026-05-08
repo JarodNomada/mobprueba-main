@@ -105,11 +105,7 @@ public static int calculateBarWidth(boolean textTools, boolean drawTools, Global
 
         if (textTools || esMisionTexto) {
             int w = 10; // Padding
-            if (esMisionTexto) {
-                w += 12 * 3 + 2 * 2; // 3 colores en triángulo (recuadro, borde, texto)
-            } else {
-                w += 12; // Color swatch
-            }
+            w += 12; // Color swatch
             w += 3;  // Gap
             w += 5 * 12 + 4 * 2; // 5 buttons × 12px + 4 gaps × 2px
             w += 10; // Padding
@@ -156,24 +152,21 @@ private static void renderTextTools(GuiGraphics g, int barX, int y, GlobalGuiSet
         boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
 
         if (esMisionTexto) {
-            // Calcular ancho de los botones para centrar el triángulo
-            int buttonsWidth = 5 * 12 + 4 * 2; // 5 columnas de botones + espacios
-            int colorsWidth = 12 * 3 + 2 * 2; // 3 colores + 2 espacios
-            int startOffset = (buttonsWidth - colorsWidth) / 2;
-            int triStartX = barX + 10 + startOffset;
+            int swatchSize = 11;
+            int gap = 4;
+            int startX = barX + 10;
 
             // Fila 1: [recuadro] [borde]
-            g.fill(triStartX, rowY, triStartX + 12, rowY + 12, pSel.colorARGB);
-            g.renderOutline(triStartX - 1, rowY - 1, 14, 14, 0xFF000000);
+            g.fill(startX, rowY, startX + swatchSize, rowY + swatchSize, pSel.colorARGB);
+            g.renderOutline(startX - 1, rowY - 1, swatchSize + 2, swatchSize + 2, 0xFF000000);
 
-            g.fill(triStartX + 14, rowY, triStartX + 14 + 12, rowY + 12, pSel.colorBorde);
-            g.renderOutline(triStartX + 14 - 1, rowY - 1, 14, 14, 0xFF000000);
+            g.fill(startX + swatchSize + gap, rowY, startX + swatchSize + gap + swatchSize, rowY + swatchSize, pSel.colorBorde);
+            g.renderOutline(startX + swatchSize + gap - 1, rowY - 1, swatchSize + 2, swatchSize + 2, 0xFF000000);
 
-            // Fila 2: [texto] centrado debajo
-            int rowY2 = y + 15 + 12 + 2;
-            int textX = triStartX + 14 + 2; // Debajo del centro de los dos colores
-            g.fill(textX, rowY2, textX + 12, rowY2 + 12, pSel.colorTexto);
-            g.renderOutline(textX - 1, rowY2 - 1, 14, 14, 0xFF000000);
+            // Fila 2: [texto] debajo de recuadro
+            int rowY2 = rowY + swatchSize + gap;
+            g.fill(startX, rowY2, startX + swatchSize, rowY2 + swatchSize, pSel.colorTexto);
+            g.renderOutline(startX - 1, rowY2 - 1, swatchSize + 2, swatchSize + 2, 0xFF000000);
         } else {
             // Un solo color para texto libre
 g.fill(curX, rowY, curX + 12, rowY + 12, tSel.colorARGB);
@@ -191,26 +184,21 @@ g.fill(curX, rowY, curX + 12, rowY + 12, tSel.colorARGB);
         boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
 
         if (esMisionTexto) {
-            int rowY = y + 15;
-            int rowY2 = y + 15 + 12 + 2;
-
-            // Calcular mismas posiciones que en renderTextTools
-            int buttonsWidth = 5 * 12 + 4 * 2;
-            int colorsWidth = 12 * 3 + 2 * 2;
-            int startOffset = (buttonsWidth - colorsWidth) / 2;
-            int triStartX = barStartX + 10 + startOffset;
+            int swatchSize = 11;
+            int gap = 4;
+            int startX = barStartX + 10;
+            int rowY2 = y + 15 + swatchSize + gap;
 
             // Recuadro (colorARGB)
-            if (mx >= triStartX && mx <= triStartX + 12 && my >= rowY && my <= rowY + 12) {
+            if (mx >= startX && mx <= startX + swatchSize && my >= y + 15 && my <= y + 15 + swatchSize) {
                 return 7;
             }
             // Borde (colorBorde)
-            if (mx >= triStartX + 14 && mx <= triStartX + 14 + 12 && my >= rowY && my <= rowY + 12) {
+            if (mx >= startX + swatchSize + gap && mx <= startX + swatchSize + gap + swatchSize && my >= y + 15 && my <= y + 15 + swatchSize) {
                 return 8;
             }
             // Texto (colorTexto)
-            int textX = triStartX + 14 + 2;
-            if (mx >= textX && mx <= textX + 12 && my >= rowY2 && my <= rowY2 + 12) {
+            if (mx >= startX && mx <= startX + swatchSize && my >= rowY2 && my <= rowY2 + swatchSize) {
                 return 9;
             }
         } else if (tSel != null) {
