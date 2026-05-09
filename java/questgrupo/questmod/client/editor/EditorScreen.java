@@ -472,10 +472,8 @@ public class EditorScreen extends Screen {
             int anchorX;
             int anchorY;
             if (editandoColorHerramientas) {
-                int panelX = LeftSidebar.SIDEBAR_WIDTH + 1;
-                int sbY = LeftSidebar.getSidebarY(this.height);
-                anchorX = panelX + 40;
-                anchorY = sbY + 50;
+                anchorX = LeftSidebar.colorBoxRectX + 8;
+                anchorY = LeftSidebar.colorBoxRectY + 20;
             } else {
                 int barX = LeftSidebar.getSidebarWidth();
                 int barStartX = barX + (this.width - barX - TopBar.getWidth()) / 2;
