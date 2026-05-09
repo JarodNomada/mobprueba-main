@@ -58,26 +58,36 @@ public static final int BTN_FILL_COLOR = 10, BTN_BORDER_COLOR = 11;
         }
     }
 
-    private static void drawBarBackground(GuiGraphics g, int x, int y, int width, int height) {
-        // Main gray fill
-        g.fill(x + 1, y + 1, x + width - 1, y + height - 1, 0xFFC6C6C6);
+private static void drawBarBackground(GuiGraphics g, int x, int y, int width, int height) {
+        // 1. Fondo Gris
+        g.fill(x + 2, y + 2, x + width - 2, y + height - 2, 0xFFC6C6C6);
         
-        // 1px Black Outline with cut corners (rounded 1px/2px effect)
-        int colorBorde = 0xFF000000;
-        g.fill(x + 2, y, x + width - 2, y + 1, colorBorde); // Top
-        g.fill(x + 2, y + height - 1, x + width - 2, y + height, colorBorde); // Bottom
-        g.fill(x, y + 2, x + 1, y + height - 2, colorBorde); // Left
-        g.fill(x + width - 1, y + 2, x + width, y + height - 2, colorBorde); // Right
+        // 2. Borde Negro 1px continuo
+        g.fill(x, y, x + width, y + 1, 0xFF000000);                           // Arriba
+        g.fill(x, y + height - 1, x + width, y + height, 0xFF000000);         // Abajo
+        g.fill(x, y, x + 1, y + height, 0xFF000000);                         // Izquierda
+        g.fill(x + width - 1, y, x + width, y + height, 0xFF000000);         // Derecha
         
-        // Corner pixels for the 2px rounded effect
-        g.fill(x + 1, y + 1, x + 2, y + 2, colorBorde); // Top-Left
-        g.fill(x + width - 2, y + 1, x + width - 1, y + 2, colorBorde); // Top-Right
-        g.fill(x + 1, y + height - 2, x + 2, y + height - 1, colorBorde); // Bottom-Left
-        g.fill(x + width - 2, y + height - 2, x + width - 1, y + height - 1, colorBorde); // Bottom-Right
-
-        // Shadow at the bottom outside
-        g.fill(x + 2, y + height, x + width - 2, y + height + 2, 0x33000000);
-        g.fill(x + width, y + 2, x + width + 2, y + height - 2, 0x33000000);
+        // 3. Esquinas escalonadas (zigzag estilo Minecraft)
+        // Cada esquina: 1px lleno, 1px vacío, 1px lleno...
+        for (int i = 0; i < 2; i++) {
+            // Esquina superior izquierda
+            g.fill(x + i * 2, y + 1, x + i * 2 + 1, y + 2, 0xFF000000);
+            // Esquina superior derecha
+            g.fill(x + width - 2 + i * 2, y + 1, x + width - 1 + i * 2, y + 2, 0xFF000000);
+            // Esquina inferior izquierda
+            g.fill(x + i * 2, y + height - 2, x + i * 2 + 1, y + height - 1, 0xFF000000);
+            // Esquina inferior derecha
+            g.fill(x + width - 2 + i * 2, y + height - 2, x + width - 1 + i * 2, y + height - 1, 0xFF000000);
+        }
+        
+        // 4. Brillo Blanco 1px (arriba e izquierda)
+        g.fill(x + 2, y + 2, x + width - 2, y + 3, 0xFFFFFFFF);
+        g.fill(x + 2, y + 2, x + 3, y + height - 2, 0xFFFFFFFF);
+        
+        // 5. Sombra Gris 1px (abajo y derecha)
+        g.fill(x + 2, y + height - 3, x + width - 2, y + height - 2, 0xFF555555);
+        g.fill(x + width - 3, y + 2, x + width - 2, y + height - 2, 0xFF555555);
     }
 
     public static void render(GuiGraphics g, int guiWidth, int y, GlobalGuiSettings.TextConfig tSel, GlobalGuiSettings.PanelConfig pSel) {
@@ -87,7 +97,7 @@ public static final int BTN_FILL_COLOR = 10, BTN_BORDER_COLOR = 11;
         int barX = LeftSidebar.getSidebarWidth();
 
         barWidth = calculateBarWidth(textToolsVisible, drawingToolsVisible, tSel, pSel);
-        int barStartX = barX + (guiWidth - barX - barWidth) / 2;
+        int barStartX = (guiWidth - barWidth) / 2;
 
         drawBarBackground(g, barStartX, y, barWidth, barHeight);
 
@@ -105,9 +115,9 @@ public static int calculateBarWidth(boolean textTools, boolean drawTools, Global
 
         if (textTools || esMisionTexto) {
             int w = 10; // Padding izquierdo
-            w += esMisionTexto ? (12 + 2 + 12) : 12; // Sección Colores: (12px recuadro + 2px gap + 12px borde) ó 12px
-            w += 6;  // Gap visual entre los colores y los botones de texto
-            w += (5 * 12) + (4 * 2); // Botones: 5 botones × 12px + 4 espacios × 2px = 68px
+            w += esMisionTexto ? (16 + 2 + 16) : 16; // Sección Colores: 34px o 16px
+            w += 2;  // Gap de 2px entre colores y botones
+            w += (5 * 18) + (4 * 2); // Botones: 5 botones × 18px + 4 espacios × 2px = 98px
             w += 10; // Padding derecho
             return w;
         } else if (drawTools && pSel != null) {
@@ -146,7 +156,7 @@ public static int calculateBarWidth(boolean textTools, boolean drawTools, Global
     }
 
 private static void renderTextTools(GuiGraphics g, int barX, int y, GlobalGuiSettings.TextConfig tSel, GlobalGuiSettings.PanelConfig pSel) {
-        int swatchSize = 10; // 10px + 2px de borde = 12px (igual al tamaño de los botones)
+        int swatchSize = 16; // 16px + 2px de borde = 18px (igual al tamaño de los botones)
         int startX = barX + 10;
         int rowY = y + 9; // Alineamos a la misma "Y" que los botones
 
@@ -159,12 +169,12 @@ private static void renderTextTools(GuiGraphics g, int barX, int y, GlobalGuiSet
             g.fill(startX + 1, rowY + 1, startX + 1 + swatchSize, rowY + 1 + swatchSize, pSel.colorARGB);
             g.renderOutline(startX, rowY, swatchSize + 2, swatchSize + 2, 0xFF000000); 
 
-            int swatch2X = startX + 12 + gap;
+            int swatch2X = startX + swatchSize + 2 + gap;
             g.fill(swatch2X + 1, rowY + 1, swatch2X + 1 + swatchSize, rowY + 1 + swatchSize, pSel.colorBorde);
             g.renderOutline(swatch2X, rowY, swatchSize + 2, swatchSize + 2, 0xFF000000);
 
             // Fila 2: [texto]
-            int rowY2 = rowY + 12 + gap; // Fila inferior idéntica a la posición de la segunda fila de botones
+            int rowY2 = rowY + swatchSize + 2 + gap;
             g.fill(startX + 1, rowY2 + 1, startX + 1 + swatchSize, rowY2 + 1 + swatchSize, pSel.colorTexto);
             g.renderOutline(startX, rowY2, swatchSize + 2, swatchSize + 2, 0xFF000000);
         } else {
@@ -174,32 +184,33 @@ private static void renderTextTools(GuiGraphics g, int barX, int y, GlobalGuiSet
         }
     }
 
-    public static int getColorClick(int mx, int my, int guiWidth, int y, GlobalGuiSettings.TextConfig tSel, GlobalGuiSettings.PanelConfig pSel) {
+public static int getColorClick(int mx, int my, int guiWidth, int y, GlobalGuiSettings.TextConfig tSel, GlobalGuiSettings.PanelConfig pSel) {
         if (!isVisible()) return -1;
 
         int barX = LeftSidebar.getSidebarWidth();
         int barW = getWidth();
-        int barStartX = barX + (guiWidth - barX - barW) / 2;
+        int barStartX = (guiWidth - barW) / 2;
 
         boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
 
+        int swatchSize = 16;
         int rowY = y + 9;
         int startX = barStartX + 10;
         int gap = 2;
 
         if (esMisionTexto) {
-            int swatch2X = startX + 12 + gap;
-            int rowY2 = rowY + 12 + gap;
+            int swatch2X = startX + swatchSize + 2 + gap;
+            int rowY2 = rowY + swatchSize + 2 + gap;
 
             // Recuadro (colorARGB)
-            if (mx >= startX && mx <= startX + 12 && my >= rowY && my <= rowY + 12) return 7;
+            if (mx >= startX && mx <= startX + swatchSize + 2 && my >= rowY && my <= rowY + swatchSize + 2) return 7;
             // Borde (colorBorde)
-            if (mx >= swatch2X && mx <= swatch2X + 12 && my >= rowY && my <= rowY + 12) return 8;
+            if (mx >= swatch2X && mx <= swatch2X + swatchSize + 2 && my >= rowY && my <= rowY + swatchSize + 2) return 8;
             // Texto (colorTexto)
-            if (mx >= startX && mx <= startX + 12 && my >= rowY2 && my <= rowY2 + 12) return 9;
+            if (mx >= startX && mx <= startX + swatchSize + 2 && my >= rowY2 && my <= rowY2 + swatchSize + 2) return 9;
         } else if (tSel != null) {
             // Un solo color para texto libre
-            if (mx >= startX && mx <= startX + 12 && my >= rowY && my <= rowY + 12) return 0;
+            if (mx >= startX && mx <= startX + swatchSize + 2 && my >= rowY && my <= rowY + swatchSize + 2) return 0;
         }
         return -1;
     }
@@ -378,7 +389,7 @@ public static void inicializarBotonesMision(int guiWidth, int y, Consumer<Button
         } else {
             expectedBarW = 10 + 20 + (pSel.tipo.equals("LINEA") || pSel.tipo.equals("TRIANGULO") ? 0 : 20) + 10 + 30 + 10 + 30 + 10;
         }
-        int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
+        int barStartX = (guiWidth - expectedBarW) / 2;
         int btnY = y + 15;
 
         // Calcular posiciones de la misma manera que renderDrawingTools
@@ -386,47 +397,47 @@ public static void inicializarBotonesMision(int guiWidth, int y, Consumer<Button
 
         if (!pSel.tipo.startsWith("DESPLEGABLE")) {
             // Para no-DESPLEGABLE: T e I
-            int tSectionX = curX + 3;
+            int tSectionX = curX + 4;
             curX += 30 + 10; // T + gap
 
-            Button btnTLeft = Button.builder(Component.literal("←"), b -> pSel.offsetXTexto -= 2.0f).bounds(tSectionX, btnY, 12, 12).build();
-            Button btnTRight = Button.builder(Component.literal("→"), b -> pSel.offsetXTexto += 2.0f).bounds(tSectionX + 14, btnY, 12, 12).build();
-            Button btnTMinus = Button.builder(Component.literal("-"), b -> pSel.escalaTexto = Math.max(0.1f, pSel.escalaTexto - 0.1f)).bounds(tSectionX, btnY + 14, 12, 12).build();
-            Button btnTPlus = Button.builder(Component.literal("+"), b -> pSel.escalaTexto = Math.min(10.0f, pSel.escalaTexto + 0.1f)).bounds(tSectionX + 14, btnY + 14, 12, 12).build();
+            Button btnTLeft = Button.builder(Component.literal("←"), b -> pSel.offsetXTexto -= 2.0f).bounds(tSectionX, btnY, 18, 18).build();
+            Button btnTRight = Button.builder(Component.literal("→"), b -> pSel.offsetXTexto += 2.0f).bounds(tSectionX + 20, btnY, 18, 18).build();
+            Button btnTMinus = Button.builder(Component.literal("-"), b -> pSel.escalaTexto = Math.max(0.1f, pSel.escalaTexto - 0.1f)).bounds(tSectionX, btnY + 20, 18, 18).build();
+            Button btnTPlus = Button.builder(Component.literal("+"), b -> pSel.escalaTexto = Math.min(10.0f, pSel.escalaTexto + 0.1f)).bounds(tSectionX + 20, btnY + 20, 18, 18).build();
             adder.accept(btnTLeft); adder.accept(btnTRight); adder.accept(btnTMinus); adder.accept(btnTPlus);
 
-            int iSectionX = curX + 30 + 3;
-            Button btnILeft = Button.builder(Component.literal("←"), b -> pSel.offsetXIcono -= 2.0f).bounds(iSectionX, btnY, 12, 12).build();
-            Button btnIRight = Button.builder(Component.literal("→"), b -> pSel.offsetXIcono += 2.0f).bounds(iSectionX + 14, btnY, 12, 12).build();
-            Button btnIMinus = Button.builder(Component.literal("-"), b -> pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f)).bounds(iSectionX, btnY + 14, 12, 12).build();
-            Button btnIPlus = Button.builder(Component.literal("+"), b -> pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f)).bounds(iSectionX + 14, btnY + 14, 12, 12).build();
+            int iSectionX = curX + 30 + 4;
+            Button btnILeft = Button.builder(Component.literal("←"), b -> pSel.offsetXIcono -= 2.0f).bounds(iSectionX, btnY, 18, 18).build();
+            Button btnIRight = Button.builder(Component.literal("→"), b -> pSel.offsetXIcono += 2.0f).bounds(iSectionX + 20, btnY, 18, 18).build();
+            Button btnIMinus = Button.builder(Component.literal("-"), b -> pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f)).bounds(iSectionX, btnY + 20, 18, 18).build();
+            Button btnIPlus = Button.builder(Component.literal("+"), b -> pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f)).bounds(iSectionX + 20, btnY + 20, 18, 18).build();
             adder.accept(btnILeft); adder.accept(btnIRight); adder.accept(btnIMinus); adder.accept(btnIPlus);
         } else {
             // Para DESPLEGABLE: T, TM, I
-            int tSectionX = curX + 3;
+            int tSectionX = curX + 4;
 
-            Button btnTLeft = Button.builder(Component.literal("←"), b -> pSel.offsetXTexto -= 2.0f).bounds(tSectionX, btnY, 12, 12).build();
-            Button btnTRight = Button.builder(Component.literal("→"), b -> pSel.offsetXTexto += 2.0f).bounds(tSectionX + 14, btnY, 12, 12).build();
-            Button btnTMinus = Button.builder(Component.literal("-"), b -> pSel.escalaTexto = Math.max(0.1f, pSel.escalaTexto - 0.1f)).bounds(tSectionX, btnY + 14, 12, 12).build();
-            Button btnTPlus = Button.builder(Component.literal("+"), b -> pSel.escalaTexto = Math.min(10.0f, pSel.escalaTexto + 0.1f)).bounds(tSectionX + 14, btnY + 14, 12, 12).build();
+            Button btnTLeft = Button.builder(Component.literal("←"), b -> pSel.offsetXTexto -= 2.0f).bounds(tSectionX, btnY, 18, 18).build();
+            Button btnTRight = Button.builder(Component.literal("→"), b -> pSel.offsetXTexto += 2.0f).bounds(tSectionX + 20, btnY, 18, 18).build();
+            Button btnTMinus = Button.builder(Component.literal("-"), b -> pSel.escalaTexto = Math.max(0.1f, pSel.escalaTexto - 0.1f)).bounds(tSectionX, btnY + 20, 18, 18).build();
+            Button btnTPlus = Button.builder(Component.literal("+"), b -> pSel.escalaTexto = Math.min(10.0f, pSel.escalaTexto + 0.1f)).bounds(tSectionX + 20, btnY + 20, 18, 18).build();
             adder.accept(btnTLeft); adder.accept(btnTRight); adder.accept(btnTMinus); adder.accept(btnTPlus);
 
             curX += 30 + 10; // T + gap
 
-            int tmSectionX = curX + 3;
-            Button btnTMLeft = Button.builder(Component.literal("←"), b -> pSel.offsetXTextoMision -= 2.0f).bounds(tmSectionX, btnY, 12, 12).build();
-            Button btnTMRight = Button.builder(Component.literal("→"), b -> pSel.offsetXTextoMision += 2.0f).bounds(tmSectionX + 14, btnY, 12, 12).build();
-            Button btnTMMinus = Button.builder(Component.literal("-"), b -> pSel.escalaTextoMision = Math.max(0.1f, pSel.escalaTextoMision - 0.1f)).bounds(tmSectionX, btnY + 14, 12, 12).build();
-            Button btnTMPlus = Button.builder(Component.literal("+"), b -> pSel.escalaTextoMision = Math.min(10.0f, pSel.escalaTextoMision + 0.1f)).bounds(tmSectionX + 14, btnY + 14, 12, 12).build();
+            int tmSectionX = curX + 4;
+            Button btnTMLeft = Button.builder(Component.literal("←"), b -> pSel.offsetXTextoMision -= 2.0f).bounds(tmSectionX, btnY, 18, 18).build();
+            Button btnTMRight = Button.builder(Component.literal("→"), b -> pSel.offsetXTextoMision += 2.0f).bounds(tmSectionX + 20, btnY, 18, 18).build();
+            Button btnTMMinus = Button.builder(Component.literal("-"), b -> pSel.escalaTextoMision = Math.max(0.1f, pSel.escalaTextoMision - 0.1f)).bounds(tmSectionX, btnY + 20, 18, 18).build();
+            Button btnTMPlus = Button.builder(Component.literal("+"), b -> pSel.escalaTextoMision = Math.min(10.0f, pSel.escalaTextoMision + 0.1f)).bounds(tmSectionX + 20, btnY + 20, 18, 18).build();
             adder.accept(btnTMLeft); adder.accept(btnTMRight); adder.accept(btnTMMinus); adder.accept(btnTMPlus);
 
             curX += 30 + 10; // TM + gap
 
-            int iSectionX = curX + 3;
-            Button btnILeft = Button.builder(Component.literal("←"), b -> pSel.offsetXIcono -= 2.0f).bounds(iSectionX, btnY, 12, 12).build();
-            Button btnIRight = Button.builder(Component.literal("→"), b -> pSel.offsetXIcono += 2.0f).bounds(iSectionX + 14, btnY, 12, 12).build();
-            Button btnIMinus = Button.builder(Component.literal("-"), b -> pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f)).bounds(iSectionX, btnY + 14, 12, 12).build();
-            Button btnIPlus = Button.builder(Component.literal("+"), b -> pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f)).bounds(iSectionX + 14, btnY + 14, 12, 12).build();
+            int iSectionX = curX + 4;
+            Button btnILeft = Button.builder(Component.literal("←"), b -> pSel.offsetXIcono -= 2.0f).bounds(iSectionX, btnY, 18, 18).build();
+            Button btnIRight = Button.builder(Component.literal("→"), b -> pSel.offsetXIcono += 2.0f).bounds(iSectionX + 20, btnY, 18, 18).build();
+            Button btnIMinus = Button.builder(Component.literal("-"), b -> pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f)).bounds(iSectionX, btnY + 20, 18, 18).build();
+            Button btnIPlus = Button.builder(Component.literal("+"), b -> pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f)).bounds(iSectionX + 20, btnY + 20, 18, 18).build();
             adder.accept(btnILeft); adder.accept(btnIRight); adder.accept(btnIMinus); adder.accept(btnIPlus);
 }
     }

@@ -54,9 +54,9 @@ public class TextoEdit {
         int barW = TopBar.calculateBarWidth(true, false, tSel, pSel);
         int barStartX = barX + (guiWidth - barX - barW) / 2;
 
-        int colorSectionWidth = esMisionTexto ? (12 + 2 + 12) : 12; // 26px si hay dos colores, 12px si hay uno
-        int curX = barStartX + 10 + colorSectionWidth + 6; // 10px de padding izquierdo + ancho de colores + 6px de brecha
-        int btnSize = 12;
+        int colorSectionWidth = esMisionTexto ? (16 + 2 + 16) : 16; // 34px si hay dos colores, 16px si hay uno
+        int curX = barStartX + 10 + colorSectionWidth + 2; // 10px de padding izquierdo + ancho de colores + 2px de brecha
+        int btnSize = 18;
         int btnGap = 2;
         int rowHeight = btnSize + btnGap;
         int row2Y = y + rowHeight;
