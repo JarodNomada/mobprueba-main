@@ -11,7 +11,6 @@ import net.minecraft.util.FormattedCharSequence;
 import questgrupo.questmod.client.GlobalGuiSettings;
 import questgrupo.questmod.client.editor.LeftSidebar;
 import questgrupo.questmod.client.editor.TopBar;
-import questgrupo.questmod.client.editor.TopBar.ButtonInfo;
 import java.util.Collections;
 
 public class TextoEdit {
@@ -55,7 +54,7 @@ public class TextoEdit {
         int barStartX = barX + (guiWidth - barX - barW) / 2;
 
         int colorSectionWidth = esMisionTexto ? (16 + 2 + 16) : 16; // 34px si hay dos colores, 16px si hay uno
-        int curX = barStartX + 10 + colorSectionWidth + 2; // 10px de padding izquierdo + ancho de colores + 2px de brecha
+        int curX = barStartX + 10 + colorSectionWidth + 2; // 10px de padding + colores + 2px de brecha
         int btnSize = 18;
         int btnGap = 2;
         int rowHeight = btnSize + btnGap;
