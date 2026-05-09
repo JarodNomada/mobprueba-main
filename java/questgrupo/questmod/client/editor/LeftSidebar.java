@@ -166,19 +166,25 @@ public class LeftSidebar {
             int centerX = screenWidth / 2;
             int centerY = viewportY + (screenHeight - viewportY) / 2;
 
+            int panelWidth = 0;
+            int panelHeight = 0;
+
             if (selectedModule == 0) {
+                panelWidth = 120; panelHeight = 45;
                 if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 100, 18)) {
                     TextoEdit.crearNuevoTexto(centerX, centerY);
                     return true;
                 }
             } else if (selectedModule == 1) {
                 if (showShapesMenu) {
+                    panelWidth = 120; panelHeight = 125;
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 100, 18)) { FigurasEdit.crearCuadrado(centerX - 25, centerY - 25); selectedShape = 0; showShapesMenu = false; return true; }
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 100, 18)) { FigurasEdit.crearRectangulo(centerX - 30, centerY - 20); selectedShape = 1; showShapesMenu = false; return true; }
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 100, 18)) { FigurasEdit.crearTriangulo(centerX, centerY); selectedShape = 2; showShapesMenu = false; return true; }
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 80, 100, 18)) { FigurasEdit.crearCirculo(centerX, centerY); selectedShape = 3; showShapesMenu = false; return true; }
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 100, 100, 18)) { showShapesMenu = false; return true; }
                 } else if (showBrushThickness) {
+                    panelWidth = 120; panelHeight = 85;
                     if (isHovered(mx, my, PANEL_X + 70, panelY + 20, 18, 18)) { GlobalGuiSettings.grosorPincel = Math.max(1, GlobalGuiSettings.grosorPincel - 1); return true; }
                     if (isHovered(mx, my, PANEL_X + 90, panelY + 20, 18, 18)) { GlobalGuiSettings.grosorPincel = Math.min(10, GlobalGuiSettings.grosorPincel + 1); return true; }
                     if (isHovered(mx, my, PANEL_X + 65, panelY + 44, 45, 18)) { showBrushThickness = false; return true; }
@@ -187,18 +193,24 @@ public class LeftSidebar {
                         return true;
                     }
                 } else {
+                    panelWidth = 120; panelHeight = 105;
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 100, 18)) { selectedTool = 0; return true; }
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 100, 18)) { selectedTool = 1; showBrushThickness = true; showShapesMenu = false; return true; }
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 100, 18)) { selectedTool = 2; showShapesMenu = true; showBrushThickness = false; return true; }
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 80, 100, 18)) { selectedTool = 3; showBrushThickness = true; showShapesMenu = false; return true; }
                 }
             } else if (selectedModule == 2) {
+                panelWidth = 140; panelHeight = 145;
                 if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 120, 18)) { FigurasEdit.crearDesplegable(centerX - 80, centerY - 100, 2); selectedModule = -1; return true; }
                 if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 120, 18)) { FigurasEdit.crearDesplegable(centerX - 80, centerY - 100, 0); selectedModule = -1; return true; }
                 if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 120, 18)) { FigurasEdit.crearDesplegable(centerX - 80, centerY - 100, 1); selectedModule = -1; return true; }
                 if (isHovered(mx, my, PANEL_X + 10, panelY + 80, 120, 18)) { FigurasEdit.crearPiezaMision("MISION_TITULO", centerX - 75, centerY - 15); selectedModule = -1; return true; }
                 if (isHovered(mx, my, PANEL_X + 10, panelY + 100, 120, 18)) { FigurasEdit.crearPiezaMision("MISION_DESCRIPCION", centerX - 75, centerY - 30); selectedModule = -1; return true; }
                 if (isHovered(mx, my, PANEL_X + 10, panelY + 120, 120, 18)) { FigurasEdit.crearPiezaMision("MISION_OBJETIVOS", centerX - 75, centerY - 50); selectedModule = -1; return true; }
+            }
+
+            if (isHovered(mx, my, PANEL_X, panelY, panelWidth, panelHeight)) {
+                return true;
             }
         }
         return false;

@@ -805,7 +805,8 @@ public class EditorScreen extends Screen {
         }
 
         // 4. Interacción en MODO ON (Editor activo)
-        if (mx < sidebarReserved) {
+        // El menú de la izquierda ahora es flotante, procesamos sus clics primero.
+        if (GlobalGuiSettings.editorActivo) {
             if (LeftSidebar.handleClick(mx, my, this.height, this.width, tSel, pSel)) {
                 if (!GlobalGuiSettings.TEXTOS.isEmpty()) {
                     this.tSel = GlobalGuiSettings.TEXTOS.get(GlobalGuiSettings.TEXTOS.size() - 1);
@@ -814,7 +815,6 @@ public class EditorScreen extends Screen {
                 this.init();
                 return true;
             }
-            return true;
         }
 
         // --- CORRECCIÓN 2: SELECCIÓN E INTERACCIÓN UNIFICADA ---
