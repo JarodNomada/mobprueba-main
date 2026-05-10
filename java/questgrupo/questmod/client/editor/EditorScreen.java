@@ -157,7 +157,7 @@ public class EditorScreen extends Screen {
 
         if (TopBar.isTextToolsVisible() && (tSel != null || pSel != null)) {
             int barY = 5;
-            int buttonY = barY + 9;
+            int buttonY = barY;
 
             TextoEdit.inicializarOActualizarBotones(
                     this.width, buttonY, this::addRenderableWidget, () -> tSel, () -> pSel, () -> {

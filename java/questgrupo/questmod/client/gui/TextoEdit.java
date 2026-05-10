@@ -53,7 +53,7 @@ public class TextoEdit {
         int barW = TopBar.calculateBarWidth(true, false, tSel, pSel);
         int barStartX = barX + (guiWidth - barX - barW) / 2;
 
-        int colorSectionWidth = esMisionTexto ? (16 + 2 + 16 + 2 + 16) : 16;
+        int colorSectionWidth = esMisionTexto ? 38 : 18;
         int btnStartX = barStartX + 4 + colorSectionWidth + 2;
         int curX = btnStartX;
         int btnSize = 18;
@@ -136,14 +136,6 @@ public class TextoEdit {
                 if (p.tipo.equals("MISION_TITULO")) p.escalaTexto = Math.max(0.1f, p.escalaTexto - 0.1f);
                 else if (p.tipo.equals("MISION_DESCRIPCION")) p.scaleDesc = Math.max(0.1f, p.scaleDesc - 0.1f);
             }
-        }).bounds(curX, rowY2, btnSize, btnSize).build();
-        curX += btnSize + btnGap;
-
-        btnMenosEspaciado = Button.builder(Component.literal("←"), b -> {
-            GlobalGuiSettings.TextConfig t = tSelSupplier.get();
-            GlobalGuiSettings.PanelConfig p = pSelSupplier.get();
-            if (t != null) t.interletrado = Math.max(0.0f, t.interletrado - 0.5f);
-            else if (p != null) p.interletrado = Math.max(0.0f, p.interletrado - 0.5f);
         }).bounds(curX, rowY2, btnSize, btnSize).build();
         curX += btnSize + btnGap;
 
