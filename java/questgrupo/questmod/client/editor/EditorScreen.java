@@ -685,34 +685,10 @@ public class EditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mx, double my, int btn) {
-        // 1. Manejo del Popup de Color (Mantenemos tu lógica actual)
-        if (inputColor.visible) {
-            boolean insidePopup = mx >= colorPopupX && mx <= colorPopupX + COLOR_POPUP_W
-                    && my >= colorPopupY && my <= colorPopupY + COLOR_POPUP_H + 2;
-            if (insidePopup) return super.mouseClicked(mx, my, btn);
-            else {
-                // Cerrar popup si se hace clic fuera
-                if (tSel != null) tSel.colorARGB = colorOriginalGuardado;
-                else if (pSel != null) {
-                    if (FigurasEdit.editandoColorIndex == 0) pSel.colorARGB = colorOriginalGuardado;
-                    else if (FigurasEdit.editandoColorIndex == 1) pSel.colorBorde = colorOriginalGuardado;
-                    else if (FigurasEdit.editandoColorIndex == 2) pSel.colorTexto = colorOriginalGuardado;
-                    else if (FigurasEdit.editandoColorIndex == 3) pSel.colorFondoMision = colorOriginalGuardado;
-                    else if (FigurasEdit.editandoColorIndex == 4) pSel.colorBordeMision = colorOriginalGuardado;
-                    else if (FigurasEdit.editandoColorIndex == 5) pSel.colorFondoCabecera = colorOriginalGuardado;
-                    else if (FigurasEdit.editandoColorIndex == 6) pSel.colorBordeCabecera = colorOriginalGuardado;
-                    else if (FigurasEdit.editandoColorIndex == 7) pSel.colorARGB = colorOriginalGuardado;
-                    else if (FigurasEdit.editandoColorIndex == 8) pSel.colorBorde = colorOriginalGuardado;
-                    else if (FigurasEdit.editandoColorIndex == 9) pSel.colorTexto = colorOriginalGuardado;
-                } else if (editandoColorHerramientas) {
-                    GlobalGuiSettings.colorHerramientas = colorOriginalGuardado;
-                }
-                inputColor.setFocused(false); inputColor.visible = false;
-                editandoColorHerramientas = false; btnAceptarColor.visible = false; btnCancelarColor.visible = false;
-                return true;
-            }
-        }
+        // 1. Manejo del Modal de Color
+        if (TopBar.handleModalClick(mx, my)) return true;
 
+        // 2. Interacción con la TopBar (Herramientas de Texto y Dibujo)
         int sidebarReserved = LeftSidebar.getSidebarWidth();
         int topBarBottom = TopBar.getHeight() > 0 ? 5 + TopBar.getHeight() : 0;
 
@@ -742,21 +718,16 @@ public class EditorScreen extends Screen {
             if (tSel != null || esMisionTexto) {
                 int colorClick = TopBar.getColorClick((int)mx, (int)my, this.width, 5, tSel, pSel);
                 if (colorClick != -1) {
-                    FigurasEdit.editandoColorIndex = colorClick;
                     LeftSidebar.selectedModule = -1;
                     if (colorClick == 0 && tSel != null) {
-                        colorOriginalGuardado = tSel.colorARGB;
-                        inputColor.setValue(String.format("%08X", tSel.colorARGB));
+                        TopBar.openPicker(tSel.colorARGB, colorClick, pSel);
                     } else if (esMisionTexto) {
-                        if (colorClick == 7) colorOriginalGuardado = pSel.colorARGB;
-                        else if (colorClick == 8) colorOriginalGuardado = pSel.colorBorde;
-                        else if (colorClick == 9) colorOriginalGuardado = pSel.colorTexto;
-                        if (colorClick == 7) inputColor.setValue(String.format("%08X", pSel.colorARGB));
-                        else if (colorClick == 8) inputColor.setValue(String.format("%08X", pSel.colorBorde));
-                        else if (colorClick == 9) inputColor.setValue(String.format("%08X", pSel.colorTexto));
+                        int colorARGB = 0xFFFFFFFF;
+                        if (colorClick == 7) colorARGB = pSel.colorARGB;
+                        else if (colorClick == 8) colorARGB = pSel.colorBorde;
+                        else if (colorClick == 9) colorARGB = pSel.colorTexto;
+                        TopBar.openPicker(colorARGB, colorClick, pSel);
                     }
-                    inputColor.visible = true; btnAceptarColor.visible = true; btnCancelarColor.visible = true;
-                    inputColor.setFocused(true);
                     return true;
                 }
             }
@@ -936,6 +907,8 @@ public class EditorScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mx, double my, int btn) {
+        TopBar.stopDragging();
+
         if (drawingLine && LeftSidebar.selectedTool == 3) {
             drawingLine = false;
             int endX = (int)mx;
@@ -965,6 +938,8 @@ public class EditorScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mx, double my, int btn, double dx, double dy) {
+        TopBar.handleModalDrag(mx);
+
         if (drawingLine && LeftSidebar.selectedTool == 3) {
             return true;
         }
