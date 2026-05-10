@@ -3,7 +3,9 @@ package questgrupo.questmod.client.editor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 import questgrupo.questmod.client.GlobalGuiSettings;
 import java.util.function.Consumer;
@@ -15,12 +17,12 @@ public class TopBar {
     private static boolean drawingToolsVisible = false;
     private static int barWidth = 0;
 
-    public static final int BTN_FILL_COLOR = 10, BTN_BORDER_COLOR = 11;
+    public static final int BTN_FILL_COLOR = 10, BTN_BORDER_COLOR = 11, BTN_TEXT_COLOR = 20;
     public static final int BTN_MINUS_TEXT_SCALE = 12, BTN_PLUS_TEXT_SCALE = 13;
     public static final int BTN_MINUS_ICON_SCALE = 14, BTN_PLUS_ICON_SCALE = 15;
     public static final int BTN_MOVE_TEXT_LEFT = 16, BTN_MOVE_TEXT_RIGHT = 17;
     public static final int BTN_MOVE_ICON_LEFT = 18, BTN_MOVE_ICON_RIGHT = 19;
-    public static final int BTN_TEXT_COLOR = 20, BTN_MISSION_FILL_COLOR = 21, BTN_MISSION_BORDER_COLOR = 22;
+    public static final int BTN_MISSION_FILL_COLOR = 21, BTN_MISSION_BORDER_COLOR = 22;
     public static final int BTN_HEADER_FILL_COLOR = 30, BTN_HEADER_BORDER_COLOR = 31;
     public static final int BTN_MOVE_TEXT_UP = 40, BTN_MOVE_TEXT_DOWN = 41;
     public static final int BTN_MOVE_MISSION_TEXT_UP = 42, BTN_MOVE_MISSION_TEXT_DOWN = 43;
@@ -34,17 +36,24 @@ public class TopBar {
     private static boolean isDraggingSlider = false;
     private static GlobalGuiSettings.PanelConfig panelEnEdicion = null;
 
-    // Dimensiones del modal
+    // Dimensiones y posiciones
     private static final int MODAL_W = 160;
-    private static final int MODAL_H = 110;
-    private static final int SLIDER_W = 100;
+    private static final int MODAL_H = 120;
+    private static final int SLIDER_W = 140;
+    private static int modalX = 0;
+    private static int modalY = 0;
+
+    // --- COMPONENTES NATIVOS ---
+    private static EditBox hexInput;
+    private static Button btnAccept;
+    private static Button btnCancel;
 
     public static void setVisible(boolean v) { visible = v; }
     public static boolean isVisible() { return visible; }
 
     public static int getHeight() {
         if (!visible) return 0;
-        return colorPickerVisible ? 0 : 48;
+        return 48;
     }
 
     public static int getVisualHeight(GlobalGuiSettings.PanelConfig pSel) {
@@ -73,13 +82,82 @@ public class TopBar {
         }
     }
 
-    // Método para abrir el modal desde el EditorScreen
+    // --- INICIALIZACIÓN DE COMPONENTES ---
+    public static void initColorPickerWidgets(int guiWidth, int y, Font font, Consumer<AbstractWidget> adder) {
+        modalX = (guiWidth - MODAL_W) / 2;
+        modalY = y + 55;
+
+        hexInput = new EditBox(font, modalX + 32, modalY + 31, 80, 16, Component.literal("Hex"));
+        hexInput.setMaxLength(6);
+        hexInput.setResponder(TopBar::onHexChanged);
+        hexInput.visible = colorPickerVisible;
+        if (colorPickerVisible) {
+            hexInput.setValue(String.format("%06X", editingColorPacked & 0x00FFFFFF));
+        }
+        adder.accept(hexInput);
+
+        btnAccept = Button.builder(Component.literal("Aceptar"), b -> closePicker(true))
+                .bounds(modalX + 10, modalY + 92, 65, 20).build();
+        btnAccept.visible = colorPickerVisible;
+        adder.accept(btnAccept);
+
+        btnCancel = Button.builder(Component.literal("Cancelar"), b -> closePicker(false))
+                .bounds(modalX + 85, modalY + 92, 65, 20).build();
+        btnCancel.visible = colorPickerVisible;
+        adder.accept(btnCancel);
+    }
+
+    private static void onHexChanged(String text) {
+        try {
+            if (text.isEmpty()) return;
+            int rgb = Integer.parseInt(text, 16);
+            editingColorPacked = (editingColorPacked & 0xFF000000) | (rgb & 0x00FFFFFF);
+        } catch (NumberFormatException ignored) {}
+    }
+
     public static void openPicker(int color, int id, GlobalGuiSettings.PanelConfig pSel) {
         editingColorPacked = color;
         currentEditingID = id;
         currentOpacity = ((color >> 24) & 0xFF) / 255.0f;
         panelEnEdicion = pSel;
         colorPickerVisible = true;
+
+        if (hexInput != null) {
+            hexInput.setValue(String.format("%06X", editingColorPacked & 0x00FFFFFF));
+            hexInput.visible = true;
+            hexInput.setFocused(false);
+        }
+        if (btnAccept != null) btnAccept.visible = true;
+        if (btnCancel != null) btnCancel.visible = true;
+    }
+
+    public static void closePicker(boolean apply) {
+        if (apply) applyFinalColor();
+        colorPickerVisible = false;
+        isDraggingSlider = false;
+
+        if (hexInput != null) {
+            hexInput.visible = false;
+            hexInput.setFocused(false);
+        }
+        if (btnAccept != null) btnAccept.visible = false;
+        if (btnCancel != null) btnCancel.visible = false;
+        panelEnEdicion = null;
+    }
+
+    private static void applyFinalColor() {
+        if (panelEnEdicion == null) return;
+        int finalColor = (Math.round(currentOpacity * 255.0f) << 24) | (editingColorPacked & 0x00FFFFFF);
+
+        switch (currentEditingID) {
+            case BTN_FILL_COLOR: panelEnEdicion.colorARGB = finalColor; break;
+            case BTN_BORDER_COLOR: panelEnEdicion.colorBorde = finalColor; break;
+            case BTN_TEXT_COLOR: panelEnEdicion.colorTexto = finalColor; break;
+            case BTN_MISSION_FILL_COLOR: panelEnEdicion.colorFondoMision = finalColor; break;
+            case BTN_MISSION_BORDER_COLOR: panelEnEdicion.colorBordeMision = finalColor; break;
+            case BTN_HEADER_FILL_COLOR: panelEnEdicion.colorFondoCabecera = finalColor; break;
+            case BTN_HEADER_BORDER_COLOR: panelEnEdicion.colorBordeCabecera = finalColor; break;
+        }
     }
 
     private static void drawContainer(GuiGraphics g, int x, int y, int width, int height) {
@@ -102,25 +180,110 @@ public class TopBar {
     public static void render(GuiGraphics g, int guiWidth, int y, GlobalGuiSettings.TextConfig tSel, GlobalGuiSettings.PanelConfig pSel) {
         if (!visible) return;
 
-        if (colorPickerVisible) {
-            renderModal(g, guiWidth, 40);
-        } else {
-            int barX = LeftSidebar.getSidebarWidth();
-            barWidth = calculateBarWidth(textToolsVisible, drawingToolsVisible, tSel, pSel);
-            int barStartX = barX + (guiWidth - barX - barWidth) / 2;
+        int barX = LeftSidebar.getSidebarWidth();
+        barWidth = calculateBarWidth(textToolsVisible, drawingToolsVisible, tSel, pSel);
+        int barStartX = barX + (guiWidth - barX - barWidth) / 2;
+        int visualBoxHeight = getVisualHeight(pSel);
 
-            int visualBoxHeight = getVisualHeight(pSel);
+        drawContainer(g, barStartX, y, barWidth, visualBoxHeight);
 
-            drawContainer(g, barStartX, y, barWidth, visualBoxHeight);
+        boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
 
-            boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
-
-            if ((textToolsVisible && tSel != null) || esMisionTexto) {
-                renderTextTools(g, barStartX, y, tSel, pSel);
-            } else if (drawingToolsVisible) {
-                renderDrawingTools(g, barStartX, y, pSel);
-            }
+        if ((textToolsVisible && tSel != null) || esMisionTexto) {
+            renderTextTools(g, barStartX, y, tSel, pSel);
+        } else if (drawingToolsVisible) {
+            renderDrawingTools(g, barStartX, y, pSel);
         }
+
+        if (colorPickerVisible) {
+            renderModal(g);
+        }
+    }
+
+    private static void renderModal(GuiGraphics g) {
+        Font font = Minecraft.getInstance().font;
+
+        g.fill(modalX, modalY, modalX + MODAL_W, modalY + MODAL_H, 0xFF000000);
+        g.renderOutline(modalX, modalY, MODAL_W, MODAL_H, 0xFFFFFFFF);
+
+        g.drawCenteredString(font, "SELECTOR DE COLOR", modalX + MODAL_W / 2, modalY + 6, 0xFFFFFFFF);
+        g.fill(modalX + 6, modalY + 16, modalX + MODAL_W - 6, modalY + 17, 0xFF555555);
+
+        g.drawString(font, "CODIGO DE COLOR", modalX + 8, modalY + 22, 0xFFFFFFFF, false);
+
+        int pX = modalX + 10;
+        int pY = modalY + 32;
+        g.fill(pX, pY, pX + 8, pY + 8, 0xFFFFFFFF);
+        g.fill(pX + 8, pY, pX + 16, pY + 8, 0xFFAAAAAA);
+        g.fill(pX, pY + 8, pX + 8, pY + 16, 0xFFAAAAAA);
+        g.fill(pX + 8, pY + 8, pX + 16, pY + 16, 0xFFFFFFFF);
+
+        int colorPreview = (Math.round(currentOpacity * 255.0f) << 24) | (editingColorPacked & 0x00FFFFFF);
+        g.fill(pX, pY, pX + 16, pY + 16, colorPreview);
+        g.renderOutline(pX - 1, pY - 1, 18, 18, 0xFF555555);
+
+        g.fill(modalX + 6, modalY + 54, modalX + MODAL_W - 6, modalY + 55, 0xFF555555);
+
+        g.drawString(font, "OPACIDAD", modalX + 8, modalY + 60, 0xFFFFFFFF, false);
+
+        int sX = modalX + 10;
+        int sY = modalY + 72;
+        g.fill(sX, sY, sX + SLIDER_W, sY + 6, 0xFF333333);
+        g.renderOutline(sX - 1, sY - 1, SLIDER_W + 2, 8, 0xFF555555);
+
+        int knobX = sX + (int)(currentOpacity * (SLIDER_W - 8));
+        g.fill(knobX, sY - 2, knobX + 8, sY + 8, 0xFFAAAAAA);
+        g.renderOutline(knobX, sY - 2, 8, 10, 0xFFFFFFFF);
+
+        g.drawString(font, Math.round(currentOpacity * 100) + "%", sX + SLIDER_W - 15, sY - 12, 0xFFFFFFFF, false);
+
+        g.fill(modalX + 6, modalY + 86, modalX + MODAL_W - 6, modalY + 87, 0xFF555555);
+    }
+
+    public static boolean handleModalClick(double mx, double my) {
+        if (!colorPickerVisible) return false;
+
+        if (mx >= modalX && mx <= modalX + MODAL_W && my >= modalY && my <= modalY + MODAL_H) {
+
+            if (btnAccept != null && btnAccept.isMouseOver(mx, my)) {
+                btnAccept.mouseClicked(mx, my, 0);
+                return true;
+            }
+            if (btnCancel != null && btnCancel.isMouseOver(mx, my)) {
+                btnCancel.mouseClicked(mx, my, 0);
+                return true;
+            }
+            if (hexInput != null && hexInput.isMouseOver(mx, my)) {
+                hexInput.mouseClicked(mx, my, 0);
+                hexInput.setFocused(true);
+                return true;
+            } else if (hexInput != null) {
+                hexInput.setFocused(false);
+            }
+
+            if (mx >= modalX + 10 && mx <= modalX + 10 + SLIDER_W && my >= modalY + 70 && my <= modalY + 80) {
+                isDraggingSlider = true;
+                updateOpacity(mx, modalX + 10);
+                return true;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public static void handleModalDrag(double mx) {
+        if (colorPickerVisible && isDraggingSlider) {
+            updateOpacity(mx, modalX + 10);
+        }
+    }
+
+    public static void stopDragging() { isDraggingSlider = false; }
+
+    private static void updateOpacity(double mx, int startX) {
+        float rel = (float)(mx - startX) / (float)(SLIDER_W - 8);
+        currentOpacity = Math.max(0.0f, Math.min(1.0f, rel));
     }
 
     public static int calculateBarWidth(boolean textTools, boolean drawTools, GlobalGuiSettings.TextConfig tSel, GlobalGuiSettings.PanelConfig pSel) {
@@ -352,105 +515,6 @@ public class TopBar {
             adder.accept(Button.builder(Component.literal("→"), b -> pSel.offsetXIcono += 2.0f).bounds(curX + 20, btnY1, btnSize, btnSize).build());
             adder.accept(Button.builder(Component.literal("-"), b -> pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f)).bounds(curX, btnY2, btnSize, btnSize).build());
             adder.accept(Button.builder(Component.literal("+"), b -> pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f)).bounds(curX + 20, btnY2, btnSize, btnSize).build());
-        }
-    }
-
-    // --- MÉTODOS DEL MODAL DE COLOR ---
-    private static void renderModal(GuiGraphics g, int guiWidth, int y) {
-        Font font = Minecraft.getInstance().font;
-        int mX = (guiWidth - MODAL_W) / 2;
-        int mY = y;
-
-        drawContainer(g, mX, mY, MODAL_W, MODAL_H);
-        g.drawCenteredString(font, "SELECTOR DE COLOR", mX + MODAL_W / 2, mY + 6, 0xFF333333);
-
-        g.fill(mX + 6, mY + 16, mX + MODAL_W - 6, mY + 17, 0xFF000000);
-
-        g.drawString(font, "CODIGO DE COLOR", mX + 8, mY + 22, 0xFF444444, false);
-
-        int colorPreview = (Math.round(currentOpacity * 255.0f) << 24) | (editingColorPacked & 0x00FFFFFF);
-        g.fill(mX + 10, mY + 32, mX + 26, mY + 48, colorPreview);
-        g.renderOutline(mX + 9, mY + 31, 18, 18, 0xFF000000);
-
-        g.fill(mX + 32, mY + 32, mX + MODAL_W - 10, mY + 48, 0xFF000000);
-        String hex = String.format("#%08X", colorPreview);
-        g.drawString(font, hex, mX + 36, mY + 36, 0xFFBBBBBB, false);
-
-        g.fill(mX + 6, mY + 54, mX + MODAL_W - 6, mY + 55, 0xFFAAAAAA);
-
-        g.drawString(font, "OPACIDAD", mX + 8, mY + 60, 0xFF444444, false);
-
-        int sX = mX + 10;
-        int sY = mY + 72;
-        g.fill(sX, sY, sX + SLIDER_W, sY + 6, 0xFF888888);
-        g.renderOutline(sX - 1, sY - 1, SLIDER_W + 2, 8, 0xFF000000);
-
-        int knobX = sX + (int)(currentOpacity * (SLIDER_W - 8));
-        g.fill(knobX, sY - 2, knobX + 8, sY + 8, 0xFF444444);
-        g.renderOutline(knobX, sY - 2, 8, 10, 0xFF000000);
-
-        g.drawString(font, Math.round(currentOpacity * 100) + "%", sX + SLIDER_W + 4, sY - 1, 0xFF333333, false);
-
-        g.fill(mX + 6, mY + 86, mX + MODAL_W - 6, mY + 87, 0xFFAAAAAA);
-
-        g.fill(mX + 10, mY + 92, mX + 75, mY + 104, 0xFF55AA55);
-        g.drawCenteredString(font, "ACEPTAR", mX + 42, mY + 94, 0xFFFFFFFF);
-
-        g.fill(mX + 85, mY + 92, mX + MODAL_W - 10, mY + 104, 0xFFAA5555);
-        g.drawCenteredString(font, "CANCELAR", mX + MODAL_W - 47, mY + 94, 0xFFFFFFFF);
-    }
-
-    public static boolean handleModalClick(double mx, double my) {
-        if (!colorPickerVisible) return false;
-
-        int guiWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
-        int mX = (guiWidth - MODAL_W) / 2;
-        int mY = 40;
-
-        if (mx >= mX + 10 && mx <= mX + 75 && my >= mY + 92 && my <= mY + 104) {
-            applyFinalColor();
-            colorPickerVisible = false;
-            return true;
-        }
-        if (mx >= mX + 85 && mx <= mX + MODAL_W - 10 && my >= mY + 92 && my <= mY + 104) {
-            colorPickerVisible = false;
-            return true;
-        }
-        if (mx >= mX + 10 && mx <= mX + 10 + SLIDER_W && my >= mY + 70 && my <= mY + 80) {
-            isDraggingSlider = true;
-            updateOpacity(mx, mX + 10);
-            return true;
-        }
-
-        return true;
-    }
-
-    public static void handleModalDrag(double mx) {
-        if (colorPickerVisible && isDraggingSlider) {
-            int guiWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
-            updateOpacity(mx, (guiWidth - MODAL_W) / 2 + 10);
-        }
-    }
-
-    public static void stopDragging() { isDraggingSlider = false; }
-
-    private static void updateOpacity(double mx, int startX) {
-        float rel = (float)(mx - startX) / (float)SLIDER_W;
-        currentOpacity = Math.max(0.0f, Math.min(1.0f, rel));
-    }
-
-    private static void applyFinalColor() {
-        if (panelEnEdicion == null) return;
-        int finalColor = (Math.round(currentOpacity * 255.0f) << 24) | (editingColorPacked & 0x00FFFFFF);
-
-        switch (currentEditingID) {
-            case BTN_FILL_COLOR: panelEnEdicion.colorARGB = finalColor; break;
-            case BTN_BORDER_COLOR: panelEnEdicion.colorBorde = finalColor; break;
-            case BTN_TEXT_COLOR: panelEnEdicion.colorTexto = finalColor; break;
-            case BTN_MISSION_FILL_COLOR: panelEnEdicion.colorFondoMision = finalColor; break;
-            case BTN_MISSION_BORDER_COLOR: panelEnEdicion.colorBordeMision = finalColor; break;
-            case BTN_HEADER_FILL_COLOR: panelEnEdicion.colorFondoCabecera = finalColor; break;
-            case BTN_HEADER_BORDER_COLOR: panelEnEdicion.colorBordeCabecera = finalColor; break;
         }
     }
 }

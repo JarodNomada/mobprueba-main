@@ -171,6 +171,8 @@ public class EditorScreen extends Screen {
         if (TopBar.isDrawingToolsVisible() && pSel != null && pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
             TopBar.inicializarBotonesMision(this.width, 5, this::addRenderableWidget, pSel);
         }
+
+        TopBar.initColorPickerWidgets(this.width, 10, this.font, this::addRenderableWidget);
     }
 
     private void handleDrawingButtonClick(int btnId) {
