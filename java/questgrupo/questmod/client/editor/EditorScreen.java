@@ -687,22 +687,51 @@ public class EditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mx, double my, int btn) {
-        // 1. ESCUDO Y MANEJO DEL MODAL DE COLOR
+        // --- 1. ESCUDO Y MANEJO DEL MODAL DE COLOR ---
         if (TopBar.colorPickerVisible) {
-            if (super.mouseClicked(mx, my, btn)) {
-                return true;
-            }
-            TopBar.handleModalClick(mx, my);
-            return true;
+            // Dejamos que los botones de Aceptar/Cancelar y el Texto funcionen
+            if (super.mouseClicked(mx, my, btn)) return true;
+            
+            // Si el jugador clica el Slider o el fondo del modal, lo atrapamos
+            if (TopBar.handleModalClick(mx, my)) return true;
+            
+            // Bloqueamos cualquier clic "vacío" para que no quite el panel de atrás
+            return true; 
         }
 
-        // 2. Interacción con la TopBar (Herramientas de Texto y Dibujo)
-        int sidebarReserved = LeftSidebar.getSidebarWidth();
-        int topBarBottom = TopBar.getHeight() > 0 ? 5 + TopBar.getHeight() : 0;
+        int barX = LeftSidebar.getSidebarWidth();
+        int topBarHeight = TopBar.getHeight();
+        int visualY = 10;
+
+        if (TopBar.isVisible() && my >= visualY && my <= visualY + topBarHeight) {
+            
+            // AQUÍ UNIFICAMOS LA LÓGICA DE DIBUJO Y TEXTO
+            int colorID = -1;
+            
+            if (TopBar.isDrawingToolsVisible() && pSel != null) {
+                // Sacamos el ID si hizo clic en un color de dibujo
+                colorID = TopBar.getDrawingButtonAt((int) mx, (int) my, this.width, visualY, pSel);
+            } 
+            
+            if (colorID == -1) {
+                // Si no, probamos si hizo clic en un color de texto/misión
+                colorID = TopBar.getColorClick((int) mx, (int) my, this.width, visualY, tSel, pSel);
+            }
+
+            // SI ENCONTRAMOS UN CLIC EN CUALQUIER COLOR -> ABRIMOS EL MODAL
+            if (colorID != -1) {
+                int currentColor = TopBar.getColorByID(colorID, pSel, tSel);
+                TopBar.openPicker(currentColor, colorID, pSel, tSel);
+                return true; // Terminamos aquí, el modal ya está abierto
+            }
+
+            // Si hizo clic en la barra pero no en un color, dejamos que los botones (+, -) actúen
+            return super.mouseClicked(mx, my, btn);
+        }
 
         // Iniciar dibujo con herramientas de dibujo (solo si no estamos en el panel de Config. Pincel)
         boolean enPanelBrush = LeftSidebar.selectedModule == 1 && LeftSidebar.showBrushThickness;
-        if (my > topBarBottom && mx > sidebarReserved && !enPanelBrush) {
+        if (my > visualY + topBarHeight && mx > barX && !enPanelBrush) {
             if (LeftSidebar.selectedTool == 3) {
                 drawingLine = true;
                 lineStartX = (int)mx;
@@ -717,29 +746,6 @@ public class EditorScreen extends Screen {
                 currentStroke.agregarPunto((int)mx, (int)my);
                 return true;
             }
-        }
-
-        // 2. Interacción con la TopBar (Herramientas de Texto y Dibujo)
-        if (my >= 5 && my <= topBarBottom && mx >= sidebarReserved) {
-            boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
-
-            if (tSel != null || esMisionTexto) {
-                int colorClick = TopBar.getColorClick((int)mx, (int)my, this.width, 5, tSel, pSel);
-                if (colorClick != -1) {
-                    LeftSidebar.selectedModule = -1;
-                    if (colorClick == 0 && tSel != null) {
-                        TopBar.openPicker(tSel.colorARGB, colorClick, pSel);
-                    } else if (esMisionTexto) {
-                        int currentColor = TopBar.getColorByID(colorClick, pSel);
-                        TopBar.openPicker(currentColor, colorClick, pSel);
-                    }
-                    return true;
-                }
-            }
-            if (super.mouseClicked(mx, my, btn)) return true;
-
-            int btnId = TopBar.getDrawingButtonAt((int)mx, (int)my, this.width, 5, pSel);
-            if (btnId != -1) { handleDrawingButtonClick(btnId); return true; }
         }
 
         // 3. Interacción en MODO OFF (Solo navegación de misiones)
@@ -900,7 +906,7 @@ public class EditorScreen extends Screen {
         }
 
         // Deselección al hacer clic en el fondo
-        if (my > topBarBottom && !inputColor.isMouseOver(mx, my)) {
+        if (my > 10 + TopBar.getHeight() && !inputColor.isMouseOver(mx, my)) {
             tSel = null; pSel = null; escribiendoTexto = false; escribiendoTextoPanel = false;
             menuVisible = false; TextoEdit.editandoColor = false; LeftSidebar.selectedModule = -1;
             inputColor.setFocused(false); inputColor.visible = false;
