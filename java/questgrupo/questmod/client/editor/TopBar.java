@@ -30,6 +30,7 @@ public class TopBar {
 
     // --- ESTADO DEL SELECTOR DE COLOR MODAL ---
     public static boolean colorPickerVisible = false;
+    private static int originalColorPacked = 0xFFFFFFFF;
     private static int editingColorPacked = 0xFFFFFFFF;
     private static float currentOpacity = 1.0f;
     private static int currentEditingID = -1;
@@ -91,9 +92,6 @@ public class TopBar {
         hexInput.setMaxLength(6);
         hexInput.setResponder(TopBar::onHexChanged);
         hexInput.visible = colorPickerVisible;
-        if (colorPickerVisible) {
-            hexInput.setValue(String.format("%06X", editingColorPacked & 0x00FFFFFF));
-        }
         adder.accept(hexInput);
 
         btnAccept = Button.builder(Component.literal("Aceptar"), b -> closePicker(true))
@@ -112,10 +110,26 @@ public class TopBar {
             if (text.isEmpty()) return;
             int rgb = Integer.parseInt(text, 16);
             editingColorPacked = (editingColorPacked & 0xFF000000) | (rgb & 0x00FFFFFF);
+            applyFinalColor();
         } catch (NumberFormatException ignored) {}
     }
 
+    public static int getColorByID(int id, GlobalGuiSettings.PanelConfig pSel) {
+        if (pSel == null) return 0xFFFFFFFF;
+        switch(id) {
+            case BTN_FILL_COLOR: return pSel.colorARGB;
+            case BTN_BORDER_COLOR: return pSel.colorBorde;
+            case BTN_TEXT_COLOR: return pSel.colorTexto;
+            case BTN_MISSION_FILL_COLOR: return pSel.colorFondoMision;
+            case BTN_MISSION_BORDER_COLOR: return pSel.colorBordeMision;
+            case BTN_HEADER_FILL_COLOR: return pSel.colorFondoCabecera;
+            case BTN_HEADER_BORDER_COLOR: return pSel.colorBordeCabecera;
+        }
+        return 0xFFFFFFFF;
+    }
+
     public static void openPicker(int color, int id, GlobalGuiSettings.PanelConfig pSel) {
+        originalColorPacked = color;
         editingColorPacked = color;
         currentEditingID = id;
         currentOpacity = ((color >> 24) & 0xFF) / 255.0f;
@@ -132,7 +146,12 @@ public class TopBar {
     }
 
     public static void closePicker(boolean apply) {
-        if (apply) applyFinalColor();
+        if (!apply) {
+            editingColorPacked = originalColorPacked;
+            currentOpacity = ((originalColorPacked >> 24) & 0xFF) / 255.0f;
+            applyFinalColor();
+        }
+
         colorPickerVisible = false;
         isDraggingSlider = false;
 
@@ -203,16 +222,17 @@ public class TopBar {
     private static void renderModal(GuiGraphics g) {
         Font font = Minecraft.getInstance().font;
 
-        g.fill(modalX, modalY, modalX + MODAL_W, modalY + MODAL_H, 0xFF000000);
-        g.renderOutline(modalX, modalY, MODAL_W, MODAL_H, 0xFFFFFFFF);
+        drawContainer(g, modalX, modalY, MODAL_W, MODAL_H);
 
-        g.drawCenteredString(font, "SELECTOR DE COLOR", modalX + MODAL_W / 2, modalY + 6, 0xFFFFFFFF);
-        g.fill(modalX + 6, modalY + 16, modalX + MODAL_W - 6, modalY + 17, 0xFF555555);
+        int tW = font.width("SELECTOR DE COLOR");
+        g.drawString(font, "SELECTOR DE COLOR", modalX + (MODAL_W - tW) / 2, modalY + 6, 0xFF000000, false);
 
-        g.drawString(font, "CODIGO DE COLOR", modalX + 8, modalY + 22, 0xFFFFFFFF, false);
+        g.fill(modalX + 6, modalY + 16, modalX + MODAL_W - 6, modalY + 17, 0xFF000000);
+
+        g.drawString(font, "CODIGO DE COLOR", modalX + 8, modalY + 22, 0xFF000000, false);
 
         int pX = modalX + 10;
-        int pY = modalY + 32;
+        int pY = modalY + 31;
         g.fill(pX, pY, pX + 8, pY + 8, 0xFFFFFFFF);
         g.fill(pX + 8, pY, pX + 16, pY + 8, 0xFFAAAAAA);
         g.fill(pX, pY + 8, pX + 8, pY + 16, 0xFFAAAAAA);
@@ -220,57 +240,38 @@ public class TopBar {
 
         int colorPreview = (Math.round(currentOpacity * 255.0f) << 24) | (editingColorPacked & 0x00FFFFFF);
         g.fill(pX, pY, pX + 16, pY + 16, colorPreview);
-        g.renderOutline(pX - 1, pY - 1, 18, 18, 0xFF555555);
+        g.renderOutline(pX - 1, pY - 1, 18, 18, 0xFF000000);
 
-        g.fill(modalX + 6, modalY + 54, modalX + MODAL_W - 6, modalY + 55, 0xFF555555);
+        g.fill(modalX + 6, modalY + 54, modalX + MODAL_W - 6, modalY + 55, 0xFFAAAAAA);
 
-        g.drawString(font, "OPACIDAD", modalX + 8, modalY + 60, 0xFFFFFFFF, false);
+        g.drawString(font, "OPACIDAD", modalX + 8, modalY + 60, 0xFF000000, false);
 
         int sX = modalX + 10;
         int sY = modalY + 72;
-        g.fill(sX, sY, sX + SLIDER_W, sY + 6, 0xFF333333);
-        g.renderOutline(sX - 1, sY - 1, SLIDER_W + 2, 8, 0xFF555555);
+        g.fill(sX, sY, sX + SLIDER_W, sY + 6, 0xFF888888);
+        g.renderOutline(sX - 1, sY - 1, SLIDER_W + 2, 8, 0xFF000000);
 
         int knobX = sX + (int)(currentOpacity * (SLIDER_W - 8));
-        g.fill(knobX, sY - 2, knobX + 8, sY + 8, 0xFFAAAAAA);
-        g.renderOutline(knobX, sY - 2, 8, 10, 0xFFFFFFFF);
+        g.fill(knobX, sY - 2, knobX + 8, sY + 8, 0xFF555555);
+        g.renderOutline(knobX, sY - 2, 8, 10, 0xFF000000);
 
-        g.drawString(font, Math.round(currentOpacity * 100) + "%", sX + SLIDER_W - 15, sY - 12, 0xFFFFFFFF, false);
+        g.drawString(font, Math.round(currentOpacity * 100) + "%", sX + SLIDER_W + 4, sY - 1, 0xFF000000, false);
 
-        g.fill(modalX + 6, modalY + 86, modalX + MODAL_W - 6, modalY + 87, 0xFF555555);
+        g.fill(modalX + 6, modalY + 86, modalX + MODAL_W - 6, modalY + 87, 0xFFAAAAAA);
     }
 
     public static boolean handleModalClick(double mx, double my) {
         if (!colorPickerVisible) return false;
 
-        if (mx >= modalX && mx <= modalX + MODAL_W && my >= modalY && my <= modalY + MODAL_H) {
-
-            if (btnAccept != null && btnAccept.isMouseOver(mx, my)) {
-                btnAccept.mouseClicked(mx, my, 0);
-                return true;
-            }
-            if (btnCancel != null && btnCancel.isMouseOver(mx, my)) {
-                btnCancel.mouseClicked(mx, my, 0);
-                return true;
-            }
-            if (hexInput != null && hexInput.isMouseOver(mx, my)) {
-                hexInput.mouseClicked(mx, my, 0);
-                hexInput.setFocused(true);
-                return true;
-            } else if (hexInput != null) {
-                hexInput.setFocused(false);
-            }
-
-            if (mx >= modalX + 10 && mx <= modalX + 10 + SLIDER_W && my >= modalY + 70 && my <= modalY + 80) {
-                isDraggingSlider = true;
-                updateOpacity(mx, modalX + 10);
-                return true;
-            }
-
+        if (mx >= modalX + 10 && mx <= modalX + 10 + SLIDER_W && my >= modalY + 70 && my <= modalY + 80) {
+            isDraggingSlider = true;
+            updateOpacity(mx, modalX + 10);
+            if (hexInput != null) hexInput.setFocused(false);
             return true;
         }
 
-        return false;
+        if (hexInput != null) hexInput.setFocused(false);
+        return true;
     }
 
     public static void handleModalDrag(double mx) {
@@ -284,6 +285,7 @@ public class TopBar {
     private static void updateOpacity(double mx, int startX) {
         float rel = (float)(mx - startX) / (float)(SLIDER_W - 8);
         currentOpacity = Math.max(0.0f, Math.min(1.0f, rel));
+        applyFinalColor();
     }
 
     public static int calculateBarWidth(boolean textTools, boolean drawTools, GlobalGuiSettings.TextConfig tSel, GlobalGuiSettings.PanelConfig pSel) {
@@ -479,9 +481,9 @@ public class TopBar {
         int btnSize = 18;
 
         if (pSel.tipo.startsWith("DESPLEGABLE")) {
-            int btnY1 = y + 11;
-            int btnY2 = y + 31;
-            int curX = barStartX + 6 + 80 + 5;
+            int btnY1 = y + 12;
+            int btnY2 = y + 32;
+            int curX = barStartX + 6 + 80 + 4;
 
             adder.accept(Button.builder(Component.literal("←"), b -> pSel.offsetXTexto -= 2.0f).bounds(curX, btnY1, btnSize, btnSize).build());
             adder.accept(Button.builder(Component.literal("→"), b -> pSel.offsetXTexto += 2.0f).bounds(curX + 20, btnY1, btnSize, btnSize).build());

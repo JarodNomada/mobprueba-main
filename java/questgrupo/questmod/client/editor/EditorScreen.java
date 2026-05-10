@@ -687,8 +687,14 @@ public class EditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mx, double my, int btn) {
-        // 1. Manejo del Modal de Color
-        if (TopBar.handleModalClick(mx, my)) return true;
+        // 1. ESCUDO Y MANEJO DEL MODAL DE COLOR
+        if (TopBar.colorPickerVisible) {
+            if (super.mouseClicked(mx, my, btn)) {
+                return true;
+            }
+            TopBar.handleModalClick(mx, my);
+            return true;
+        }
 
         // 2. Interacción con la TopBar (Herramientas de Texto y Dibujo)
         int sidebarReserved = LeftSidebar.getSidebarWidth();
@@ -724,11 +730,8 @@ public class EditorScreen extends Screen {
                     if (colorClick == 0 && tSel != null) {
                         TopBar.openPicker(tSel.colorARGB, colorClick, pSel);
                     } else if (esMisionTexto) {
-                        int colorARGB = 0xFFFFFFFF;
-                        if (colorClick == 7) colorARGB = pSel.colorARGB;
-                        else if (colorClick == 8) colorARGB = pSel.colorBorde;
-                        else if (colorClick == 9) colorARGB = pSel.colorTexto;
-                        TopBar.openPicker(colorARGB, colorClick, pSel);
+                        int currentColor = TopBar.getColorByID(colorClick, pSel);
+                        TopBar.openPicker(currentColor, colorClick, pSel);
                     }
                     return true;
                 }
