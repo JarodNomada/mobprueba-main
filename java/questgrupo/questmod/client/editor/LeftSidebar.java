@@ -185,12 +185,14 @@ public class LeftSidebar {
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 100, 100, 18)) { showShapesMenu = false; return true; }
                 } else if (showBrushThickness) {
                     panelWidth = 120; panelHeight = 85;
-                    if (isHovered(mx, my, PANEL_X + 70, panelY + 20, 18, 18)) { GlobalGuiSettings.grosorPincel = Math.max(1, GlobalGuiSettings.grosorPincel - 1); return true; }
-                    if (isHovered(mx, my, PANEL_X + 90, panelY + 20, 18, 18)) { GlobalGuiSettings.grosorPincel = Math.min(10, GlobalGuiSettings.grosorPincel + 1); return true; }
-                    if (isHovered(mx, my, PANEL_X + 65, panelY + 44, 45, 18)) { showBrushThickness = false; return true; }
-                    if (isHovered(mx, my, colorBoxRectX, colorBoxRectY, 16, 16)) {
-                        editColorRequested = true;
-                        return true;
+                    if (isHovered(mx, my, PANEL_X, panelY, panelWidth, panelHeight)) {
+                        if (isHovered(mx, my, PANEL_X + 70, panelY + 20, 18, 18)) { GlobalGuiSettings.grosorPincel = Math.max(1, GlobalGuiSettings.grosorPincel - 1); return true; }
+                        if (isHovered(mx, my, PANEL_X + 90, panelY + 20, 18, 18)) { GlobalGuiSettings.grosorPincel = Math.min(10, GlobalGuiSettings.grosorPincel + 1); return true; }
+                        if (isHovered(mx, my, PANEL_X + 65, panelY + 44, 45, 18)) { showBrushThickness = false; return true; }
+                        if (isHovered(mx, my, colorBoxRectX, colorBoxRectY, 16, 16)) {
+                            editColorRequested = true;
+                            return true;
+                        }
                     }
                 } else {
                     panelWidth = 120; panelHeight = 105;

@@ -716,6 +716,25 @@ public class EditorScreen extends Screen {
         int sidebarReserved = LeftSidebar.getSidebarWidth();
         int topBarBottom = TopBar.getHeight() > 0 ? 5 + TopBar.getHeight() : 0;
 
+        // Iniciar dibujo con herramientas de dibujo (solo si no estamos en el panel de Config. Pincel)
+        boolean enPanelBrush = LeftSidebar.selectedModule == 1 && LeftSidebar.showBrushThickness;
+        if (my > topBarBottom && mx > sidebarReserved && !enPanelBrush) {
+            if (LeftSidebar.selectedTool == 3) {
+                drawingLine = true;
+                lineStartX = (int)mx;
+                lineStartY = (int)my;
+                return true;
+            }
+            if (LeftSidebar.selectedTool == 1) {
+                drawingBrush = true;
+                currentStroke = new GlobalGuiSettings.BrushStroke();
+                currentStroke.colorARGB = GlobalGuiSettings.colorHerramientas;
+                currentStroke.grosor = GlobalGuiSettings.grosorPincel;
+                currentStroke.agregarPunto((int)mx, (int)my);
+                return true;
+            }
+        }
+
         // 2. Interacción con la TopBar (Herramientas de Texto y Dibujo)
         if (my >= 5 && my <= topBarBottom && mx >= sidebarReserved) {
             boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
