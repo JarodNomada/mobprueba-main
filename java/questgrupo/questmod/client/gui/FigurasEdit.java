@@ -86,7 +86,7 @@ public class FigurasEdit {
         int alto = 30;
         if (tipo.equals("MISION_DESCRIPCION")) alto = 60;
         if (tipo.equals("MISION_OBJETIVOS")) alto = 100;
-        
+
         GlobalGuiSettings.PanelConfig p = new GlobalGuiSettings.PanelConfig(x, y, ancho, alto);
         p.tipo = tipo;
         p.colorARGB = 0xAA222222;
@@ -110,7 +110,7 @@ public class FigurasEdit {
     }
 
     private static void drawLineThick(GuiGraphics g, int x0, int y0, int x1, int y1, int color, int grosor) {
-        if (grosor <= 1) { // Fallback to 1px line for grosor 1
+        if (grosor <= 1) {
             drawLine1px(g, x0, y0, x1, y1, color);
             return;
         }
@@ -121,10 +121,10 @@ public class FigurasEdit {
         int sy = y0 < y1 ? 1 : -1;
         int err = dx - dy;
         int halfGrosor = grosor / 2;
-        
+
         while (true) {
             g.fill(x0 - halfGrosor, y0 - halfGrosor, x0 - halfGrosor + grosor, y0 - halfGrosor + grosor, color);
-            
+
             if (x0 == x1 && y0 == y1) break;
             int e2 = 2 * err;
             if (e2 > -dy) { err -= dy; x0 += sx; }
@@ -139,7 +139,7 @@ public class FigurasEdit {
         if (p.iconoRL != null) {
             float baseIconSize = 16;
             float scaledIconSize = baseIconSize * p.escalaIcono;
-            float iconBaseX = p.x + marginX + 5; 
+            float iconBaseX = p.x + marginX + 5;
             float iconX = iconBaseX + p.offsetXIcono;
             float iconY = cardY + (cardHeight - scaledIconSize) / 2;
             g.pose().pushPose();
@@ -158,7 +158,6 @@ public class FigurasEdit {
 
     public static void renderizar(GuiGraphics g, GlobalGuiSettings.PanelConfig p, boolean seleccionado, boolean escribiendo) {
         if (p.tipo.equals("LINEA")) {
-            // Draw line from (x,y) to (x2,y2) using Bresenham
             if (p.x2 != 0 || p.y2 != 0) {
                 drawLineThick(g, p.x, p.y, p.x2, p.y2, p.colorARGB, p.grosor);
             }
@@ -170,10 +169,8 @@ public class FigurasEdit {
             g.fill(p.x, p.y, p.x + t, p.y + p.alto, p.colorBorde);
             g.fill(p.x + p.ancho - t, p.y, p.x + p.ancho, p.y + p.alto, p.colorBorde);
         } else if (p.tipo.equals("TRIANGULO")) {
-            // Minecraft-style pixelated triangle (staircase diagonal)
             int centerX = p.x + p.ancho / 2;
             int bottomY = p.y + p.alto;
-            // Draw from bottom corners to top center
             for (int dy = 0; dy < p.alto; dy++) {
                 int progress = dy * p.ancho / 2 / p.alto;
                 int lineStart = centerX - progress;
@@ -183,7 +180,6 @@ public class FigurasEdit {
                 g.fill(lineStart, bottomY - dy, lineEnd, bottomY - dy + 1, p.colorARGB);
             }
         } else if (p.tipo.equals("CIRCULO")) {
-            // Minecraft-style pixel circle (midpoint circle algorithm simplified)
             int centerX = p.x + p.ancho/2;
             int centerY = p.y + p.alto/2;
             int radius = Math.min(p.ancho, p.alto)/2;
@@ -197,7 +193,7 @@ public class FigurasEdit {
         } else if (p.tipo.equals("DETALLE_MISION")) {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
             Config.MisionData data = null;
-            
+
             for (java.util.List<Config.MisionData> lista : Config.misionesCargadas.values()) {
                 for (Config.MisionData m : lista) {
                     if (m.nombre != null && m.nombre.equals(p.textoAsociado)) { data = m; break; }
@@ -212,7 +208,7 @@ public class FigurasEdit {
                 return;
             }
 
-            // --- 1. NOMBRE (Centrado y único) ---
+            // --- 1. NOMBRE ---
             g.pose().pushPose();
             float nX = p.x + (p.ancho / 2f) - (font.width(data.nombre) * p.escalaTexto / 2f) + p.offsetXTexto;
             float nY = p.y + 10 + p.offsetYTexto;
@@ -244,7 +240,7 @@ public class FigurasEdit {
             if (GlobalGuiSettings.editorActivo && p.subElementoSel == 3) g.renderOutline(-2, -2, (int)((p.ancho-60)/p.scaleDesc), 30, 0xFFFF0000);
             g.pose().popPose();
 
-            // --- 4. OBJETIVOS (Con fix de superposición y color verde) ---
+            // --- 4. OBJETIVOS (Con Checkbox y Colores) ---
             g.pose().pushPose();
             g.pose().translate(p.x + 10 + p.offXObj, p.y + 80 + p.offYObj, 0);
             g.pose().scale(p.scaleObj, p.scaleObj, 1);
@@ -252,19 +248,30 @@ public class FigurasEdit {
             for (Config.Objetivo obj : data.objetivos) {
                 int cantJugador = net.minecraft.client.Minecraft.getInstance().player.getInventory().countItem(obj.itemReal);
                 boolean completado = cantJugador >= obj.cantidad;
-                
-                g.fill(0, oY, p.ancho - 20, oY + 22, completado ? 0x6600FF00 : 0x22FFFFFF);
-                
-                if (obj.itemReal != null) g.renderFakeItem(new net.minecraft.world.item.ItemStack(obj.itemReal), 2, oY + 3);
-                
+
+                g.fill(0, oY, p.ancho - 20, oY + 22, 0x22FFFFFF);
+
+                g.renderOutline(5, oY + 2, 18, 18, 0xFFAAAAAA);
+                if (obj.itemReal != null) g.renderFakeItem(new net.minecraft.world.item.ItemStack(obj.itemReal), 6, oY + 3);
+
                 String txtObj = obj.itemReal.getDescription().getString();
+                g.drawString(font, txtObj, 28, oY + 7, p.colorObj, true);
+
+                int boxSize = 11;
+                int boxX = p.ancho - 20 - 18;
+                int boxY = oY + 5;
+
+                g.renderOutline(boxX - 1, boxY - 1, boxSize + 2, boxSize + 2, 0xFF000000);
+
+                g.fill(boxX, boxY, boxX + boxSize, boxY + boxSize, completado ? 0xFF00AA00 : 0x44000000);
+                g.renderOutline(boxX, boxY, boxSize, boxSize, completado ? 0xFF00FF00 : 0xFFFFFFFF);
+
+                if (completado) g.drawString(font, "✔", boxX + 3, boxY + 3, 0xFF00FF00, false);
+
                 String txtCant = cantJugador + " / " + obj.cantidad;
-                
-                g.drawString(font, txtObj, 22, oY + 7, p.colorObj);
                 int cantWidth = font.width(txtCant);
-                g.drawString(font, (completado ? "§a" : "§f") + txtCant, p.ancho - 45 - cantWidth, oY + 7, 0xFFFFFFFF);
-                
-                if (completado) g.drawString(font, "§a✔", p.ancho - 35, oY + 7, 0xFFFFFFFF);
+                g.drawString(font, (completado ? "§a" : "§c") + txtCant, boxX - 6 - cantWidth, oY + 7, 0xFFFFFFFF, true);
+
                 oY += 25;
             }
             g.pose().popPose();
@@ -278,7 +285,7 @@ public class FigurasEdit {
                 g.fill(rX, 0, rX + 40, 20, 0x44000000);
                 if (rec.itemReal != null) {
                     g.renderFakeItem(new net.minecraft.world.item.ItemStack(rec.itemReal), rX + 2, 2);
-                    g.drawString(font, "x" + rec.cantidad, rX + 20, 10, p.colorRec);
+                    g.drawString(font, "x" + rec.cantidad, rX + 20, 10, p.colorRec, true);
                 }
                 rX += 45;
             }
@@ -293,7 +300,7 @@ public class FigurasEdit {
             g.renderOutline(p.x, p.y, p.ancho, p.alto, p.colorBorde);
 
             net.minecraft.network.chat.Style estilo = net.minecraft.network.chat.Style.EMPTY
-                .withBold(p.negrita).withItalic(p.cursiva).withUnderlined(p.subrayado).withStrikethrough(p.tachado);
+                    .withBold(p.negrita).withItalic(p.cursiva).withUnderlined(p.subrayado).withStrikethrough(p.tachado);
 
             g.pose().pushPose();
             float nScale = p.escalaTexto;
@@ -313,20 +320,20 @@ public class FigurasEdit {
             g.renderOutline(p.x, p.y, p.ancho, p.alto, p.colorBorde);
 
             net.minecraft.network.chat.Style estilo = net.minecraft.network.chat.Style.EMPTY
-                .withBold(p.negrita).withItalic(p.cursiva).withUnderlined(p.subrayado).withStrikethrough(p.tachado);
+                    .withBold(p.negrita).withItalic(p.cursiva).withUnderlined(p.subrayado).withStrikethrough(p.tachado);
 
             g.pose().pushPose();
             g.pose().translate(p.x + 5, p.y + 5, 0);
             g.pose().scale(p.scaleDesc, p.scaleDesc, 1);
             g.drawWordWrap(font, net.minecraft.network.chat.Component.literal(texto).setStyle(estilo), 0, 0, (int)((p.ancho - 10) / p.scaleDesc), p.colorTexto);
             g.pose().popPose();
-} else if (p.tipo.equals("MISION_OBJETIVOS")) {
+        } else if (p.tipo.equals("MISION_OBJETIVOS")) {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
             Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
-            
+
             g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
             g.renderOutline(p.x, p.y, p.ancho, p.alto, p.colorBorde);
-            
+
             if (data != null) {
                 int oY = 0;
                 g.pose().pushPose();
@@ -335,14 +342,29 @@ public class FigurasEdit {
                 for (Config.Objetivo obj : data.objetivos) {
                     int cant = net.minecraft.client.Minecraft.getInstance().player.getInventory().countItem(obj.itemReal);
                     boolean ok = cant >= obj.cantidad;
-                    
-                    g.fill(0, oY, p.ancho - 10, oY + 22, ok ? 0x6600FF00 : 0x22FFFFFF);
+
+                    // Fondo neutral
+                    g.fill(0, oY, p.ancho - 10, oY + 22, 0x22FFFFFF);
                     g.renderOutline(0, oY, p.ancho - 10, 22, p.colorBorde);
-                    
-                    if (obj.itemReal != null) g.renderFakeItem(new net.minecraft.world.item.ItemStack(obj.itemReal), 2, oY + 3);
-                    
+
+                    g.renderOutline(5, oY + 2, 18, 18, 0xFFAAAAAA);
+                    if (obj.itemReal != null) g.renderFakeItem(new net.minecraft.world.item.ItemStack(obj.itemReal), 6, oY + 3);
+
+                    int boxSize = 11;
+                    int boxX = p.ancho - 10 - 18;
+                    int boxY = oY + 5;
+
+                    g.renderOutline(boxX - 1, boxY - 1, boxSize + 2, boxSize + 2, 0xFF000000);
+
+                    g.fill(boxX, boxY, boxX + boxSize, boxY + boxSize, ok ? 0xFF00AA00 : 0x44000000);
+                    g.renderOutline(boxX, boxY, boxSize, boxSize, ok ? 0xFF00FF00 : 0xFFFFFFFF);
+
+                    if (ok) g.drawString(font, "✔", boxX + 3, boxY + 3, 0xFF00FF00, false);
+
                     String txt = cant + "/" + obj.cantidad;
-                    g.drawString(font, txt, p.ancho - 45, oY + 8, 0xFFFFFFFF);
+                    int cantWidth = font.width(txt);
+                    g.drawString(font, (ok ? "§a" : "§c") + txt, boxX - 6 - cantWidth, oY + 7, 0xFFFFFFFF, true);
+
                     oY += 26;
                 }
                 g.pose().popPose();
@@ -354,16 +376,14 @@ public class FigurasEdit {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
 
             if (p.tipo.equals("DESPLEGABLE_MAESTRO")) {
-                // Maestro has no main header. It's just a background box.
                 g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
-                g.fill(p.x, p.y + p.alto - t, p.x + p.ancho, p.y + p.alto, p.colorBorde); // Bottom
-                g.fill(p.x, p.y, p.x + p.ancho, p.y + t, p.colorBorde); // Top
-                g.fill(p.x, p.y, p.x + t, p.y + p.alto, p.colorBorde); // Left
-                g.fill(p.x + p.ancho - t, p.y, p.x + p.ancho, p.y + p.alto, p.colorBorde); // Right
+                g.fill(p.x, p.y + p.alto - t, p.x + p.ancho, p.y + p.alto, p.colorBorde);
+                g.fill(p.x, p.y, p.x + p.ancho, p.y + t, p.colorBorde);
+                g.fill(p.x, p.y, p.x + t, p.y + p.alto, p.colorBorde);
+                g.fill(p.x + p.ancho - t, p.y, p.x + p.ancho, p.y + p.alto, p.colorBorde);
 
-                // Scissor test to clip contents
                 g.enableScissor(p.x + t, p.y + t, p.x + p.ancho - t, p.y + p.alto - t);
-                
+
                 g.pose().pushPose();
                 g.pose().translate(0, -p.scrollY, 0);
 
@@ -375,10 +395,9 @@ public class FigurasEdit {
                 float titleScale = p.escalaTexto;
                 float titleOffsetX = p.offsetXTexto;
 
-                // Sub-header Principales
                 g.fill(p.x + marginX, currentY, p.x + marginX + cardWidth, currentY + 15, p.colorFondoCabecera);
                 g.renderOutline(p.x + marginX, currentY, cardWidth, 15, p.colorBordeCabecera);
-                
+
                 g.pose().pushPose();
                 g.pose().translate(p.x + marginX + 5 + titleOffsetX, currentY + (15 - font.lineHeight * titleScale) / 2, 0);
                 g.pose().scale(titleScale, titleScale, 1.0f);
@@ -401,7 +420,6 @@ public class FigurasEdit {
                     }
                 }
 
-                // Sub-header Secundarias
                 g.fill(p.x + marginX, currentY, p.x + marginX + cardWidth, currentY + 15, p.colorFondoCabecera);
                 g.renderOutline(p.x + marginX, currentY, cardWidth, 15, p.colorBordeCabecera);
 
@@ -430,7 +448,6 @@ public class FigurasEdit {
                 g.pose().popPose();
                 g.disableScissor();
 
-                // Invisible Scroll logic (no scrollbar drawn)
                 int totalContentHeight = currentY - (p.y + 5);
                 int bodyHeight = p.alto - 10;
                 if (totalContentHeight > bodyHeight) {
@@ -442,38 +459,36 @@ public class FigurasEdit {
                 }
 
             } else {
-                // Classic DESPLEGABLE_PRINCIPAL / SECUNDARIA
                 int headerHeight = 20;
                 int renderHeight = p.desplegado ? p.alto : headerHeight;
 
-                // Draw header background and border
                 g.fill(p.x, p.y, p.x + p.ancho, p.y + headerHeight, p.colorFondoCabecera);
-                g.fill(p.x, p.y, p.x + p.ancho, p.y + t, p.colorBordeCabecera); // Top
-                g.fill(p.x, p.y + headerHeight - t, p.x + p.ancho, p.y + headerHeight, p.colorBordeCabecera); // Bottom
-                g.fill(p.x, p.y, p.x + t, p.y + headerHeight, p.colorBordeCabecera); // Left
-                g.fill(p.x + p.ancho - t, p.y, p.x + p.ancho, p.y + headerHeight, p.colorBordeCabecera); // Right
+                g.fill(p.x, p.y, p.x + p.ancho, p.y + t, p.colorBordeCabecera);
+                g.fill(p.x, p.y + headerHeight - t, p.x + p.ancho, p.y + headerHeight, p.colorBordeCabecera);
+                g.fill(p.x, p.y, p.x + t, p.y + headerHeight, p.colorBordeCabecera);
+                g.fill(p.x + p.ancho - t, p.y, p.x + p.ancho, p.y + headerHeight, p.colorBordeCabecera);
 
                 if (p.desplegado && p.alto > headerHeight) {
                     int bodyY = p.y + headerHeight;
                     int bodyHeight = p.alto - headerHeight;
                     g.fill(p.x, bodyY, p.x + p.ancho, bodyY + bodyHeight, p.colorARGB);
-                    g.fill(p.x, bodyY + bodyHeight - t, p.x + p.ancho, bodyY + bodyHeight, p.colorBorde); // Bottom
-                    g.fill(p.x, bodyY, p.x + t, bodyY + bodyHeight, p.colorBorde); // Left
-                    g.fill(p.x + p.ancho - t, bodyY, p.x + p.ancho, bodyY + bodyHeight, p.colorBorde); // Right
+                    g.fill(p.x, bodyY + bodyHeight - t, p.x + p.ancho, bodyY + bodyHeight, p.colorBorde);
+                    g.fill(p.x, bodyY, p.x + t, bodyY + bodyHeight, p.colorBorde);
+                    g.fill(p.x + p.ancho - t, bodyY, p.x + p.ancho, bodyY + bodyHeight, p.colorBorde);
 
                     g.enableScissor(p.x + t, bodyY, p.x + p.ancho - t, bodyY + bodyHeight - t);
                     g.pose().pushPose();
                     g.pose().translate(0, -p.scrollY, 0);
 
-int currentY = bodyY + 5;
+                    int currentY = bodyY + 5;
                     int marginX = 5;
                     int cardHeight = 30;
                     int cardWidth = p.ancho - (marginX * 2);
-                    
-                    List<String> misiones = p.tipo.equals("DESPLEGABLE_PRINCIPAL") 
-                        ? p.listaPrincipales 
-                        : p.listaSecundarias;
-                    
+
+                    List<String> misiones = p.tipo.equals("DESPLEGABLE_PRINCIPAL")
+                            ? p.listaPrincipales
+                            : p.listaSecundarias;
+
                     for (String missionName : misiones) {
                         if (missionName != null && !missionName.isEmpty()) {
                             drawDummyMission(g, font, p, currentY, marginX, cardWidth, cardHeight, missionName);
@@ -494,11 +509,9 @@ int currentY = bodyY + 5;
                     }
                 }
 
-                // Draw arrow at right
                 String flecha = p.desplegado ? "▼" : "▶";
                 g.drawString(font, flecha, p.x + p.ancho - 15, p.y + 6, p.colorTexto, false);
 
-                // Draw title at left
                 float titleScale = p.escalaTexto;
                 float titleOffsetX = p.offsetXTexto;
                 g.pose().pushPose();
@@ -516,33 +529,30 @@ int currentY = bodyY + 5;
 
         if (p.textoAsociado != null && (!p.textoAsociado.isEmpty() || escribiendo) && !p.tipo.startsWith("DESPLEGABLE")) {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
-            
+
             float scaledTextHeight = font.lineHeight * p.escalaTexto;
             float baseIconSize = 16;
             float scaledIconSize = baseIconSize * p.escalaIcono;
-            
-            // Icono: Posición base a la izquierda + offset manual
+
             if (p.iconoRL != null && !p.tipo.startsWith("DESPLEGABLE")) {
-                float iconBaseX = p.x + 10; // 10px desde el borde izquierdo del panel
+                float iconBaseX = p.x + 10;
                 float iconX = iconBaseX + p.offsetXIcono;
                 float iconY = p.y + (p.alto - scaledIconSize) / 2;
-                
+
                 g.pose().pushPose();
                 g.pose().translate(iconX, iconY, 0);
                 g.pose().scale(p.escalaIcono, p.escalaIcono, 1.0f);
                 g.blit(p.iconoRL, 0, 0, 0, 0, (int)baseIconSize, (int)baseIconSize, (int)baseIconSize, (int)baseIconSize);
                 g.pose().popPose();
             }
-            
-            // Texto: Posición base central/derecha + offset manual
-            // Ponemos el texto en una posición fija (ej: 35px desde la izquierda) para que no sea empujado
-            float textBaseX = p.x + 35; 
+
+            float textBaseX = p.x + 35;
             float textX = textBaseX + p.offsetXTexto;
             float textY = p.y + (p.alto - scaledTextHeight) / 2;
             if (p.tipo.startsWith("DESPLEGABLE")) {
-                textY = p.y + (20 - scaledTextHeight) / 2; // 20 is headerHeight
+                textY = p.y + (20 - scaledTextHeight) / 2;
             }
-            
+
             g.pose().pushPose();
             g.pose().translate(textX, textY, 0);
             g.pose().scale(p.escalaTexto, p.escalaTexto, 1.0f);
