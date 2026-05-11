@@ -179,7 +179,6 @@ public class TextoEdit {
         g.pose().mulPose(Axis.ZP.rotationDegrees(t.rotacion));
         g.pose().scale(t.escala, t.escala, 1.0f);
 
-        // Renderizar con interletrado (espaciado entre caracteres)
         float xOffset = 0;
         for (int i = 0; i < contenido.length(); i++) {
             char c = contenido.charAt(i);
@@ -191,7 +190,29 @@ public class TextoEdit {
 
         if (seleccionado) {
             int ancho = (int)(xOffset - t.interletrado);
-            g.renderOutline(-2, -2, ancho + 4, (int)(font.lineHeight), 0xFFFFFFFF);
+            
+            int color = 0xFFFFFFFF;
+            int x = -2;
+            int y = -2;
+            int w = ancho + 4;
+            int h = font.lineHeight + 4;
+            
+            int dash = 4;
+            int gap = 3;
+            int step = dash + gap;
+            
+            for (int i = 0; i < w; i += step) {
+                g.fill(x + i, y, x + Math.min(i + dash, w), y + 1, color);
+            }
+            for (int i = 0; i < w; i += step) {
+                g.fill(x + i, y + h - 1, x + Math.min(i + dash, w), y + h, color);
+            }
+            for (int i = 0; i < h; i += step) {
+                g.fill(x, y + i, x + 1, y + Math.min(i + dash, h), color);
+            }
+            for (int i = 0; i < h; i += step) {
+                g.fill(x + w - 1, y + i, x + w, y + Math.min(i + dash, h), color);
+            }
         }
         g.pose().popPose();
     }
