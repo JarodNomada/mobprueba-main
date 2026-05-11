@@ -54,6 +54,15 @@ public class GlobalGuiSettings {
         public int colorObj = 0xFFFFFFFF;
         public int colorRec = 0xFFFFFFFF;
 
+        // Nuevos colores para Objetivos
+        public int colorFondoRenglon = 0x22FFFFFF;
+        public int colorBordeRenglon = 0xFFA6A6A6;
+        public int colorFondoIcono = 0x00000000;
+        public int colorBordeIcono = 0xFFAAAAAA;
+        public int colorFondoCheck = 0x44000000;
+        public int colorBordeCheckInterno = 0xFFFFFFFF;
+        public int colorBordeCheckExterno = 0xFF000000;
+
         public boolean desplegado = true;
         public boolean principalesAbierto = true;
         public boolean secundariasAbierto = true;

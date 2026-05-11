@@ -249,9 +249,10 @@ public class FigurasEdit {
                 int cantJugador = net.minecraft.client.Minecraft.getInstance().player.getInventory().countItem(obj.itemReal);
                 boolean completado = cantJugador >= obj.cantidad;
 
-                g.fill(0, oY, p.ancho - 20, oY + 22, 0x22FFFFFF);
+                g.fill(0, oY, p.ancho - 20, oY + 22, p.colorFondoRenglon);
 
-                g.renderOutline(5, oY + 2, 18, 18, 0xFFAAAAAA);
+                g.fill(5, oY + 2, 23, oY + 20, p.colorFondoIcono);
+                g.renderOutline(5, oY + 2, 18, 18, p.colorBordeIcono);
                 if (obj.itemReal != null) g.renderFakeItem(new net.minecraft.world.item.ItemStack(obj.itemReal), 6, oY + 3);
 
                 String txtObj = obj.itemReal.getDescription().getString();
@@ -261,12 +262,14 @@ public class FigurasEdit {
                 int boxX = p.ancho - 20 - 18;
                 int boxY = oY + 5;
 
-                g.renderOutline(boxX - 1, boxY - 1, boxSize + 2, boxSize + 2, 0xFF000000);
+                g.renderOutline(boxX - 1, boxY - 1, boxSize + 2, boxSize + 2, p.colorBordeCheckExterno);
 
-                g.fill(boxX, boxY, boxX + boxSize, boxY + boxSize, completado ? 0xFF00AA00 : 0x44000000);
-                g.renderOutline(boxX, boxY, boxSize, boxSize, completado ? 0xFF00FF00 : 0xFFFFFFFF);
+                g.fill(boxX, boxY, boxX + boxSize, boxY + boxSize, completado ? 0xFF00AA00 : p.colorFondoCheck);
+                g.renderOutline(boxX, boxY, boxSize, boxSize, completado ? 0xFF00FF00 : p.colorBordeCheckInterno);
 
                 if (completado) g.drawString(font, "✔", boxX + 3, boxY + 3, 0xFF00FF00, false);
+
+                g.renderOutline(0, oY, p.ancho - 20, 22, p.colorBordeRenglon);
 
                 String txtCant = cantJugador + " / " + obj.cantidad;
                 int cantWidth = font.width(txtCant);
@@ -343,23 +346,24 @@ public class FigurasEdit {
                     int cant = net.minecraft.client.Minecraft.getInstance().player.getInventory().countItem(obj.itemReal);
                     boolean ok = cant >= obj.cantidad;
 
-                    // Fondo neutral
-                    g.fill(0, oY, p.ancho - 10, oY + 22, 0x22FFFFFF);
-                    g.renderOutline(0, oY, p.ancho - 10, 22, p.colorBorde);
+                    g.fill(0, oY, p.ancho - 10, oY + 22, p.colorFondoRenglon);
 
-                    g.renderOutline(5, oY + 2, 18, 18, 0xFFAAAAAA);
+                    g.fill(5, oY + 2, 23, oY + 20, p.colorFondoIcono);
+                    g.renderOutline(5, oY + 2, 18, 18, p.colorBordeIcono);
                     if (obj.itemReal != null) g.renderFakeItem(new net.minecraft.world.item.ItemStack(obj.itemReal), 6, oY + 3);
 
                     int boxSize = 11;
                     int boxX = p.ancho - 10 - 18;
                     int boxY = oY + 5;
 
-                    g.renderOutline(boxX - 1, boxY - 1, boxSize + 2, boxSize + 2, 0xFF000000);
+                    g.renderOutline(boxX - 1, boxY - 1, boxSize + 2, boxSize + 2, p.colorBordeCheckExterno);
 
-                    g.fill(boxX, boxY, boxX + boxSize, boxY + boxSize, ok ? 0xFF00AA00 : 0x44000000);
-                    g.renderOutline(boxX, boxY, boxSize, boxSize, ok ? 0xFF00FF00 : 0xFFFFFFFF);
+                    g.fill(boxX, boxY, boxX + boxSize, boxY + boxSize, ok ? 0xFF00AA00 : p.colorFondoCheck);
+                    g.renderOutline(boxX, boxY, boxSize, boxSize, ok ? 0xFF00FF00 : p.colorBordeCheckInterno);
 
                     if (ok) g.drawString(font, "✔", boxX + 3, boxY + 3, 0xFF00FF00, false);
+
+                    g.renderOutline(0, oY, p.ancho - 10, 22, p.colorBordeRenglon);
 
                     String txt = cant + "/" + obj.cantidad;
                     int cantWidth = font.width(txt);

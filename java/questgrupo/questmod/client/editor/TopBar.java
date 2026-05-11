@@ -28,6 +28,11 @@ public class TopBar {
     public static final int BTN_MOVE_ICON_LEFT = 50, BTN_MOVE_ICON_RIGHT = 51;
     public static final int BTN_MOVE_ICON_UP = 52, BTN_MOVE_ICON_DOWN = 53;
 
+    // Nuevos botones para objetivos
+    public static final int BTN_OBJ_ROW_FILL = 60, BTN_OBJ_ROW_BORDER = 61;
+    public static final int BTN_OBJ_ICON_FILL = 62, BTN_OBJ_ICON_BORDER = 63;
+    public static final int BTN_OBJ_CHECK_FILL = 64, BTN_OBJ_CHECK_BORDER_IN = 65, BTN_OBJ_CHECK_BORDER_OUT = 66;
+
     // --- ESTADO DEL SELECTOR DE COLOR MODAL ---
     public static boolean colorPickerVisible = false;
     private static int originalColorPacked = 0xFFFFFFFF; // Copia de seguridad si cancela
@@ -101,6 +106,13 @@ public class TopBar {
                 case BTN_MISSION_BORDER_COLOR: return pSel.colorBordeMision;
                 case BTN_HEADER_FILL_COLOR: return pSel.colorFondoCabecera;
                 case BTN_HEADER_BORDER_COLOR: return pSel.colorBordeCabecera;
+                case BTN_OBJ_ROW_FILL: return pSel.colorFondoRenglon;
+                case BTN_OBJ_ROW_BORDER: return pSel.colorBordeRenglon;
+                case BTN_OBJ_ICON_FILL: return pSel.colorFondoIcono;
+                case BTN_OBJ_ICON_BORDER: return pSel.colorBordeIcono;
+                case BTN_OBJ_CHECK_FILL: return pSel.colorFondoCheck;
+                case BTN_OBJ_CHECK_BORDER_IN: return pSel.colorBordeCheckInterno;
+                case BTN_OBJ_CHECK_BORDER_OUT: return pSel.colorBordeCheckExterno;
             }
         } else if (tSel != null) {
             if (id == BTN_TEXT_COLOR) return tSel.colorARGB;
@@ -159,6 +171,13 @@ public class TopBar {
                 case BTN_MISSION_BORDER_COLOR: panelEnEdicion.colorBordeMision = finalColor; break;
                 case BTN_HEADER_FILL_COLOR: panelEnEdicion.colorFondoCabecera = finalColor; break;
                 case BTN_HEADER_BORDER_COLOR: panelEnEdicion.colorBordeCabecera = finalColor; break;
+                case BTN_OBJ_ROW_FILL: panelEnEdicion.colorFondoRenglon = finalColor; break;
+                case BTN_OBJ_ROW_BORDER: panelEnEdicion.colorBordeRenglon = finalColor; break;
+                case BTN_OBJ_ICON_FILL: panelEnEdicion.colorFondoIcono = finalColor; break;
+                case BTN_OBJ_ICON_BORDER: panelEnEdicion.colorBordeIcono = finalColor; break;
+                case BTN_OBJ_CHECK_FILL: panelEnEdicion.colorFondoCheck = finalColor; break;
+                case BTN_OBJ_CHECK_BORDER_IN: panelEnEdicion.colorBordeCheckInterno = finalColor; break;
+                case BTN_OBJ_CHECK_BORDER_OUT: panelEnEdicion.colorBordeCheckExterno = finalColor; break;
             }
         } else if (textoEnEdicion != null && currentEditingID == BTN_TEXT_COLOR) {
             textoEnEdicion.colorARGB = finalColor;
@@ -299,7 +318,9 @@ public class TopBar {
             w += 4;
             return w;
         } else if (drawTools && pSel != null) {
-            if (pSel.tipo.startsWith("DESPLEGABLE")) {
+            if (pSel.tipo.equals("MISION_OBJETIVOS") || pSel.tipo.equals("DETALLE_MISION")) {
+                return 6 + 16 + 80 + 6; // Swatches para objetivos
+            } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
                 int w = 6 + 80; 
                 if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
                     w += 46 * 3; 
@@ -375,7 +396,23 @@ public class TopBar {
         if (pSel == null) return;
         Font font = Minecraft.getInstance().font;
 
-        if (pSel.tipo.startsWith("DESPLEGABLE")) {
+        if (pSel.tipo.equals("MISION_OBJETIVOS") || pSel.tipo.equals("DETALLE_MISION")) {
+            int colorsX = barStartX + 6;
+            drawSectionTitle(g, font, "OBJETIVOS", colorsX, y + 2, 100);
+            int row1Y = y + 12;
+            int row2Y = y + 32;
+
+            drawColorSwatch(g, pSel.colorARGB, colorsX, row1Y);
+            drawColorSwatch(g, pSel.colorBorde, colorsX + 20, row1Y);
+            drawColorSwatch(g, pSel.colorFondoRenglon, colorsX + 40, row1Y);
+            drawColorSwatch(g, pSel.colorBordeRenglon, colorsX + 60, row1Y);
+            drawColorSwatch(g, pSel.colorFondoIcono, colorsX + 80, row1Y);
+
+            drawColorSwatch(g, pSel.colorBordeIcono, colorsX, row2Y);
+            drawColorSwatch(g, pSel.colorFondoCheck, colorsX + 20, row2Y);
+            drawColorSwatch(g, pSel.colorBordeCheckInterno, colorsX + 40, row2Y);
+            drawColorSwatch(g, pSel.colorBordeCheckExterno, colorsX + 60, row2Y);
+        } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
             int colorsX = barStartX + 6;
             drawSectionTitle(g, font, "COLORES", colorsX, y + 2, 76);
 
@@ -438,7 +475,25 @@ public class TopBar {
         barWidth = barW;
         int barStartX = barX + (guiWidth - barX - barW) / 2;
 
-        if (pSel.tipo.startsWith("DESPLEGABLE")) {
+        if (pSel.tipo.equals("MISION_OBJETIVOS") || pSel.tipo.equals("DETALLE_MISION")) {
+            int colorsX = barStartX + 6;
+            int row1Y = y + 12;
+            int row2Y = y + 32;
+
+            if (my >= row1Y && my <= row1Y + 16) {
+                if (mx >= colorsX && mx <= colorsX + 16) return BTN_FILL_COLOR;
+                if (mx >= colorsX + 20 && mx <= colorsX + 36) return BTN_BORDER_COLOR;
+                if (mx >= colorsX + 40 && mx <= colorsX + 56) return BTN_OBJ_ROW_FILL;
+                if (mx >= colorsX + 60 && mx <= colorsX + 76) return BTN_OBJ_ROW_BORDER;
+                if (mx >= colorsX + 80 && mx <= colorsX + 96) return BTN_OBJ_ICON_FILL;
+            }
+            if (my >= row2Y && my <= row2Y + 16) {
+                if (mx >= colorsX && mx <= colorsX + 16) return BTN_OBJ_ICON_BORDER;
+                if (mx >= colorsX + 20 && mx <= colorsX + 36) return BTN_OBJ_CHECK_FILL;
+                if (mx >= colorsX + 40 && mx <= colorsX + 56) return BTN_OBJ_CHECK_BORDER_IN;
+                if (mx >= colorsX + 60 && mx <= colorsX + 76) return BTN_OBJ_CHECK_BORDER_OUT;
+            }
+        } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
             int colorsX = barStartX + 6;
             int row1Y = y + 12;
             int row2Y = y + 32; 
