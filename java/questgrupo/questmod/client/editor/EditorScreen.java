@@ -466,6 +466,7 @@ public class EditorScreen extends Screen {
 
         g.pose().popPose();
 
+        TopBar.setCurrentPanel(pSel);
         TopBar.render(g, this.width, 5, tSel, pSel);
 
         // Color popup: styled Minecraft window with title, EditBox, and buttons

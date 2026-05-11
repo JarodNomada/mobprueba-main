@@ -59,9 +59,15 @@ public class TopBar {
     public static void setVisible(boolean v) { visible = v; }
     public static boolean isVisible() { return visible; }
 
+    private static GlobalGuiSettings.PanelConfig currentPanel = null;
+    public static void setCurrentPanel(GlobalGuiSettings.PanelConfig p) { currentPanel = p; }
+
     public static int getHeight() {
         if (!visible) return 0;
-        return 48; 
+        if (currentPanel != null && (currentPanel.tipo.equals("MISION_OBJETIVOS") || currentPanel.tipo.equals("DETALLE_MISION"))) {
+            return 34;
+        }
+        return 48;
     }
 
     public static int getWidth() { return barWidth; }
@@ -319,7 +325,7 @@ public class TopBar {
             return w;
         } else if (drawTools && pSel != null) {
             if (pSel.tipo.equals("MISION_OBJETIVOS") || pSel.tipo.equals("DETALLE_MISION")) {
-                return 6 + 16 + 80 + 6; // Swatches para objetivos
+                return 244; // F(46) + sep(4) + R(46) + sep(4) + I(46) + sep(4) + C(90) + padding(4)
             } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
                 int w = 6 + 80; 
                 if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
@@ -397,21 +403,48 @@ public class TopBar {
         Font font = Minecraft.getInstance().font;
 
         if (pSel.tipo.equals("MISION_OBJETIVOS") || pSel.tipo.equals("DETALLE_MISION")) {
-            int colorsX = barStartX + 6;
-            drawSectionTitle(g, font, "OBJETIVOS", colorsX, y + 2, 100);
-            int row1Y = y + 12;
-            int row2Y = y + 32;
+            int rowY = y + 14;
+            int curX = barStartX + 6;
+            int sectionWidth = 46;
+            int sectionCWidth = 90;
+            int swatchOffset = (sectionWidth - 36) / 2;
+            int cSwatchOffset = (sectionCWidth - 54) / 2;
 
-            drawColorSwatch(g, pSel.colorARGB, colorsX, row1Y);
-            drawColorSwatch(g, pSel.colorBorde, colorsX + 20, row1Y);
-            drawColorSwatch(g, pSel.colorFondoRenglon, colorsX + 40, row1Y);
-            drawColorSwatch(g, pSel.colorBordeRenglon, colorsX + 60, row1Y);
-            drawColorSwatch(g, pSel.colorFondoIcono, colorsX + 80, row1Y);
+            // Sección F: Fondo y Borde del panel
+            drawSectionTitle(g, font, "F", curX, y + 2, sectionWidth);
+            drawColorSwatch(g, pSel.colorARGB, curX + swatchOffset, rowY);
+            drawColorSwatch(g, pSel.colorBorde, curX + swatchOffset + 20, rowY);
+            curX += sectionWidth + 4;
 
-            drawColorSwatch(g, pSel.colorBordeIcono, colorsX, row2Y);
-            drawColorSwatch(g, pSel.colorFondoCheck, colorsX + 20, row2Y);
-            drawColorSwatch(g, pSel.colorBordeCheckInterno, colorsX + 40, row2Y);
-            drawColorSwatch(g, pSel.colorBordeCheckExterno, colorsX + 60, row2Y);
+            // Separador vertical
+            drawVerticalSeparator(g, curX, y + 4, 26);
+            curX += 4;
+
+            // Sección R: Fondo y Borde del renglón
+            drawSectionTitle(g, font, "R", curX, y + 2, sectionWidth);
+            drawColorSwatch(g, pSel.colorFondoRenglon, curX + swatchOffset, rowY);
+            drawColorSwatch(g, pSel.colorBordeRenglon, curX + swatchOffset + 20, rowY);
+            curX += sectionWidth + 4;
+
+            // Separador vertical
+            drawVerticalSeparator(g, curX, y + 4, 26);
+            curX += 4;
+
+            // Sección I: Fondo y Borde del icono
+            drawSectionTitle(g, font, "I", curX, y + 2, sectionWidth);
+            drawColorSwatch(g, pSel.colorFondoIcono, curX + swatchOffset, rowY);
+            drawColorSwatch(g, pSel.colorBordeIcono, curX + swatchOffset + 20, rowY);
+            curX += sectionWidth + 4;
+
+            // Separador vertical
+            drawVerticalSeparator(g, curX, y + 4, 26);
+            curX += 4;
+
+            // Sección C: Check (Fondo, Borde interno, Borde externo)
+            drawSectionTitle(g, font, "C", curX, y + 2, 90);
+            drawColorSwatch(g, pSel.colorFondoCheck, curX + cSwatchOffset, rowY);
+            drawColorSwatch(g, pSel.colorBordeCheckInterno, curX + cSwatchOffset + 20, rowY);
+            drawColorSwatch(g, pSel.colorBordeCheckExterno, curX + cSwatchOffset + 40, rowY);
         } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
             int colorsX = barStartX + 6;
             drawSectionTitle(g, font, "COLORES", colorsX, y + 2, 76);
@@ -469,30 +502,40 @@ public class TopBar {
     }
 
     public static int getDrawingButtonAt(int mx, int my, int guiWidth, int y, GlobalGuiSettings.PanelConfig pSel) {
-        if (!drawingToolsVisible || pSel == null || my < y || my > y + getHeight()) return -1;
+        if (!drawingToolsVisible || pSel == null || my < y + 14 || my > y + 32) return -1;
         int barX = LeftSidebar.getSidebarWidth();
-        int barW = calculateBarWidth(false, true, null, pSel);
-        barWidth = barW;
-        int barStartX = barX + (guiWidth - barX - barW) / 2;
+        int barStartX = barX + (guiWidth - barX - barWidth) / 2;
 
         if (pSel.tipo.equals("MISION_OBJETIVOS") || pSel.tipo.equals("DETALLE_MISION")) {
-            int colorsX = barStartX + 6;
-            int row1Y = y + 12;
-            int row2Y = y + 32;
+            int rowY = y + 14;
+            int curX = barStartX + 6;
+            int sectionWidth = 46;
+            int sectionCWidth = 90;
+            int swatchOffset = (sectionWidth - 36) / 2;
+            int cSwatchOffset = (sectionCWidth - 54) / 2;
 
-            if (my >= row1Y && my <= row1Y + 16) {
-                if (mx >= colorsX && mx <= colorsX + 16) return BTN_FILL_COLOR;
-                if (mx >= colorsX + 20 && mx <= colorsX + 36) return BTN_BORDER_COLOR;
-                if (mx >= colorsX + 40 && mx <= colorsX + 56) return BTN_OBJ_ROW_FILL;
-                if (mx >= colorsX + 60 && mx <= colorsX + 76) return BTN_OBJ_ROW_BORDER;
-                if (mx >= colorsX + 80 && mx <= colorsX + 96) return BTN_OBJ_ICON_FILL;
-            }
-            if (my >= row2Y && my <= row2Y + 16) {
-                if (mx >= colorsX && mx <= colorsX + 16) return BTN_OBJ_ICON_BORDER;
-                if (mx >= colorsX + 20 && mx <= colorsX + 36) return BTN_OBJ_CHECK_FILL;
-                if (mx >= colorsX + 40 && mx <= colorsX + 56) return BTN_OBJ_CHECK_BORDER_IN;
-                if (mx >= colorsX + 60 && mx <= colorsX + 76) return BTN_OBJ_CHECK_BORDER_OUT;
-            }
+            // Sección F
+            if (mx >= curX + swatchOffset && mx <= curX + swatchOffset + 16) return BTN_FILL_COLOR;
+            if (mx >= curX + swatchOffset + 20 && mx <= curX + swatchOffset + 36) return BTN_BORDER_COLOR;
+            curX += sectionWidth + 4;
+            curX += 4;
+
+            // Sección R
+            if (mx >= curX + swatchOffset && mx <= curX + swatchOffset + 16) return BTN_OBJ_ROW_FILL;
+            if (mx >= curX + swatchOffset + 20 && mx <= curX + swatchOffset + 36) return BTN_OBJ_ROW_BORDER;
+            curX += sectionWidth + 4;
+            curX += 4;
+
+            // Sección I
+            if (mx >= curX + swatchOffset && mx <= curX + swatchOffset + 16) return BTN_OBJ_ICON_FILL;
+            if (mx >= curX + swatchOffset + 20 && mx <= curX + swatchOffset + 36) return BTN_OBJ_ICON_BORDER;
+            curX += sectionWidth + 4;
+            curX += 4;
+
+            // Sección C
+            if (mx >= curX + cSwatchOffset && mx <= curX + cSwatchOffset + 16) return BTN_OBJ_CHECK_FILL;
+            if (mx >= curX + cSwatchOffset + 20 && mx <= curX + cSwatchOffset + 36) return BTN_OBJ_CHECK_BORDER_IN;
+            if (mx >= curX + cSwatchOffset + 40 && mx <= curX + cSwatchOffset + 56) return BTN_OBJ_CHECK_BORDER_OUT;
         } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
             int colorsX = barStartX + 6;
             int row1Y = y + 12;
