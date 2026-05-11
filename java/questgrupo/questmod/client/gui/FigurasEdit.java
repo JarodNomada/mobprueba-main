@@ -555,7 +555,7 @@ int currentY = bodyY + 5;
         }
 
         if (seleccionado) {
-            g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFFFFFF00);
+            g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF55FFFF);
             if (p.tipo.equals("CUADRADO") || p.tipo.equals("RECTANGULO") || p.tipo.startsWith("DESPLEGABLE")) {
                 g.fill(p.x + p.ancho - 5, p.y + p.alto - 5, p.x + p.ancho, p.y + p.alto, 0xFFFFFFFF);
             }
