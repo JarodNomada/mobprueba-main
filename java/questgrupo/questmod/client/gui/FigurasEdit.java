@@ -25,25 +25,38 @@ public class FigurasEdit {
     public static void crearCuadrado(int x, int y) {
         GlobalGuiSettings.PanelConfig p = new GlobalGuiSettings.PanelConfig(x, y, 50, 50);
         p.tipo = "CUADRADO";
+        p.pagina = GlobalGuiSettings.paginaActual;
         GlobalGuiSettings.PANELES.add(p);
     }
 
     public static void crearRectangulo(int x, int y) {
         GlobalGuiSettings.PanelConfig p = new GlobalGuiSettings.PanelConfig(x, y, 80, 40);
         p.tipo = "RECTANGULO";
+        p.pagina = GlobalGuiSettings.paginaActual;
         GlobalGuiSettings.PANELES.add(p);
     }
 
     public static void crearTriangulo(int x, int y) {
         GlobalGuiSettings.PanelConfig p = new GlobalGuiSettings.PanelConfig(x - 25, y - 20, 50, 40);
         p.tipo = "TRIANGULO";
-        p.grosor = 1; // For pixelated style
+        p.grosor = 1;
+        p.pagina = GlobalGuiSettings.paginaActual;
         GlobalGuiSettings.PANELES.add(p);
     }
 
     public static void crearCirculo(int x, int y) {
         GlobalGuiSettings.PanelConfig p = new GlobalGuiSettings.PanelConfig(x - 20, y - 20, 40, 40);
         p.tipo = "CIRCULO";
+        p.pagina = GlobalGuiSettings.paginaActual;
+        GlobalGuiSettings.PANELES.add(p);
+    }
+
+    public static void crearBotonPagina(int numPagina) {
+        GlobalGuiSettings.PanelConfig p = new GlobalGuiSettings.PanelConfig(50, 50 + (numPagina * 30), 40, 40);
+        p.tipo = "BOTON_PAGINA";
+        p.textoAsociado = String.valueOf(numPagina);
+        p.colorARGB = 0xFF888888;
+        p.pagina = 0;
         GlobalGuiSettings.PANELES.add(p);
     }
 
@@ -54,6 +67,7 @@ public class FigurasEdit {
         p.iconoRL = icono;
         p.colorARGB = 0xFF444444; // Dark gray background
         p.colorBorde = 0xFFAAAAAA; // Light gray border
+        p.pagina = GlobalGuiSettings.paginaActual;
         GlobalGuiSettings.PANELES.add(p);
     }
 
@@ -69,6 +83,7 @@ public class FigurasEdit {
         p.colorARGB = 0xAA000000;
         p.colorBorde = 0xFFFFFFFF;
         p.iconoRL = net.minecraft.resources.ResourceLocation.parse("minecraft:textures/item/book.png");
+        p.pagina = GlobalGuiSettings.paginaActual;
         GlobalGuiSettings.PANELES.add(p);
     }
 
@@ -78,6 +93,7 @@ public class FigurasEdit {
         p.textoAsociado = "Selecciona una mision";
         p.colorARGB = 0xEE1A1A1A;
         p.colorBorde = 0xFFA6A6A6;
+        p.pagina = GlobalGuiSettings.paginaActual;
         GlobalGuiSettings.PANELES.add(p);
     }
 
@@ -91,6 +107,7 @@ public class FigurasEdit {
         p.tipo = tipo;
         p.colorARGB = 0xAA222222;
         p.colorBorde = 0xFFA6A6A6;
+        p.pagina = GlobalGuiSettings.paginaActual;
         GlobalGuiSettings.PANELES.add(p);
     }
 
@@ -161,7 +178,7 @@ public class FigurasEdit {
             if (p.x2 != 0 || p.y2 != 0) {
                 drawLineThick(g, p.x, p.y, p.x2, p.y2, p.colorARGB, p.grosor);
             }
-        } else if (p.tipo.equals("CUADRADO") || p.tipo.equals("RECTANGULO")) {
+        } else if (p.tipo.equals("CUADRADO") || p.tipo.equals("RECTANGULO") || p.tipo.equals("BOTON_PAGINA")) {
             g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
             int t = 1;
             g.fill(p.x, p.y, p.x + p.ancho, p.y + t, p.colorBorde);
@@ -534,7 +551,12 @@ public class FigurasEdit {
         if (p.textoAsociado != null && (!p.textoAsociado.isEmpty() || escribiendo) && !p.tipo.startsWith("DESPLEGABLE")) {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
 
-            float scaledTextHeight = font.lineHeight * p.escalaTexto;
+            float scale = p.escalaTexto;
+            if (p.tipo.equals("BOTON_PAGINA")) {
+                scale = 1.2f;
+            }
+
+            float scaledTextHeight = font.lineHeight * scale;
             float baseIconSize = 16;
             float scaledIconSize = baseIconSize * p.escalaIcono;
 
@@ -559,7 +581,7 @@ public class FigurasEdit {
 
             g.pose().pushPose();
             g.pose().translate(textX, textY, 0);
-            g.pose().scale(p.escalaTexto, p.escalaTexto, 1.0f);
+            g.pose().scale(scale, scale, 1.0f);
             g.drawString(font, p.textoAsociado, 0, 0, p.colorTexto, false);
             if (escribiendo && (System.currentTimeMillis() % 1000 < 500)) {
                 int textWidth = font.width(p.textoAsociado);

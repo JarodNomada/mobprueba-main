@@ -25,6 +25,7 @@ public class TextoEdit {
 
     public static GlobalGuiSettings.TextConfig crearNuevoTexto(int x, int y) {
         GlobalGuiSettings.TextConfig nuevo = new GlobalGuiSettings.TextConfig("Nuevo Texto", x, y);
+        nuevo.pagina = GlobalGuiSettings.paginaActual;
         GlobalGuiSettings.TEXTOS.add(nuevo);
         return nuevo;
     }

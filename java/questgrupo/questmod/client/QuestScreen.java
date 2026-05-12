@@ -6,6 +6,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import questgrupo.questmod.Config;
+import questgrupo.questmod.client.gui.FigurasEdit;
 import questgrupo.questmod.events.ClickAldeano;
 import questgrupo.questmod.network.Messages;
 import questgrupo.questmod.network.PacketAceptarMision;
@@ -130,6 +131,18 @@ public class QuestScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        for (int i = GlobalGuiSettings.PANELES.size() - 1; i >= 0; i--) {
+            GlobalGuiSettings.PanelConfig p = GlobalGuiSettings.PANELES.get(i);
+            if (p.tipo.equals("BOTON_PAGINA")) {
+                if (FigurasEdit.mouseSobreFigura(mouseX, mouseY, p)) {
+                    try {
+                        GlobalGuiSettings.paginaActual = Integer.parseInt(p.textoAsociado);
+                        return true;
+                    } catch (Exception e) {}
+                }
+            }
+        }
+
         if (button == 0) {
             String textoActual = getTextoActual();
             if (caracteresVisibles < textoActual.length()) {

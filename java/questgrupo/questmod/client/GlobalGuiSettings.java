@@ -10,6 +10,11 @@ public class GlobalGuiSettings {
     public static java.util.Set<String> misionesAceptadasCliente = new java.util.HashSet<>();
     public static String misionSeleccionadaGlobal = "";
 
+    public static PanelConfig panelSeleccionado = null;
+    public static TextConfig textoSeleccionado = null;
+    public static int paginaActual = 1;
+    public static int totalPaginas = 1;
+
     public static class PanelConfig {
         public int x, y, ancho, alto;
         public int x2, y2; // For LINEA: endpoint
@@ -62,6 +67,7 @@ public class GlobalGuiSettings {
         public int colorFondoCheck = 0x44000000;
         public int colorBordeCheckInterno = 0xFFFFFFFF;
         public int colorBordeCheckExterno = 0xFF000000;
+        public int pagina = 1;
 
         public boolean desplegado = true;
         public boolean principalesAbierto = true;
@@ -95,6 +101,7 @@ public class GlobalGuiSettings {
         public int x, y;
         public float escala = 1.0f;
         public int colorARGB = 0xFFFFFFFF;
+        public int pagina = 1;
         public boolean negrita = false, cursiva = false, subrayado = false, tachado = false;
         public boolean sombra = true;
         public boolean mayusculas = false;

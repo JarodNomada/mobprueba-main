@@ -173,6 +173,18 @@ public class EditorScreen extends Screen {
         }
 
         TopBar.initColorPickerWidgets(this.width, 10, this.font, this::addRenderableWidget);
+
+        boolean hasPage1 = false;
+        int maxPage = 1;
+        for (GlobalGuiSettings.PanelConfig p : GlobalGuiSettings.PANELES) {
+            if (p.pagina > maxPage) maxPage = p.pagina;
+            if (p.tipo.equals("BOTON_PAGINA")) {
+                if ("1".equals(p.textoAsociado)) hasPage1 = true;
+                try { int num = Integer.parseInt(p.textoAsociado); if(num > maxPage) maxPage = num; } catch(Exception e){}
+            }
+        }
+        GlobalGuiSettings.totalPaginas = maxPage;
+        if (!hasPage1) FigurasEdit.crearBotonPagina(1);
     }
 
     private void handleDrawingButtonClick(int btnId) {
@@ -458,16 +470,22 @@ public class EditorScreen extends Screen {
         }
 
         for (GlobalGuiSettings.PanelConfig p : GlobalGuiSettings.PANELES) {
-            FigurasEdit.renderizar(g, p, p == pSel, escribiendoTextoPanel && p == pSel);
+            if (p.pagina == GlobalGuiSettings.paginaActual || p.tipo.equals("BOTON_PAGINA")) {
+                FigurasEdit.renderizar(g, p, p == pSel, escribiendoTextoPanel && p == pSel);
+            }
         }
         for (GlobalGuiSettings.TextConfig t : GlobalGuiSettings.TEXTOS) {
-            TextoEdit.renderizar(g, t, this.font, (t == tSel), escribiendoTexto && t == tSel);
+            if (t.pagina == GlobalGuiSettings.paginaActual) {
+                TextoEdit.renderizar(g, t, this.font, (t == tSel), escribiendoTexto && t == tSel);
+            }
         }
 
         g.pose().popPose();
 
         TopBar.setCurrentPanel(pSel);
         TopBar.render(g, this.width, 5, tSel, pSel);
+
+        DownBar.render(g, this.width, this.height);
 
         // Color popup: styled Minecraft window with title, EditBox, and buttons
         if (inputColor.visible) {
@@ -688,6 +706,8 @@ public class EditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mx, double my, int btn) {
+        if (DownBar.handleClick(mx, my, this.width, this.height)) return true;
+
         // --- 1. ESCUDO Y MANEJO DEL MODAL DE COLOR ---
         if (TopBar.colorPickerVisible) {
             // Dejamos que los botones de Aceptar/Cancelar y el Texto funcionen
@@ -1009,6 +1029,7 @@ public class EditorScreen extends Screen {
         if (KeyboardShortcuts.handleKeyPress(key, mod, tSel)) return true;
 
         if (key == InputConstants.KEY_DELETE) {
+            if (pSel != null && pSel.tipo.equals("BOTON_PAGINA")) return true;
             if (tSel != null) { TextoEdit.eliminarTexto(tSel); tSel = null; this.init(); return true; }
             if (pSel != null) { FigurasEdit.eliminarFigura(pSel); pSel = null; this.init(); return true; }
         }

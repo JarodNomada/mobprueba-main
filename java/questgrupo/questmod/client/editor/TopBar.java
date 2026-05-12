@@ -325,7 +325,9 @@ public class TopBar {
             return w;
         } else if (drawTools && pSel != null) {
             if (pSel.tipo.equals("MISION_OBJETIVOS") || pSel.tipo.equals("DETALLE_MISION")) {
-                return 244; // F(46) + sep(4) + R(46) + sep(4) + I(46) + sep(4) + C(90) + padding(4)
+                return 244;
+            } else if (pSel.tipo.equals("BOTON_PAGINA")) {
+                return 50;
             } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
                 int w = 6 + 80; 
                 if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
@@ -402,7 +404,14 @@ public class TopBar {
         if (pSel == null) return;
         Font font = Minecraft.getInstance().font;
 
-        if (pSel.tipo.equals("MISION_OBJETIVOS") || pSel.tipo.equals("DETALLE_MISION")) {
+        if (pSel.tipo.equals("BOTON_PAGINA")) {
+            int rowY = y + 14;
+            int curX = barStartX + 6;
+            drawSectionTitle(g, font, "F", curX, y + 2, 38);
+            drawColorSwatch(g, pSel.colorARGB, curX + 5, rowY);
+            drawColorSwatch(g, pSel.colorBorde, curX + 23, rowY);
+            return;
+        } else if (pSel.tipo.equals("MISION_OBJETIVOS") || pSel.tipo.equals("DETALLE_MISION")) {
             int rowY = y + 14;
             int curX = barStartX + 6;
             int sectionWidth = 46;
@@ -447,7 +456,6 @@ public class TopBar {
             drawColorSwatch(g, pSel.colorBordeCheckExterno, curX + cSwatchOffset + 40, rowY);
         } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
             int colorsX = barStartX + 6;
-            drawSectionTitle(g, font, "COLORES", colorsX, y + 2, 76);
 
             int row1Y = y + 12;
             int row2Y = y + 32;
@@ -513,6 +521,12 @@ public class TopBar {
             int sectionCWidth = 90;
             int swatchOffset = (sectionWidth - 36) / 2;
             int cSwatchOffset = 10;
+
+            if (pSel.tipo.equals("BOTON_PAGINA")) {
+                if (mx >= curX + 5 && mx <= curX + 21) return BTN_FILL_COLOR;
+                if (mx >= curX + 23 && mx <= curX + 39) return BTN_BORDER_COLOR;
+                return -1;
+            }
 
             // Sección F
             if (mx >= curX + swatchOffset && mx <= curX + swatchOffset + 16) return BTN_FILL_COLOR;
