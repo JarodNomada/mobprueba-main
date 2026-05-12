@@ -408,7 +408,7 @@ public class TopBar {
             int sectionWidth = 46;
             int sectionCWidth = 90;
             int swatchOffset = (sectionWidth - 36) / 2;
-            int cSwatchOffset = (sectionCWidth - 54) / 2;
+            int cSwatchOffset = 10;
 
             // Sección F: Fondo y Borde del panel
             drawSectionTitle(g, font, "F", curX, y + 2, sectionWidth);
@@ -512,7 +512,7 @@ public class TopBar {
             int sectionWidth = 46;
             int sectionCWidth = 90;
             int swatchOffset = (sectionWidth - 36) / 2;
-            int cSwatchOffset = (sectionCWidth - 54) / 2;
+            int cSwatchOffset = 10;
 
             // Sección F
             if (mx >= curX + swatchOffset && mx <= curX + swatchOffset + 16) return BTN_FILL_COLOR;
