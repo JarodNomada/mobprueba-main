@@ -51,12 +51,13 @@ public class FigurasEdit {
         GlobalGuiSettings.PANELES.add(p);
     }
 
-    public static void crearBotonPagina(int numPagina) {
+public static void crearBotonPagina(int numPagina) {
         GlobalGuiSettings.PanelConfig p = new GlobalGuiSettings.PanelConfig(50, 50 + (numPagina * 30), 40, 40);
         p.tipo = "BOTON_PAGINA";
         p.textoAsociado = String.valueOf(numPagina);
         p.colorARGB = 0xFF888888;
-        p.pagina = 0;
+        p.pagina = 0; 
+        p.escalaTexto = 1.2f;
         GlobalGuiSettings.PANELES.add(p);
     }
 
@@ -551,12 +552,7 @@ public class FigurasEdit {
         if (p.textoAsociado != null && (!p.textoAsociado.isEmpty() || escribiendo) && !p.tipo.startsWith("DESPLEGABLE")) {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
 
-            float scale = p.escalaTexto;
-            if (p.tipo.equals("BOTON_PAGINA")) {
-                scale = 1.2f;
-            }
-
-            float scaledTextHeight = font.lineHeight * scale;
+            float scaledTextHeight = font.lineHeight * p.escalaTexto;
             float baseIconSize = 16;
             float scaledIconSize = baseIconSize * p.escalaIcono;
 
@@ -581,7 +577,7 @@ public class FigurasEdit {
 
             g.pose().pushPose();
             g.pose().translate(textX, textY, 0);
-            g.pose().scale(scale, scale, 1.0f);
+            g.pose().scale(p.escalaTexto, p.escalaTexto, 1.0f);
             g.drawString(font, p.textoAsociado, 0, 0, p.colorTexto, false);
             if (escribiendo && (System.currentTimeMillis() % 1000 < 500)) {
                 int textWidth = font.width(p.textoAsociado);
