@@ -327,7 +327,7 @@ public class TopBar {
             if (pSel.tipo.equals("MISION_OBJETIVOS") || pSel.tipo.equals("DETALLE_MISION")) {
                 return 244;
             } else if (pSel.tipo.equals("BOTON_PAGINA")) {
-                return 50;
+                return 96;
             } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
                 int w = 6 + 80; 
                 if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
@@ -410,6 +410,11 @@ public class TopBar {
             drawSectionTitle(g, font, "F", curX, y + 2, 38);
             drawColorSwatch(g, pSel.colorARGB, curX + 5, rowY);
             drawColorSwatch(g, pSel.colorBorde, curX + 23, rowY);
+
+            curX += 42;
+            drawVerticalSeparator(g, curX, y + 4, 26);
+            curX += 4;
+            drawSectionTitle(g, font, "T", curX, y + 2, 38);
             return;
         } else if (pSel.tipo.equals("MISION_OBJETIVOS") || pSel.tipo.equals("DETALLE_MISION")) {
             int rowY = y + 14;
@@ -617,12 +622,14 @@ public class TopBar {
             adder.accept(Button.builder(Component.literal("→"), b -> pSel.offsetXTexto += 2.0f).bounds(curX + 20, btnY1, btnSize, btnSize).build());
             adder.accept(Button.builder(Component.literal("-"), b -> pSel.escalaTexto = Math.max(0.1f, pSel.escalaTexto - 0.1f)).bounds(curX, btnY2, btnSize, btnSize).build());
             adder.accept(Button.builder(Component.literal("+"), b -> pSel.escalaTexto = Math.min(10.0f, pSel.escalaTexto + 0.1f)).bounds(curX + 20, btnY2, btnSize, btnSize).build());
-            curX += 46; 
+            curX += 46;
 
-            adder.accept(Button.builder(Component.literal("←"), b -> pSel.offsetXIcono -= 2.0f).bounds(curX, btnY1, btnSize, btnSize).build());
-            adder.accept(Button.builder(Component.literal("→"), b -> pSel.offsetXIcono += 2.0f).bounds(curX + 20, btnY1, btnSize, btnSize).build());
-            adder.accept(Button.builder(Component.literal("-"), b -> pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f)).bounds(curX, btnY2, btnSize, btnSize).build());
-            adder.accept(Button.builder(Component.literal("+"), b -> pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f)).bounds(curX + 20, btnY2, btnSize, btnSize).build());
+            if (!pSel.tipo.equals("BOTON_PAGINA")) {
+                adder.accept(Button.builder(Component.literal("←"), b -> pSel.offsetXIcono -= 2.0f).bounds(curX, btnY1, btnSize, btnSize).build());
+                adder.accept(Button.builder(Component.literal("→"), b -> pSel.offsetXIcono += 2.0f).bounds(curX + 20, btnY1, btnSize, btnSize).build());
+                adder.accept(Button.builder(Component.literal("-"), b -> pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f)).bounds(curX, btnY2, btnSize, btnSize).build());
+                adder.accept(Button.builder(Component.literal("+"), b -> pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f)).bounds(curX + 20, btnY2, btnSize, btnSize).build());
+            }
         }
     }
 }

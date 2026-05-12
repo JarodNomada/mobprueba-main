@@ -485,7 +485,9 @@ public class EditorScreen extends Screen {
         TopBar.setCurrentPanel(pSel);
         TopBar.render(g, this.width, 5, tSel, pSel);
 
-        DownBar.render(g, this.width, this.height);
+        if (GlobalGuiSettings.editorActivo) {
+            DownBar.render(g, this.width, this.height);
+        }
 
         // Color popup: styled Minecraft window with title, EditBox, and buttons
         if (inputColor.visible) {
@@ -773,6 +775,16 @@ public class EditorScreen extends Screen {
         if (!GlobalGuiSettings.editorActivo) {
             for (int i = GlobalGuiSettings.PANELES.size() - 1; i >= 0; i--) {
                 GlobalGuiSettings.PanelConfig p = GlobalGuiSettings.PANELES.get(i);
+
+                if (p.tipo.equals("BOTON_PAGINA")) {
+                    if (FigurasEdit.mouseSobreFigura(mx, my, p)) {
+                        try {
+                            GlobalGuiSettings.paginaActual = Integer.parseInt(p.textoAsociado);
+                            return true;
+                        } catch (Exception e) {}
+                    }
+                }
+
                 if (!p.tipo.startsWith("DESPLEGABLE")) continue;
 
                 boolean isOver = FigurasEdit.mouseSobreFigura(mx, my, p);
