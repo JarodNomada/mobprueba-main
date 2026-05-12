@@ -854,6 +854,7 @@ public class EditorScreen extends Screen {
         // --- CORRECCIÓN 2: SELECCIÓN E INTERACCIÓN UNIFICADA ---
         for (int i = GlobalGuiSettings.PANELES.size() - 1; i >= 0; i--) {
             GlobalGuiSettings.PanelConfig p = GlobalGuiSettings.PANELES.get(i);
+            if (p.pagina != GlobalGuiSettings.paginaActual && !p.tipo.equals("BOTON_PAGINA")) continue;
             boolean isMouseOver = FigurasEdit.mouseSobreFigura(mx, my, p);
             if (p.tipo.startsWith("DESPLEGABLE") && !p.desplegado) {
                 isMouseOver = mx >= p.x && mx <= p.x + p.ancho && my >= p.y && my <= p.y + 20;
@@ -930,6 +931,7 @@ public class EditorScreen extends Screen {
         // Selección de textos (Mantenemos la misma lógica unificada)
         for (int i = GlobalGuiSettings.TEXTOS.size() - 1; i >= 0; i--) {
             GlobalGuiSettings.TextConfig t = GlobalGuiSettings.TEXTOS.get(i);
+            if (t.pagina != GlobalGuiSettings.paginaActual) continue;
             if (TextoEdit.mouseSobreTexto(mx, my, t, Minecraft.getInstance().font)) {
                 if (tSel != t) { tSel = t; pSel = null; this.init(); }
                 if (TextoEdit.esDobleClic(t)) { escribiendoTexto = true; arrastrando = false; }
@@ -1011,6 +1013,7 @@ public class EditorScreen extends Screen {
     public boolean mouseScrolled(double mx, double my, double scrollDelta) {
         for (int i = GlobalGuiSettings.PANELES.size() - 1; i >= 0; i--) {
             GlobalGuiSettings.PanelConfig p = GlobalGuiSettings.PANELES.get(i);
+            if (p.pagina != GlobalGuiSettings.paginaActual && !p.tipo.equals("BOTON_PAGINA")) continue;
             if (p.tipo.startsWith("DESPLEGABLE") && p.desplegado) {
                 int bodyTop = p.tipo.equals("DESPLEGABLE_MAESTRO") ? p.y : p.y + 20;
                 int bodyBottom = p.y + p.alto;
