@@ -140,17 +140,6 @@ public class EditorScreen extends Screen {
         btnCancelarColor.visible = false;
         this.addRenderableWidget(btnCancelarColor);
 
-        // Botón ON/OFF en la esquina superior derecha
-        Button btnEditorOnOff = Button.builder(
-            Component.literal(GlobalGuiSettings.editorActivo ? "OFF" : "ON"),
-            b -> {
-                GlobalGuiSettings.editorActivo = !GlobalGuiSettings.editorActivo;
-                LeftSidebar.sidebarVisible = GlobalGuiSettings.editorActivo;
-                this.init();
-            }
-        ).bounds(this.width - 80, 5, 75, 20).build();
-        this.addRenderableWidget(btnEditorOnOff);
-
         LeftSidebar.sidebarVisible = GlobalGuiSettings.editorActivo;
 
         updateTopBarVisibility();
@@ -1029,6 +1018,21 @@ public class EditorScreen extends Screen {
 
     @Override
     public boolean keyPressed(int key, int sc, int mod) {
+        if (!inputColor.isFocused() && !escribiendoTexto && !escribiendoTextoPanel) {
+            if (key == InputConstants.KEY_O) {
+                GlobalGuiSettings.editorActivo = true;
+                LeftSidebar.sidebarVisible = true;
+                this.init();
+                return true;
+            }
+            if (key == InputConstants.KEY_P) {
+                GlobalGuiSettings.editorActivo = false;
+                LeftSidebar.sidebarVisible = false;
+                this.init();
+                return true;
+            }
+        }
+
         if (inputColor.isFocused()) {
             if (key == InputConstants.KEY_ESCAPE || key == InputConstants.KEY_RETURN || key == InputConstants.KEY_NUMPADENTER) {
                 inputColor.setFocused(false);
