@@ -94,15 +94,6 @@ public class RightBar {
             dibujarHamburguesa(g, listX1 - 11, itemY + (ITEM_H - 7) / 2);
         }
 
-        if (capas.size() > MAX_VISIBLE) {
-            int tx = x1 - 3;
-            int ty = listY0;
-            g.fill(tx, ty, tx + 2, ty + LIST_H, 0xFF3A3A3A);
-            int tH = Math.max(12, LIST_H * MAX_VISIBLE / capas.size());
-            int tY = ty + (maxScroll > 0 ? (LIST_H - tH) * scrollOffset / maxScroll : 0);
-            g.fill(tx, tY, tx + 2, tY + tH, 0xFF909090);
-        }
-
         int botY = listY1;
         g.fill(x0, botY, x1, yBase + PANEL_H, 0xFF3D3D3D);
         renderBotonesInferiores(g, font, x0, x1, botY);
