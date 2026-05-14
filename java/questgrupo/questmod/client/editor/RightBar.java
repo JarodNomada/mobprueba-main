@@ -10,7 +10,7 @@ public class RightBar {
     private static final int MARGIN_TOP   = 4;
     private static final int MARGIN_RIGHT = 2;
 
-    private static final int WIDTH        = 130;
+    private static final int WIDTH        = 135;
     private static final int HEADER_H     = 22;
     private static final int BOTTOM_H     = 30;
     private static final int ITEM_H       = 27;
@@ -73,9 +73,10 @@ public class RightBar {
                        || (capa.texto != null && capa.texto == GlobalGuiSettings.textoSeleccionado);
 
             int bgColor = sel ? 0xFF6E6E6E : 0xFF5A5A5A;
-            g.fill(listX0, itemY, listX1, itemY + ITEM_H, bgColor);
 
-            g.renderOutline(listX0, itemY, listX1 - listX0, ITEM_H + 1, 0xFF000000);
+            g.fill(listX0 + 1, itemY, listX1 - 1, itemY + ITEM_H, bgColor);
+
+            g.fill(listX0, itemY + ITEM_H - 1, listX1, itemY + ITEM_H, 0xFF000000);
 
             dibujarOjo(g, listX0 + 4, itemY + (ITEM_H - 10) / 2, capa.visible);
 
