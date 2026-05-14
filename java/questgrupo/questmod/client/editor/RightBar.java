@@ -10,14 +10,14 @@ public class RightBar {
     private static final int MARGIN_TOP   = 4;
     private static final int MARGIN_RIGHT = 2;
 
-    private static final int WIDTH        = 160;
+    private static final int WIDTH        = 175;
     private static final int HEADER_H     = 22;
     private static final int BOTTOM_H     = 30;
     private static final int ITEM_H       = 27;
     private static final int THUMB_SIZE   = 16;
-    private static final int MAX_VISIBLE  = 6;
+    private static final int MAX_VISIBLE  = 5;
     private static final int LIST_H       = ITEM_H * MAX_VISIBLE;
-    private static final int PANEL_H      = HEADER_H + 1 + LIST_H + 1 + BOTTOM_H;
+    private static final int PANEL_H      = HEADER_H + LIST_H + BOTTOM_H;
 
     private static final float TEXT_SCALE = 0.75f;
 
@@ -39,15 +39,10 @@ public class RightBar {
         Font font = Minecraft.getInstance().font;
 
         g.fill(x0, yBase, x1, yBase + PANEL_H, 0xFF5A5A5A);
-        g.fill(x0, yBase, x0 + 1, yBase + PANEL_H, 0xFF2A2A2A);
-        g.fill(x0, yBase + PANEL_H - 1, x1, yBase + PANEL_H, 0xFF2A2A2A);
-        g.fill(x1 - 1, yBase, x1, yBase + PANEL_H, 0xFF2A2A2A);
-        g.fill(x0, yBase, x1, yBase + 1, 0xFF2A2A2A);
 
         int hY0 = yBase;
         int hY1 = yBase + HEADER_H;
         g.fill(x0, hY0, x1, hY1, 0xFF3D3D3D);
-        g.fill(x0, hY1, x1, hY1 + 1, 0xFF2A2A2A);
         g.drawString(font, "CAPAS", x0 + 7, hY0 + (HEADER_H - 8) / 2, 0xFFFFFFFF, false);
 
         int plusX = x1 - 19;
@@ -55,18 +50,21 @@ public class RightBar {
         renderButton(g, plusX, plusY, 16, 18, 0xFF3A3A3A, 0xFF2A2A2A);
         g.drawString(font, "+", plusX + 4, plusY + 5, 0xFFFFFFFF, false);
 
+        int listX0 = x0 + 3;
+        int listX1 = x1 - 3;
+        int listY0 = hY1;
+        int listY1 = listY0 + LIST_H;
+
+        g.fill(listX0, listY0, listX1, listY1, 0xFF4A4A4A);
+        g.renderOutline(listX0, listY0, listX1 - listX0, listY1 - listY0, 0xFF000000);
+
         java.util.List<GlobalGuiSettings.Capa> capas = capasDePageActual();
         int maxScroll = Math.max(0, capas.size() - MAX_VISIBLE);
         scrollOffset  = Math.max(0, Math.min(scrollOffset, maxScroll));
 
-        int listY0 = yBase + HEADER_H + 1;
-
         for (int slot = 0; slot < MAX_VISIBLE; slot++) {
             int idx   = slot + scrollOffset;
             int itemY = listY0 + slot * ITEM_H;
-
-            g.fill(x0 + 1, itemY, x1, itemY + ITEM_H, 0xFF5A5A5A);
-            g.fill(x0 + 1, itemY + ITEM_H - 1, x1, itemY + ITEM_H, 0xFF3A3A3A);
 
             if (idx >= capas.size()) continue;
 
@@ -74,11 +72,14 @@ public class RightBar {
             boolean sel = (capa.panel != null && capa.panel == GlobalGuiSettings.panelSeleccionado)
                        || (capa.texto != null && capa.texto == GlobalGuiSettings.textoSeleccionado);
 
-            if (sel) g.fill(x0 + 1, itemY, x1, itemY + ITEM_H, 0xFF6E6E6E);
+            int bgColor = sel ? 0xFF6E6E6E : 0xFF5A5A5A;
+            g.fill(listX0 + 1, itemY, listX1 - 1, itemY + ITEM_H, bgColor);
 
-            dibujarOjo(g, x0 + 5, itemY + (ITEM_H - 10) / 2, capa.visible);
+            g.renderOutline(listX0, itemY, listX1 - listX0, ITEM_H + 1, 0xFF000000);
 
-            int tx = x0 + 20;
+            dibujarOjo(g, listX0 + 4, itemY + (ITEM_H - 10) / 2, capa.visible);
+
+            int tx = listX0 + 18;
             int ty = itemY + (ITEM_H - THUMB_SIZE) / 2;
             dibujarThumbnail(g, tx, ty);
 
@@ -89,7 +90,7 @@ public class RightBar {
             int textY = itemY + (ITEM_H - (int)(8 * TEXT_SCALE)) / 2;
             dibujarTextoEscalado(g, font, nombre, textX, textY, textColor);
 
-            dibujarHamburguesa(g, x1 - 13, itemY + (ITEM_H - 7) / 2);
+            dibujarHamburguesa(g, listX1 - 11, itemY + (ITEM_H - 7) / 2);
         }
 
         if (capas.size() > MAX_VISIBLE) {
@@ -101,10 +102,12 @@ public class RightBar {
             g.fill(tx, tY, tx + 2, tY + tH, 0xFF909090);
         }
 
-        int botY = yBase + PANEL_H - BOTTOM_H;
+        int botY = listY1;
         g.fill(x0, botY, x1, yBase + PANEL_H, 0xFF3D3D3D);
-        g.fill(x0, botY, x1, botY + 1, 0xFF2A2A2A);
         renderBotonesInferiores(g, font, x0, x1, botY);
+
+        g.renderOutline(x0, yBase, x1 - x0, PANEL_H, 0xFFCCCCCC);
+        g.renderOutline(x0 - 1, yBase - 1, (x1 - x0) + 2, PANEL_H + 2, 0xFF000000);
     }
 
     private static void dibujarTextoEscalado(GuiGraphics g, Font font, String text, int x, int y, int color) {
