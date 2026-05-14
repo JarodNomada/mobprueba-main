@@ -156,16 +156,17 @@ public class GlobalGuiSettings {
 
     public static void sincronizarCapas() {
         CAPAS_UI.clear();
+        int contador = 1;
         for (PanelConfig p : PANELES) {
-            String nombre = p.tipo.toLowerCase();
-            if (p.textoAsociado != null && !p.textoAsociado.isEmpty()) nombre = p.textoAsociado;
+            String nombre = (p.textoAsociado != null && !p.textoAsociado.isEmpty()) ? p.textoAsociado : "CAPA " + contador++;
             Capa c = new Capa(nombre, p);
             c.visible = p.visible;
             c.bloqueado = p.bloqueado;
             CAPAS_UI.add(c);
         }
         for (TextConfig t : TEXTOS) {
-            Capa c = new Capa(t.contenido, t);
+            String nombre = (t.contenido != null && !t.contenido.isEmpty()) ? t.contenido : "TEXTO " + contador++;
+            Capa c = new Capa(nombre, t);
             c.visible = t.visible;
             c.bloqueado = t.bloqueado;
             CAPAS_UI.add(c);

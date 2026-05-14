@@ -43,7 +43,7 @@ public class RightBar {
         int hY0 = yBase;
         int hY1 = yBase + HEADER_H;
         g.fill(x0, hY0, x1, hY1, 0xFF3D3D3D);
-        g.drawString(font, "CAPAS", x0 + 7, hY0 + (HEADER_H - 8) / 2, 0xFFFFFFFF, false);
+        g.drawString(font, "CAPAS " + GlobalGuiSettings.paginaActual, x0 + 7, hY0 + (HEADER_H - 8) / 2, 0xFFFFFFFF, false);
 
         int plusX = x1 - 19;
         int plusY = hY0 + 2;
@@ -190,7 +190,8 @@ public class RightBar {
         java.util.List<GlobalGuiSettings.Capa> lista = new java.util.ArrayList<>();
         for (int i = GlobalGuiSettings.CAPAS_UI.size() - 1; i >= 0; i--) {
             GlobalGuiSettings.Capa c = GlobalGuiSettings.CAPAS_UI.get(i);
-            if (c.pagina == GlobalGuiSettings.paginaActual || c.pagina == 0) lista.add(c);
+            // Solo añadimos si pertenece a la página actual (filtramos la página 0 de la DownBar)
+            if (c.pagina == GlobalGuiSettings.paginaActual) lista.add(c);
         }
         return lista;
     }
