@@ -56,7 +56,6 @@ public class RightBar {
         int listY1 = listY0 + LIST_H;
 
         g.fill(listX0, listY0, listX1, listY1, 0xFF4A4A4A);
-        g.renderOutline(listX0, listY0, listX1 - listX0, listY1 - listY0, 0xFF000000);
 
         java.util.List<GlobalGuiSettings.Capa> capas = capasDePageActual();
         int maxScroll = Math.max(0, capas.size() - MAX_VISIBLE);
@@ -92,9 +91,12 @@ public class RightBar {
             dibujarTextoEscalado(g, font, nombre, textX, textY, textColor);
 
             dibujarHamburguesa(g, listX1 - 11, itemY + (ITEM_H - 7) / 2);
-        }
+         }
 
-        int botY = listY1;
+        // Dibujamos el borde negro del contenedor de la lista DESPUÉS de las capas
+        g.renderOutline(listX0, listY0, listX1 - listX0, listY1 - listY0, 0xFF000000);
+
+         int botY = listY1;
         g.fill(x0, botY, x1, yBase + PANEL_H, 0xFF3D3D3D);
         renderBotonesInferiores(g, font, x0, x1, botY);
 
