@@ -68,6 +68,8 @@ public class GlobalGuiSettings {
         public int colorBordeCheckInterno = 0xFFFFFFFF;
         public int colorBordeCheckExterno = 0xFF000000;
         public int pagina = 1;
+        public boolean visible = true;
+        public boolean bloqueado = false;
 
         public boolean desplegado = true;
         public boolean principalesAbierto = true;
@@ -102,6 +104,8 @@ public class GlobalGuiSettings {
         public float escala = 1.0f;
         public int colorARGB = 0xFFFFFFFF;
         public int pagina = 1;
+        public boolean visible = true;
+        public boolean bloqueado = false;
         public boolean negrita = false, cursiva = false, subrayado = false, tachado = false;
         public boolean sombra = true;
         public boolean mayusculas = false;
@@ -114,6 +118,57 @@ public class GlobalGuiSettings {
             this.contenido = txt;
             this.x = x;
             this.y = y;
+        }
+    }
+
+    // --- NUEVO SISTEMA DE CAPAS ---
+    public static class Capa {
+        public String nombre;
+        public boolean visible = true;
+        public boolean bloqueado = false;
+        public int pagina = 1;
+
+        public PanelConfig panel = null;
+        public TextConfig texto = null;
+        public BrushStroke trazo = null;
+
+        public Capa(String nombre, PanelConfig panel) {
+            this.nombre = nombre;
+            this.panel = panel;
+            if (panel != null) this.pagina = panel.pagina;
+        }
+
+        public Capa(String nombre, TextConfig texto) {
+            this.nombre = nombre;
+            this.texto = texto;
+            if (texto != null) this.pagina = texto.pagina;
+        }
+
+        public Capa(String nombre, BrushStroke trazo) {
+            this.nombre = nombre;
+            this.trazo = trazo;
+            this.pagina = GlobalGuiSettings.paginaActual;
+        }
+    }
+
+    public static final List<Capa> CAPAS_UI = new ArrayList<>();
+    // -------------------------------
+
+    public static void sincronizarCapas() {
+        CAPAS_UI.clear();
+        for (PanelConfig p : PANELES) {
+            String nombre = p.tipo.toLowerCase();
+            if (p.textoAsociado != null && !p.textoAsociado.isEmpty()) nombre = p.textoAsociado;
+            Capa c = new Capa(nombre, p);
+            c.visible = p.visible;
+            c.bloqueado = p.bloqueado;
+            CAPAS_UI.add(c);
+        }
+        for (TextConfig t : TEXTOS) {
+            Capa c = new Capa(t.contenido, t);
+            c.visible = t.visible;
+            c.bloqueado = t.bloqueado;
+            CAPAS_UI.add(c);
         }
     }
 

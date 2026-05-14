@@ -71,6 +71,8 @@ public class EditorScreen extends Screen {
 
     @Override
     protected void init() {
+        GlobalGuiSettings.sincronizarCapas();
+
         // Repoblar las misiones desde las aceptadas cada vez que se abre el editor
         Config.inyectarMisionesEnEditor();
         
@@ -439,13 +441,23 @@ public class EditorScreen extends Screen {
         Viewport.renderBorder(g, sidebarReserved, viewportY, viewportWidth, viewportHeight);
 
         LeftSidebar.render(g, this.width, this.height);
+        RightBar.render(g, this.width, this.height);
 
         g.pose().pushPose();
         // Draw elements at fixed position - sidebarReserved affects only click detection, not rendering
         g.pose().translate(0, viewportY, 0);
 
-        for (GlobalGuiSettings.BrushStroke stroke : GlobalGuiSettings.TRAZOS) {
-            renderBrushStroke(g, stroke);
+        for (GlobalGuiSettings.Capa capa : GlobalGuiSettings.CAPAS_UI) {
+            if (!capa.visible) continue;
+            if (capa.pagina != GlobalGuiSettings.paginaActual && capa.pagina != 0) continue;
+
+            if (capa.trazo != null) {
+                renderBrushStroke(g, capa.trazo);
+            } else if (capa.panel != null) {
+                FigurasEdit.renderizar(g, capa.panel, capa.panel == pSel, escribiendoTextoPanel && capa.panel == pSel);
+            } else if (capa.texto != null) {
+                TextoEdit.renderizar(g, capa.texto, this.font, (capa.texto == tSel), escribiendoTexto && capa.texto == tSel);
+            }
         }
 
         if (drawingBrush && currentStroke != null) {
@@ -456,17 +468,6 @@ public class EditorScreen extends Screen {
             int currentX = (int)mx;
             int currentY = (int)my;
             drawLineThick(g, lineStartX, lineStartY, currentX, currentY, GlobalGuiSettings.colorHerramientas, GlobalGuiSettings.grosorPincel);
-        }
-
-        for (GlobalGuiSettings.PanelConfig p : GlobalGuiSettings.PANELES) {
-            if (p.pagina == GlobalGuiSettings.paginaActual || p.tipo.equals("BOTON_PAGINA")) {
-                FigurasEdit.renderizar(g, p, p == pSel, escribiendoTextoPanel && p == pSel);
-            }
-        }
-        for (GlobalGuiSettings.TextConfig t : GlobalGuiSettings.TEXTOS) {
-            if (t.pagina == GlobalGuiSettings.paginaActual) {
-                TextoEdit.renderizar(g, t, this.font, (t == tSel), escribiendoTexto && t == tSel);
-            }
         }
 
         g.pose().popPose();
@@ -698,6 +699,12 @@ public class EditorScreen extends Screen {
     @Override
     public boolean mouseClicked(double mx, double my, int btn) {
         if (DownBar.handleClick(mx, my, this.width, this.height)) return true;
+        if (RightBar.handleClick(mx, my, this.width, this.height)) {
+            this.pSel = GlobalGuiSettings.panelSeleccionado;
+            this.tSel = GlobalGuiSettings.textoSeleccionado;
+            this.init();
+            return true;
+        }
 
         // --- 1. ESCUDO Y MANEJO DEL MODAL DE COLOR ---
         if (TopBar.colorPickerVisible) {
@@ -840,92 +847,85 @@ public class EditorScreen extends Screen {
             }
         }
 
-        // --- CORRECCIÓN 2: SELECCIÓN E INTERACCIÓN UNIFICADA ---
-        for (int i = GlobalGuiSettings.PANELES.size() - 1; i >= 0; i--) {
-            GlobalGuiSettings.PanelConfig p = GlobalGuiSettings.PANELES.get(i);
-            if (p.pagina != GlobalGuiSettings.paginaActual && !p.tipo.equals("BOTON_PAGINA")) continue;
-            boolean isMouseOver = FigurasEdit.mouseSobreFigura(mx, my, p);
-            if (p.tipo.startsWith("DESPLEGABLE") && !p.desplegado) {
-                isMouseOver = mx >= p.x && mx <= p.x + p.ancho && my >= p.y && my <= p.y + 20;
-            }
+        // --- NUEVA LÓGICA DE CAPAS PARA CLICS ---
+        for (int i = GlobalGuiSettings.CAPAS_UI.size() - 1; i >= 0; i--) {
+            GlobalGuiSettings.Capa capa = GlobalGuiSettings.CAPAS_UI.get(i);
 
-            if (isMouseOver) {
-                // Seleccionar inmediatamente si no lo estaba
-                if (pSel != p) { pSel = p; tSel = null; this.init(); }
+            if (!capa.visible || capa.bloqueado) continue;
+            if (capa.pagina != GlobalGuiSettings.paginaActual && capa.pagina != 0) continue;
 
-                if (p.tipo.startsWith("DESPLEGABLE")) {
-                    // Flecha principal
-                    if (mx >= p.x + p.ancho - 20 && mx <= p.x + p.ancho && my >= p.y && my <= p.y + 20) {
-                        p.desplegado = !p.desplegado; return true;
-                    }
-
-                    if (p.desplegado && p.tipo.equals("DESPLEGABLE_MAESTRO")) {
-                        int relY = (int)(my - p.y + p.scrollY);
-                        int currentY = 5;
-                        boolean doble = FigurasEdit.esDobleClic(p);
-
-                        // Click/Rename Principales
-                        if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 15) {
-                            if (doble) { FigurasEdit.EditandoMaestroTitle = 1; escribiendoTextoPanel = true; arrastrando = false; }
-                            else p.principalesAbierto = !p.principalesAbierto;
-                            return true;
-                        }
-                        currentY += 20;
-                        if (p.principalesAbierto) {
-                            for (String mName : p.listaPrincipales) {
-                                if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 30) {
-                                    vincularMisionADetalle(mName); return true;
-                                }
-                                currentY += 35;
-                            }
-                        }
-
-                        // Click/Rename Secundarias
-                        if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 15) {
-                            if (doble) { FigurasEdit.EditandoMaestroTitle = 2; escribiendoTextoPanel = true; arrastrando = false; }
-                            else p.secundariasAbierto = !p.secundariasAbierto;
-                            return true;
-                        }
-                        currentY += 20;
-                        if (p.secundariasAbierto) {
-                            for (String mName : p.listaSecundarias) {
-                                if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 30) {
-                                    vincularMisionADetalle(mName); return true;
-                                }
-                                currentY += 35;
-                            }
-                        }
-                    }
-
-                    // Listas individuales en Editor
-                    if (!p.tipo.equals("DESPLEGABLE_MAESTRO") && p.desplegado) {
-                        int rY = (int)(my - (p.y + 20) + p.scrollY);
-                        int curY = 5;
-                        List<String> misiones = p.tipo.equals("DESPLEGABLE_PRINCIPAL") ? p.listaPrincipales : p.listaSecundarias;
-                        for (String mName : misiones) {
-                            if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && rY >= curY && rY <= curY + 30) {
-                                vincularMisionADetalle(mName); return true;
-                            }
-                            curY += 35;
-                        }
-                    }
+            if (capa.panel != null) {
+                GlobalGuiSettings.PanelConfig p = capa.panel;
+                boolean isMouseOver = FigurasEdit.mouseSobreFigura(mx, my, p);
+                if (p.tipo.startsWith("DESPLEGABLE") && !p.desplegado) {
+                    isMouseOver = mx >= p.x && mx <= p.x + p.ancho && my >= p.y && my <= p.y + 20;
                 }
 
-                if (FigurasEdit.sobreEsquinaRedimension(mx, my, p) && (!p.tipo.startsWith("DESPLEGABLE") || p.desplegado)) redimensionando = true;
-                else { arrastrando = true; dragX = mx - p.x; dragY = my - p.y; }
-                return true;
-            }
-        }
+                if (isMouseOver) {
+                    if (pSel != p) { pSel = p; tSel = null; this.init(); }
 
-        // Selección de textos (Mantenemos la misma lógica unificada)
-        for (int i = GlobalGuiSettings.TEXTOS.size() - 1; i >= 0; i--) {
-            GlobalGuiSettings.TextConfig t = GlobalGuiSettings.TEXTOS.get(i);
-            if (t.pagina != GlobalGuiSettings.paginaActual) continue;
-            if (TextoEdit.mouseSobreTexto(mx, my, t, Minecraft.getInstance().font)) {
-                if (tSel != t) { tSel = t; pSel = null; this.init(); }
-                if (TextoEdit.esDobleClic(t)) { escribiendoTexto = true; arrastrando = false; }
-                else { arrastrando = true; dragX = mx - t.x; dragY = my - t.y; escribiendoTexto = false; }
-                return true;
+                    if (p.tipo.startsWith("DESPLEGABLE")) {
+                        if (mx >= p.x + p.ancho - 20 && mx <= p.x + p.ancho && my >= p.y && my <= p.y + 20) {
+                            p.desplegado = !p.desplegado; return true;
+                        }
+                        if (p.desplegado && p.tipo.equals("DESPLEGABLE_MAESTRO")) {
+                            int relY = (int)(my - p.y + p.scrollY);
+                            int currentY = 5;
+                            boolean doble = FigurasEdit.esDobleClic(p);
+                            if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 15) {
+                                if (doble) { FigurasEdit.EditandoMaestroTitle = 1; escribiendoTextoPanel = true; arrastrando = false; }
+                                else p.principalesAbierto = !p.principalesAbierto;
+                                return true;
+                            }
+                            currentY += 20;
+                            if (p.principalesAbierto) {
+                                for (String mName : p.listaPrincipales) {
+                                    if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 30) {
+                                        vincularMisionADetalle(mName); return true;
+                                    }
+                                    currentY += 35;
+                                }
+                            }
+                            if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 15) {
+                                if (doble) { FigurasEdit.EditandoMaestroTitle = 2; escribiendoTextoPanel = true; arrastrando = false; }
+                                else p.secundariasAbierto = !p.secundariasAbierto;
+                                return true;
+                            }
+                            currentY += 20;
+                            if (p.secundariasAbierto) {
+                                for (String mName : p.listaSecundarias) {
+                                    if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 30) {
+                                        vincularMisionADetalle(mName); return true;
+                                    }
+                                    currentY += 35;
+                                }
+                            }
+                        }
+                        if (!p.tipo.equals("DESPLEGABLE_MAESTRO") && p.desplegado) {
+                            int rY = (int)(my - (p.y + 20) + p.scrollY);
+                            int curY = 5;
+                            List<String> misiones = p.tipo.equals("DESPLEGABLE_PRINCIPAL") ? p.listaPrincipales : p.listaSecundarias;
+                            for (String mName : misiones) {
+                                if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && rY >= curY && rY <= curY + 30) {
+                                    vincularMisionADetalle(mName); return true;
+                                }
+                                curY += 35;
+                            }
+                        }
+                    }
+
+                    if (FigurasEdit.sobreEsquinaRedimension(mx, my, p) && (!p.tipo.startsWith("DESPLEGABLE") || p.desplegado)) redimensionando = true;
+                    else { arrastrando = true; dragX = mx - p.x; dragY = my - p.y; }
+                    return true;
+                }
+            } else if (capa.texto != null) {
+                GlobalGuiSettings.TextConfig t = capa.texto;
+                if (TextoEdit.mouseSobreTexto(mx, my, t, Minecraft.getInstance().font)) {
+                    if (tSel != t) { tSel = t; pSel = null; this.init(); }
+                    if (TextoEdit.esDobleClic(t)) { escribiendoTexto = true; arrastrando = false; }
+                    else { arrastrando = true; dragX = mx - t.x; dragY = my - t.y; escribiendoTexto = false; }
+                    return true;
+                }
             }
         }
 
@@ -1000,6 +1000,8 @@ public class EditorScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mx, double my, double scrollDelta) {
+        if (RightBar.handleScroll(mx, my, scrollDelta, this.width, this.height)) return true;
+
         for (int i = GlobalGuiSettings.PANELES.size() - 1; i >= 0; i--) {
             GlobalGuiSettings.PanelConfig p = GlobalGuiSettings.PANELES.get(i);
             if (p.pagina != GlobalGuiSettings.paginaActual && !p.tipo.equals("BOTON_PAGINA")) continue;
