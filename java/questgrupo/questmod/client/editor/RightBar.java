@@ -10,7 +10,7 @@ public class RightBar {
     private static final int MARGIN_TOP   = 4;
     private static final int MARGIN_RIGHT = 2;
 
-    private static final int WIDTH        = 175;
+    private static final int WIDTH        = 130;
     private static final int HEADER_H     = 22;
     private static final int BOTTOM_H     = 30;
     private static final int ITEM_H       = 27;
@@ -73,7 +73,7 @@ public class RightBar {
                        || (capa.texto != null && capa.texto == GlobalGuiSettings.textoSeleccionado);
 
             int bgColor = sel ? 0xFF6E6E6E : 0xFF5A5A5A;
-            g.fill(listX0 + 1, itemY, listX1 - 1, itemY + ITEM_H, bgColor);
+            g.fill(listX0, itemY, listX1, itemY + ITEM_H, bgColor);
 
             g.renderOutline(listX0, itemY, listX1 - listX0, ITEM_H + 1, 0xFF000000);
 
@@ -84,7 +84,7 @@ public class RightBar {
             dibujarThumbnail(g, tx, ty);
 
             String nombre = (capa.nombre != null) ? capa.nombre : "Capa";
-            if (nombre.length() > 13) nombre = nombre.substring(0, 11) + "..";
+            if (nombre.length() > 10) nombre = nombre.substring(0, 8) + "..";
             int textColor = capa.visible ? 0xFFDDDDDD : 0xFF888888;
             int textX = tx + THUMB_SIZE + 5;
             int textY = itemY + (ITEM_H - (int)(8 * TEXT_SCALE)) / 2;
