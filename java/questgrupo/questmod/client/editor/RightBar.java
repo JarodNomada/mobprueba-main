@@ -111,10 +111,17 @@ public class RightBar {
             int ty = itemY + (ITEM_H - THUMB_SIZE) / 2;
             dibujarThumbnail(g, tx, ty);
 
-            // 4. Ajustamos la posición del Nombre
+            // 4. Ajustamos la posición del Nombre (Con soporte visual para renombrado)
             String nombre = (capa.nombre != null) ? capa.nombre : "Capa";
-            if (nombre.length() > 9) nombre = nombre.substring(0, 7) + ".."; 
             int textColor = capa.visible ? 0xFFDDDDDD : 0xFF888888;
+
+            if (capa == capaEditandoNombre) {
+                textColor = 0xFFFFCC00; // Color amarillo para indicar que estás editando
+                nombre = nombre + "_";  // Cursor dinámico de escritura
+            } else {
+                if (nombre.length() > 9) nombre = nombre.substring(0, 7) + ".."; 
+            }
+
             int textX = tx + THUMB_SIZE + 5;
             int textY = itemY + (ITEM_H - (int)(8 * TEXT_SCALE)) / 2;
             dibujarTextoEscalado(g, font, nombre, textX, textY, textColor);
@@ -219,7 +226,8 @@ public class RightBar {
                     return true;
                 }
                 if (mx >= x1 - 16) {
-                    return true; // Clic en hamburguesa
+                    capaEditandoNombre = null; // Limpiar si clicamos la hamburguesa
+                    return true; 
                 }
                 
                 // --- DOBLE CLIC PARA RENAME ---
@@ -231,6 +239,10 @@ public class RightBar {
                         return true;
                     }
                 }
+                
+                // Si fue un clic simple, cancelamos el modo de renombrar capa
+                capaEditandoNombre = null;
+                
                 lastClickTime = now;
                 lastClickedCapa = capa;
                 // --- FIN DOBLE CLIC ---

@@ -714,6 +714,9 @@ public class EditorScreen extends Screen {
             return true;
         }
 
+        // ¡ESTO ES CLAVE!: Si el clic ocurre en el lienzo (fuera de la RightBar), liberamos el teclado
+        RightBar.capaEditandoNombre = null;
+
         // --- 1. ESCUDO Y MANEJO DEL MODAL DE COLOR ---
         if (TopBar.colorPickerVisible) {
             // Dejamos que los botones de Aceptar/Cancelar y el Texto funcionen
@@ -1043,15 +1046,103 @@ public class EditorScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int key, int sc, int mod) {
+    public boolean charTyped(char codePoint, int modifiers) {
+        // 1. PRIORIDAD: Escribir el nombre de una capa en la RightBar
+        if (questgrupo.questmod.client.editor.RightBar.capaEditandoNombre != null) {
+            questgrupo.questmod.client.editor.RightBar.capaEditandoNombre.nombre += codePoint;
+            return true;
+        }
+
+        // 2. SEGUNDA PRIORIDAD: Escribir en un objeto de TEXTO haciendo doble clic en el lienzo
+        // ¡CORRECCIÓN!: Volvemos a usar 'this.tSel' para que funcione perfectamente tu doble clic
+        if (escribiendoTexto && this.tSel != null) {
+            if (this.tSel.contenido.equals("Texto")) {
+                this.tSel.contenido = "";
+            }
+            this.tSel.contenido += codePoint;
+            questgrupo.questmod.client.GlobalGuiSettings.sincronizarCapas();
+            // Sincronizamos la capa global automáticamente
+            questgrupo.questmod.client.GlobalGuiSettings.textoSeleccionado = this.tSel; 
+            return true;
+        }
+
+        // 3. TERCERA PRIORIDAD: Escribir el texto asociado a un PANEL
+        if (escribiendoTextoPanel && this.pSel != null) {
+            if (this.pSel.textoAsociado == null) {
+                this.pSel.textoAsociado = "";
+            }
+            this.pSel.textoAsociado += codePoint;
+            questgrupo.questmod.client.GlobalGuiSettings.sincronizarCapas();
+            questgrupo.questmod.client.GlobalGuiSettings.panelSeleccionado = this.pSel;
+            return true;
+        }
+
+        return super.charTyped(codePoint, modifiers);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        // 1. PRIORIDAD: Borrar o Guardar nombre de capa en la RightBar
+        if (questgrupo.questmod.client.editor.RightBar.capaEditandoNombre != null) {
+            if (keyCode == 259) { // Tecla Backspace (Borrar)
+                String n = questgrupo.questmod.client.editor.RightBar.capaEditandoNombre.nombre;
+                if (!n.isEmpty()) {
+                    questgrupo.questmod.client.editor.RightBar.capaEditandoNombre.nombre = n.substring(0, n.length() - 1);
+                }
+                return true;
+            }
+            if (keyCode == 257 || keyCode == 256) { // Tecla Enter o Escape (Guardar)
+                questgrupo.questmod.client.editor.RightBar.capaEditandoNombre = null;
+                return true;
+            }
+            return true; // Bloquea otros atajos mientras renombras
+        }
+
+        // 2. SEGUNDA PRIORIDAD: Borrar o Guardar texto en el lienzo
+        if (escribiendoTexto && this.tSel != null) {
+            if (keyCode == 259) { // Tecla Backspace (Borrar)
+                String cont = this.tSel.contenido;
+                if (!cont.isEmpty()) {
+                    this.tSel.contenido = cont.substring(0, cont.length() - 1);
+                    questgrupo.questmod.client.GlobalGuiSettings.sincronizarCapas();
+                }
+                return true;
+            }
+            if (keyCode == 257 || keyCode == 256) { // Tecla Enter o Escape (Guardar)
+                escribiendoTexto = false;
+                return true;
+            }
+            return true;
+        }
+
+        // 3. TERCERA PRIORIDAD: Borrar o Guardar texto asociado a un PANEL
+        if (escribiendoTextoPanel && this.pSel != null) {
+            if (keyCode == 259) { // Tecla Backspace (Borrar)
+                String cont = this.pSel.textoAsociado;
+                if (cont != null && !cont.isEmpty()) {
+                    this.pSel.textoAsociado = cont.substring(0, cont.length() - 1);
+                    questgrupo.questmod.client.GlobalGuiSettings.sincronizarCapas();
+                }
+                return true;
+            }
+            if (keyCode == 257 || keyCode == 256) { // Tecla Enter o Escape (Guardar)
+                escribiendoTextoPanel = false;
+                return true;
+            }
+            return true;
+        }
+
+        // ── ABAJO DE ESTA LÍNEA DEBEN SEGUIR TUS ATAJOS EXISTENTES DEL EDITOR ──
+        
+        // Atajos del editor (O = Editor ON, P = Editor OFF)
         if (!inputColor.isFocused() && !escribiendoTexto && !escribiendoTextoPanel) {
-            if (key == InputConstants.KEY_O) {
+            if (keyCode == InputConstants.KEY_O) {
                 GlobalGuiSettings.editorActivo = true;
                 LeftSidebar.sidebarVisible = true;
                 this.init();
                 return true;
             }
-            if (key == InputConstants.KEY_P) {
+            if (keyCode == InputConstants.KEY_P) {
                 GlobalGuiSettings.editorActivo = false;
                 LeftSidebar.sidebarVisible = false;
                 this.init();
@@ -1059,8 +1150,9 @@ public class EditorScreen extends Screen {
             }
         }
 
+        // Manejo de input de color
         if (inputColor.isFocused()) {
-            if (key == InputConstants.KEY_ESCAPE || key == InputConstants.KEY_RETURN || key == InputConstants.KEY_NUMPADENTER) {
+            if (keyCode == InputConstants.KEY_ESCAPE || keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) {
                 inputColor.setFocused(false);
                 inputColor.visible = false;
                 editandoColorHerramientas = false;
@@ -1068,79 +1160,25 @@ public class EditorScreen extends Screen {
                 btnCancelarColor.visible = false;
                 return true;
             }
-            if (inputColor.keyPressed(key, sc, mod)) return true;
+            if (inputColor.keyPressed(keyCode, scanCode, modifiers)) return true;
         }
 
-        if (KeyboardShortcuts.handleKeyPress(key, mod, tSel)) return true;
+        // Atajos de teclado personalizados
+        if (KeyboardShortcuts.handleKeyPress(keyCode, modifiers, tSel)) return true;
 
-        if (key == InputConstants.KEY_DELETE) {
+        // Tecla Delete para eliminar objetos
+        if (keyCode == InputConstants.KEY_DELETE) {
             if (pSel != null && pSel.tipo.equals("BOTON_PAGINA")) return true;
             if (tSel != null) { TextoEdit.eliminarTexto(tSel); tSel = null; this.init(); return true; }
             if (pSel != null) { FigurasEdit.eliminarFigura(pSel); pSel = null; this.init(); return true; }
         }
-
-        if (escribiendoTextoPanel && pSel != null && pSel.tipo.startsWith("DESPLEGABLE")) {
-            if (key == InputConstants.KEY_BACKSPACE) {
-                if (FigurasEdit.EditandoMaestroTitle == 1 && pSel.tituloPrincipales != null && pSel.tituloPrincipales.length() > 0) {
-                    pSel.tituloPrincipales = pSel.tituloPrincipales.substring(0, pSel.tituloPrincipales.length() - 1);
-                } else if (FigurasEdit.EditandoMaestroTitle == 2 && pSel.tituloSecundarias != null && pSel.tituloSecundarias.length() > 0) {
-                    pSel.tituloSecundarias = pSel.tituloSecundarias.substring(0, pSel.tituloSecundarias.length() - 1);
-                } else if (FigurasEdit.EditandoMaestroTitle == 0 && pSel.textoAsociado != null && pSel.textoAsociado.length() > 0) {
-                    pSel.textoAsociado = pSel.textoAsociado.substring(0, pSel.textoAsociado.length() - 1);
-                }
-            } else if (key == InputConstants.KEY_RETURN || key == InputConstants.KEY_ESCAPE) {
-                escribiendoTextoPanel = false;
-            }
-            return true;
-        }
-
-        if (escribiendoTexto && tSel != null) {
-            if (key == InputConstants.KEY_BACKSPACE && tSel.contenido.length() > 0) {
-                tSel.contenido = tSel.contenido.substring(0, tSel.contenido.length() - 1);
-            } else if (key == InputConstants.KEY_RETURN || key == InputConstants.KEY_ESCAPE) {
-                escribiendoTexto = false;
-            }
-            return true;
-        }
         
-        // Handle Escape/Enter to finish layer name editing
-        if (RightBar.capaEditandoNombre != null) {
-            if (key == InputConstants.KEY_ESCAPE || key == InputConstants.KEY_RETURN || key == InputConstants.KEY_NUMPADENTER) {
-                RightBar.capaEditandoNombre = null;
-                return true;
-            }
-        }
-        return super.keyPressed(key, sc, mod);
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
-
-    @Override
-    public boolean charTyped(char c, int m) {
-        if (inputColor.isFocused() && inputColor.charTyped(c, m)) return true;
-        // Handle layer name editing
-        if (RightBar.capaEditandoNombre != null) {
-            RightBar.capaEditandoNombre.nombre += c;
-            return true;
-        }
-        if (escribiendoTextoPanel && pSel != null && pSel.tipo.startsWith("DESPLEGABLE")) {
-            if (FigurasEdit.EditandoMaestroTitle == 1) {
-                if (pSel.tituloPrincipales == null) pSel.tituloPrincipales = "";
-                pSel.tituloPrincipales += c;
-            } else if (FigurasEdit.EditandoMaestroTitle == 2) {
-                if (pSel.tituloSecundarias == null) pSel.tituloSecundarias = "";
-                pSel.tituloSecundarias += c;
-            } else {
-                if (pSel.textoAsociado == null) pSel.textoAsociado = "";
-                pSel.textoAsociado += c;
-            }
-            return true;
-        }
-        if (escribiendoTexto && tSel != null) { tSel.contenido += c; return true; }
-        return super.charTyped(c, m);
-    }
-
-    @Override public boolean isPauseScreen() { return false; }
 
     private void vincularMisionADetalle(String nombreMision) {
         GlobalGuiSettings.misionSeleccionadaGlobal = nombreMision;
     }
+
+    @Override public boolean isPauseScreen() { return false; }
 }
