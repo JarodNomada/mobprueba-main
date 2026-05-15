@@ -77,14 +77,23 @@ public class RightBar {
 
             g.fill(listX0, itemY + ITEM_H - 1, listX1, itemY + ITEM_H, 0xFF000000);
 
-            dibujarOjo(g, listX0 + 4, itemY + (ITEM_H - 10) / 2, capa.visible);
+            // --- NUEVO: Celda cuadrada para el Ojo ---
+            // 1. Dibujamos la línea negra vertical (el ancho de la celda es igual al alto: ITEM_H)
+            g.fill(listX0 + ITEM_H, itemY, listX0 + ITEM_H + 1, itemY + ITEM_H, 0xFF000000);
 
-            int tx = listX0 + 18;
+            // 2. Centramos el ojo matemáticamente en su nuevo cuadrado (El ojo mide 10x5 px)
+            int eyeX = listX0 + (ITEM_H - 10) / 2;
+            int eyeY = itemY + (ITEM_H - 5) / 2;
+            dibujarOjo(g, eyeX, eyeY, capa.visible);
+
+            // 3. Ajustamos el Thumbnail para que empiece después de la línea negra
+            int tx = listX0 + ITEM_H + 6;
             int ty = itemY + (ITEM_H - THUMB_SIZE) / 2;
             dibujarThumbnail(g, tx, ty);
 
+            // 4. Ajustamos la posición del Nombre
             String nombre = (capa.nombre != null) ? capa.nombre : "Capa";
-            if (nombre.length() > 10) nombre = nombre.substring(0, 8) + "..";
+            if (nombre.length() > 9) nombre = nombre.substring(0, 7) + ".."; 
             int textColor = capa.visible ? 0xFFDDDDDD : 0xFF888888;
             int textX = tx + THUMB_SIZE + 5;
             int textY = itemY + (ITEM_H - (int)(8 * TEXT_SCALE)) / 2;
@@ -169,7 +178,8 @@ public class RightBar {
                 if (idx >= capas.size()) return true;
                 GlobalGuiSettings.Capa capa = capas.get(idx);
 
-                if (mx >= x0 + 3 && mx <= x0 + 18) {
+                // El área del clic ahora abarca todo el cuadrado perfecto del ojo
+                if (mx >= x0 + 3 && mx <= x0 + 3 + ITEM_H) {
                     capa.visible = !capa.visible;
                     if (capa.panel != null) capa.panel.visible = capa.visible;
                     if (capa.texto != null) capa.texto.visible = capa.visible;
