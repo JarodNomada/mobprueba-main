@@ -447,10 +447,14 @@ public class EditorScreen extends Screen {
         // Draw elements at fixed position - sidebarReserved affects only click detection, not rendering
         g.pose().translate(0, viewportY, 0);
 
+        float zOffset = 0;
         for (GlobalGuiSettings.Capa capa : GlobalGuiSettings.CAPAS_UI) {
             if (!capa.visible) continue;
             if (capa.pagina != GlobalGuiSettings.paginaActual && capa.pagina != 0) continue;
 
+            g.pose().pushPose();
+            g.pose().translate(0, 0, zOffset); // Empujamos cada capa un poco más hacia el frente
+            
             if (capa.trazo != null) {
                 renderBrushStroke(g, capa.trazo);
             } else if (capa.panel != null) {
@@ -458,6 +462,9 @@ public class EditorScreen extends Screen {
             } else if (capa.texto != null) {
                 TextoEdit.renderizar(g, capa.texto, this.font, (capa.texto == tSel), escribiendoTexto && capa.texto == tSel);
             }
+
+            g.pose().popPose();
+            zOffset += 0.1f; // Cada capa está 0.1 píxeles delante de la anterior
         }
 
         if (drawingBrush && currentStroke != null) {
@@ -944,6 +951,9 @@ public class EditorScreen extends Screen {
     public boolean mouseReleased(double mx, double my, int btn) {
         TopBar.stopDragging();
 
+        // Solo necesitamos el nuevo método
+        if (RightBar.handleMouseReleased(mx, my, btn)) return true;
+
         if (drawingLine && LeftSidebar.selectedTool == 3) {
             drawingLine = false;
             int endX = (int)mx;
@@ -973,6 +983,9 @@ public class EditorScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mx, double my, int btn, double dx, double dy) {
+        // Si la RightBar atrapa el arrastre (para Live Drag & Drop de capas), no movemos el lienzo
+        if (RightBar.handleMouseDragged(mx, my, btn, this.width, this.height)) return true;
+        
         TopBar.handleModalDrag(mx);
 
         if (drawingLine && LeftSidebar.selectedTool == 3) {

@@ -22,6 +22,10 @@ public class RightBar {
     private static final float TEXT_SCALE = 0.75f;
 
     private static int scrollOffset = 0;
+    
+    // Variables para Live Drag & Drop estilo Photoshop
+    public static GlobalGuiSettings.Capa capaArrastrada = null;
+    public static double mouseDragY = 0;
 
     public static boolean isVisible = true;
 
@@ -61,6 +65,7 @@ public class RightBar {
         int maxScroll = Math.max(0, capas.size() - MAX_VISIBLE);
         scrollOffset  = Math.max(0, Math.min(scrollOffset, maxScroll));
 
+        // Primero dibujamos todas las capas excepto la que se está arrastrando
         for (int slot = 0; slot < MAX_VISIBLE; slot++) {
             int idx   = slot + scrollOffset;
             int itemY = listY0 + slot * ITEM_H;
@@ -68,8 +73,17 @@ public class RightBar {
             if (idx >= capas.size()) continue;
 
             GlobalGuiSettings.Capa capa = capas.get(idx);
+            
+            // Live Drag & Drop estilo Photoshop: dibujar hueco si es la capa arrastrada
+            if (capaArrastrada != null && capa == capaArrastrada) {
+                // Dibujar un hueco oscurecido para indicar de dónde sacamos la capa
+                g.fill(listX0 + 1, itemY, listX1 - 1, itemY + ITEM_H, 0xFF353535);
+                g.fill(listX0, itemY + ITEM_H - 1, listX1, itemY + ITEM_H, 0xFF000000);
+                continue; // Saltamos el dibujo normal de esta capa
+            }
+
             boolean sel = (capa.panel != null && capa.panel == GlobalGuiSettings.panelSeleccionado)
-                       || (capa.texto != null && capa.texto == GlobalGuiSettings.textoSeleccionado);
+                        || (capa.texto != null && capa.texto == GlobalGuiSettings.textoSeleccionado);
 
             int bgColor = sel ? 0xFF6E6E6E : 0xFF5A5A5A;
 
@@ -100,7 +114,7 @@ public class RightBar {
             dibujarTextoEscalado(g, font, nombre, textX, textY, textColor);
 
             dibujarHamburguesa(g, listX1 - 11, itemY + (ITEM_H - 7) / 2);
-         }
+        }
 
         // Dibujamos el borde negro del contenedor de la lista DESPUÉS de las capas
         g.renderOutline(listX0, listY0, listX1 - listX0, listY1 - listY0, 0xFF000000);
@@ -111,6 +125,19 @@ public class RightBar {
 
         g.renderOutline(x0, yBase, x1 - x0, PANEL_H, 0xFFCCCCCC);
         g.renderOutline(x0 - 1, yBase - 1, (x1 - x0) + 2, PANEL_H + 2, 0xFF000000);
+        
+        // ── DIBUJO DE LA CAPA FANTASMA (SEMI-TRANSPARENTE) ──
+        if (capaArrastrada != null) {
+            int ghostY = (int) mouseDragY - (ITEM_H / 2);
+            // Colores con canal Alpha (0x99) para la transparencia
+            g.fill(listX0 + 1, ghostY, listX1 - 1, ghostY + ITEM_H, 0x996E6E6E); 
+            g.fill(listX0, ghostY + ITEM_H - 1, listX1, ghostY + ITEM_H, 0x99000000);
+
+            // Textos y miniaturas con transparencia
+            String nombre = (capaArrastrada.nombre != null) ? capaArrastrada.nombre : "Capa";
+            if (nombre.length() > 9) nombre = nombre.substring(0, 7) + ".."; 
+            dibujarTextoEscalado(g, font, nombre, listX0 + ITEM_H + 6 + THUMB_SIZE + 5, ghostY + (ITEM_H - (int)(8 * TEXT_SCALE)) / 2, 0xCCFFFFFF);
+        }
     }
 
     private static void dibujarTextoEscalado(GuiGraphics g, Font font, String text, int x, int y, int color) {
@@ -161,7 +188,6 @@ public class RightBar {
                         case 2: accionBajar();    break;
                         case 3: accionEliminar(); break;
                     }
-                    return true;
                 }
             }
             return true;
@@ -184,13 +210,20 @@ public class RightBar {
                     if (capa.panel != null) capa.panel.visible = capa.visible;
                     if (capa.texto != null) capa.texto.visible = capa.visible;
                     return true;
-                }
-                if (mx >= x1 - 16) {
-                    return true;
-                }
-                GlobalGuiSettings.panelSeleccionado = capa.panel;
-                GlobalGuiSettings.textoSeleccionado = capa.texto;
-                return true;
+            }
+            if (mx >= x1 - 16) {
+                return true; // Clic en hamburguesa
+            }
+            
+            // Seleccionamos el objeto en la pantalla
+            GlobalGuiSettings.panelSeleccionado = capa.panel;
+            GlobalGuiSettings.textoSeleccionado = capa.texto;
+            
+            // ¡AQUÍ ESTABA EL ERROR! Iniciamos el arrastre
+            capaArrastrada = capa;
+            mouseDragY = my;
+            
+            return true;
             }
         }
         return true;
@@ -278,4 +311,54 @@ public class RightBar {
     private static void accionSubir()    { }
     private static void accionBajar()    { }
     private static void accionEliminar() { }
+
+    // Métodos para Live Drag & Drop estilo Photoshop
+    public static boolean handleMouseDragged(double mx, double my, int button, int screenWidth, int screenHeight) {
+        if (!isVisible || capaArrastrada == null) return false;
+        mouseDragY = my;
+
+        int listY0 = MARGIN_TOP + HEADER_H;
+        int slotActual = (int) ((my - listY0) / ITEM_H) + scrollOffset;
+        
+        java.util.List<GlobalGuiSettings.Capa> capas = capasDePageActual();
+        if (slotActual >= 0 && slotActual < capas.size()) {
+            GlobalGuiSettings.Capa capaDestino = capas.get(slotActual);
+            
+            // Reorganización en VIVO (Z-Index instantáneo)
+            if (capaDestino != capaArrastrada) {
+                int indexOrigen = GlobalGuiSettings.CAPAS_UI.indexOf(capaArrastrada);
+                int indexDestino = GlobalGuiSettings.CAPAS_UI.indexOf(capaDestino);
+                
+                if (indexOrigen != -1 && indexDestino != -1) {
+                    GlobalGuiSettings.CAPAS_UI.remove(indexOrigen);
+                    GlobalGuiSettings.CAPAS_UI.add(indexDestino, capaArrastrada);
+                }
+            }
+        }
+        return true; // Bloquea el arrastre de otras cosas mientras ordenas capas
+    }
+
+    public static boolean handleMouseReleased(double mx, double my, int button) {
+        if (capaArrastrada != null) {
+            capaArrastrada = null; // Soltamos la capa fantasma
+            
+            // GUARDADO MAESTRO: Sincronizar el nuevo orden con las listas de dibujado
+            java.util.List<GlobalGuiSettings.PanelConfig> nuevosPaneles = new java.util.ArrayList<>();
+            java.util.List<GlobalGuiSettings.TextConfig> nuevosTextos = new java.util.ArrayList<>();
+            
+            for (GlobalGuiSettings.Capa c : GlobalGuiSettings.CAPAS_UI) {
+                if (c.panel != null) nuevosPaneles.add(c.panel);
+                if (c.texto != null) nuevosTextos.add(c.texto);
+            }
+            
+            GlobalGuiSettings.PANELES.clear();
+            GlobalGuiSettings.PANELES.addAll(nuevosPaneles);
+            
+            GlobalGuiSettings.TEXTOS.clear();
+            GlobalGuiSettings.TEXTOS.addAll(nuevosTextos);
+            
+            return true;
+        }
+        return false;
+    }
 }
