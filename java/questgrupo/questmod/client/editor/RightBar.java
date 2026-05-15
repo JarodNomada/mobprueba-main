@@ -307,10 +307,83 @@ public class RightBar {
         g.fill(x+3,y+3,x+4,y+10,c); g.fill(x+5,y+3,x+6,y+10,c); g.fill(x+7,y+3,x+8,y+10,c);
     }
 
-    private static void accionDuplicar() { }
-    private static void accionSubir()    { }
-    private static void accionBajar()    { }
-    private static void accionEliminar() { }
+    // ── MÉTODOS AUXILIARES PARA LOS BOTONES ──
+    private static int obtenerIndiceSeleccionado() {
+        for (int i = 0; i < GlobalGuiSettings.CAPAS_UI.size(); i++) {
+            GlobalGuiSettings.Capa c = GlobalGuiSettings.CAPAS_UI.get(i);
+            if ((c.panel != null && c.panel == GlobalGuiSettings.panelSeleccionado) ||
+                (c.texto != null && c.texto == GlobalGuiSettings.textoSeleccionado)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static void guardarOrdenCapas() {
+        java.util.List<GlobalGuiSettings.PanelConfig> nuevosPaneles = new java.util.ArrayList<>();
+        java.util.List<GlobalGuiSettings.TextConfig> nuevosTextos = new java.util.ArrayList<>();
+        for (GlobalGuiSettings.Capa c : GlobalGuiSettings.CAPAS_UI) {
+            if (c.panel != null) nuevosPaneles.add(c.panel);
+            if (c.texto != null) nuevosTextos.add(c.texto);
+        }
+        GlobalGuiSettings.PANELES.clear();
+        GlobalGuiSettings.PANELES.addAll(nuevosPaneles);
+        GlobalGuiSettings.TEXTOS.clear();
+        GlobalGuiSettings.TEXTOS.addAll(nuevosTextos);
+    }
+
+    // ── ACCIONES DE LOS BOTONES ──
+    private static void accionDuplicar() {
+        if (GlobalGuiSettings.panelSeleccionado != null) {
+            GlobalGuiSettings.PanelConfig p = GlobalGuiSettings.panelSeleccionado;
+            GlobalGuiSettings.PanelConfig copia = new GlobalGuiSettings.PanelConfig(p.x + 15, p.y + 15, p.ancho, p.alto);
+            copia.tipo = p.tipo;
+            copia.colorARGB = p.colorARGB;
+            copia.colorBorde = p.colorBorde;
+            copia.textoAsociado = p.textoAsociado;
+            copia.pagina = p.pagina;
+            GlobalGuiSettings.PANELES.add(copia);
+            GlobalGuiSettings.panelSeleccionado = copia;
+        } else if (GlobalGuiSettings.textoSeleccionado != null) {
+            GlobalGuiSettings.TextConfig t = GlobalGuiSettings.textoSeleccionado;
+            GlobalGuiSettings.TextConfig copia = new GlobalGuiSettings.TextConfig(t.contenido, t.x + 15, t.y + 15);
+            copia.escala = t.escala;
+            copia.colorARGB = t.colorARGB;
+            copia.pagina = t.pagina;
+            GlobalGuiSettings.TEXTOS.add(copia);
+            GlobalGuiSettings.textoSeleccionado = copia;
+        }
+        GlobalGuiSettings.sincronizarCapas();
+    }
+
+    private static void accionSubir() {
+        int idx = obtenerIndiceSeleccionado();
+        if (idx >= 0 && idx < GlobalGuiSettings.CAPAS_UI.size() - 1) {
+            GlobalGuiSettings.Capa c = GlobalGuiSettings.CAPAS_UI.remove(idx);
+            GlobalGuiSettings.CAPAS_UI.add(idx + 1, c);
+            guardarOrdenCapas();
+        }
+    }
+
+    private static void accionBajar() {
+        int idx = obtenerIndiceSeleccionado();
+        if (idx > 0) {
+            GlobalGuiSettings.Capa c = GlobalGuiSettings.CAPAS_UI.remove(idx);
+            GlobalGuiSettings.CAPAS_UI.add(idx - 1, c);
+            guardarOrdenCapas();
+        }
+    }
+
+    private static void accionEliminar() {
+        if (GlobalGuiSettings.panelSeleccionado != null) {
+            GlobalGuiSettings.PANELES.remove(GlobalGuiSettings.panelSeleccionado);
+            GlobalGuiSettings.panelSeleccionado = null;
+        } else if (GlobalGuiSettings.textoSeleccionado != null) {
+            GlobalGuiSettings.TEXTOS.remove(GlobalGuiSettings.textoSeleccionado);
+            GlobalGuiSettings.textoSeleccionado = null;
+        }
+        GlobalGuiSettings.sincronizarCapas();
+    }
 
     // Métodos para Live Drag & Drop estilo Photoshop
     public static boolean handleMouseDragged(double mx, double my, int button, int screenWidth, int screenHeight) {
