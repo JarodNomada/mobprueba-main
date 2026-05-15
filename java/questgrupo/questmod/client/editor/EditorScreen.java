@@ -455,8 +455,9 @@ public class EditorScreen extends Screen {
             g.pose().pushPose();
             g.pose().translate(0, 0, zOffset); // Empujamos cada capa un poco más hacia el frente
             
-            if (capa.trazo != null) {
-                renderBrushStroke(g, capa.trazo);
+            if (capa.dibujo != null) {
+                for (GlobalGuiSettings.BrushStroke stroke : capa.dibujo.trazos) renderBrushStroke(g, stroke);
+                for (GlobalGuiSettings.PanelConfig linea : capa.dibujo.lineas) FigurasEdit.renderizar(g, linea, false, false);
             } else if (capa.panel != null) {
                 FigurasEdit.renderizar(g, capa.panel, capa.panel == pSel, escribiendoTextoPanel && capa.panel == pSel);
             } else if (capa.texto != null) {
@@ -956,22 +957,32 @@ public class EditorScreen extends Screen {
 
         if (drawingLine && LeftSidebar.selectedTool == 3) {
             drawingLine = false;
-            int endX = (int)mx;
-            int endY = (int)my;
             GlobalGuiSettings.PanelConfig linea = new GlobalGuiSettings.PanelConfig(lineStartX, lineStartY, 0, 0);
-            linea.tipo = "LINEA";
-            linea.x2 = endX;
-            linea.y2 = endY;
-            linea.colorARGB = GlobalGuiSettings.colorHerramientas;
-            linea.grosor = GlobalGuiSettings.grosorPincel; // Save the thickness
-            GlobalGuiSettings.PANELES.add(linea);
+            linea.tipo = "LINEA"; linea.x2 = (int)mx; linea.y2 = (int)my;
+            linea.colorARGB = GlobalGuiSettings.colorHerramientas; linea.grosor = GlobalGuiSettings.grosorPincel;
+            
+            if (GlobalGuiSettings.dibujoSeleccionado != null) {
+                GlobalGuiSettings.dibujoSeleccionado.lineas.add(linea);
+            } else {
+                GlobalGuiSettings.GrupoDibujo gd = new GlobalGuiSettings.GrupoDibujo();
+                gd.pagina = GlobalGuiSettings.paginaActual; gd.lineas.add(linea);
+                GlobalGuiSettings.DIBUJOS.add(gd); GlobalGuiSettings.dibujoSeleccionado = gd;
+                GlobalGuiSettings.sincronizarCapas();
+            }
             return true;
         }
 
         if (drawingBrush && LeftSidebar.selectedTool == 1) {
             drawingBrush = false;
             if (currentStroke != null && currentStroke.puntos.size() > 1) {
-                GlobalGuiSettings.TRAZOS.add(currentStroke);
+                if (GlobalGuiSettings.dibujoSeleccionado != null) {
+                    GlobalGuiSettings.dibujoSeleccionado.trazos.add(currentStroke);
+                } else {
+                    GlobalGuiSettings.GrupoDibujo gd = new GlobalGuiSettings.GrupoDibujo();
+                    gd.pagina = GlobalGuiSettings.paginaActual; gd.trazos.add(currentStroke);
+                    GlobalGuiSettings.DIBUJOS.add(gd); GlobalGuiSettings.dibujoSeleccionado = gd;
+                    GlobalGuiSettings.sincronizarCapas();
+                }
             }
             currentStroke = null;
             return true;
@@ -1091,12 +1102,25 @@ public class EditorScreen extends Screen {
             }
             return true;
         }
+        
+        // Handle Escape/Enter to finish layer name editing
+        if (RightBar.capaEditandoNombre != null) {
+            if (key == InputConstants.KEY_ESCAPE || key == InputConstants.KEY_RETURN || key == InputConstants.KEY_NUMPADENTER) {
+                RightBar.capaEditandoNombre = null;
+                return true;
+            }
+        }
         return super.keyPressed(key, sc, mod);
     }
 
     @Override
     public boolean charTyped(char c, int m) {
         if (inputColor.isFocused() && inputColor.charTyped(c, m)) return true;
+        // Handle layer name editing
+        if (RightBar.capaEditandoNombre != null) {
+            RightBar.capaEditandoNombre.nombre += c;
+            return true;
+        }
         if (escribiendoTextoPanel && pSel != null && pSel.tipo.startsWith("DESPLEGABLE")) {
             if (FigurasEdit.EditandoMaestroTitle == 1) {
                 if (pSel.tituloPrincipales == null) pSel.tituloPrincipales = "";

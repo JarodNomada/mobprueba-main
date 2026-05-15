@@ -121,7 +121,13 @@ public class GlobalGuiSettings {
         }
     }
 
-    // --- NUEVO SISTEMA DE CAPAS ---
+    // --- NUEVO SISTEMA DE GRUPO DE DIBUJO ---
+    public static class GrupoDibujo {
+        public java.util.List<BrushStroke> trazos = new java.util.ArrayList<>();
+        public java.util.List<PanelConfig> lineas = new java.util.ArrayList<>();
+        public int pagina = 1;
+    }
+
     public static class Capa {
         public String nombre;
         public boolean visible = true;
@@ -130,53 +136,50 @@ public class GlobalGuiSettings {
 
         public PanelConfig panel = null;
         public TextConfig texto = null;
-        public BrushStroke trazo = null;
+        public GrupoDibujo dibujo = null;
 
         public Capa(String nombre, PanelConfig panel) {
-            this.nombre = nombre;
-            this.panel = panel;
+            this.nombre = nombre; this.panel = panel;
             if (panel != null) this.pagina = panel.pagina;
         }
-
         public Capa(String nombre, TextConfig texto) {
-            this.nombre = nombre;
-            this.texto = texto;
+            this.nombre = nombre; this.texto = texto;
             if (texto != null) this.pagina = texto.pagina;
         }
-
-        public Capa(String nombre, BrushStroke trazo) {
-            this.nombre = nombre;
-            this.trazo = trazo;
-            this.pagina = GlobalGuiSettings.paginaActual;
+        public Capa(String nombre, GrupoDibujo dibujo) {
+            this.nombre = nombre; this.dibujo = dibujo;
+            if (dibujo != null) this.pagina = dibujo.pagina;
         }
     }
 
-    public static final List<Capa> CAPAS_UI = new ArrayList<>();
-    // -------------------------------
+    public static final java.util.List<Capa> CAPAS_UI = new java.util.ArrayList<>();
+    public static GrupoDibujo dibujoSeleccionado = null;
 
     public static void sincronizarCapas() {
-        // 1. Quitar capas de objetos que ya no existen
         CAPAS_UI.removeIf(c -> (c.panel != null && !PANELES.contains(c.panel)) || 
-                               (c.texto != null && !TEXTOS.contains(c.texto)));
+                               (c.texto != null && !TEXTOS.contains(c.texto)) ||
+                               (c.dibujo != null && !DIBUJOS.contains(c.dibujo)));
 
-        // 2. Añadir Paneles nuevos al final de la lista de capas
         for (PanelConfig p : PANELES) {
             boolean existe = false;
             for (Capa c : CAPAS_UI) { if (c.panel == p) { existe = true; break; } }
             if (!existe) CAPAS_UI.add(new Capa(p.tipo, p));
         }
-
-        // 3. Añadir Textos nuevos al final de la lista de capas
         for (TextConfig t : TEXTOS) {
             boolean existe = false;
             for (Capa c : CAPAS_UI) { if (c.texto == t) { existe = true; break; } }
             if (!existe) CAPAS_UI.add(new Capa(t.contenido, t));
         }
+        for (GrupoDibujo d : DIBUJOS) {
+            boolean existe = false;
+            for (Capa c : CAPAS_UI) { if (c.dibujo == d) { existe = true; break; } }
+            if (!existe) CAPAS_UI.add(new Capa("Capa Dibujo", d));
+        }
     }
 
-    public static final List<PanelConfig> PANELES = new ArrayList<>();
-    public static final List<TextConfig> TEXTOS = new ArrayList<>();
-    public static final List<BrushStroke> TRAZOS = new ArrayList<>();
+    public static final java.util.List<PanelConfig> PANELES = new java.util.ArrayList<>();
+    public static final java.util.List<TextConfig> TEXTOS = new java.util.ArrayList<>();
+    public static final java.util.List<GrupoDibujo> DIBUJOS = new java.util.ArrayList<>();
     public static int grosorPincel = 2;
     public static int colorHerramientas = 0xFF000000;
 }

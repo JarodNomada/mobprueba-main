@@ -217,4 +217,18 @@ public class QuestScreen extends Screen {
             }
         }
     }
+
+    private void renderBrushStroke(GuiGraphics g, GlobalGuiSettings.BrushStroke stroke) {
+        int prevX = -1, prevY = -1;
+        for (int[] punto : stroke.puntos) {
+            if (prevX != -1) {
+                for (int dx = -stroke.grosor/2; dx <= stroke.grosor/2; dx++) {
+                    for (int dy = -stroke.grosor/2; dy <= stroke.grosor/2; dy++) {
+                        g.fill(prevX + dx, prevY + dy, punto[0] + dx, punto[1] + dy, stroke.colorARGB);
+                    }
+                }
+            }
+            prevX = punto[0]; prevY = punto[1];
+        }
+    }
 }

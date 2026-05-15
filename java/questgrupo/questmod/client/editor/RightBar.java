@@ -22,10 +22,15 @@ public class RightBar {
     private static final float TEXT_SCALE = 0.75f;
 
     private static int scrollOffset = 0;
-    
+     
     // Variables para Live Drag & Drop estilo Photoshop
     public static GlobalGuiSettings.Capa capaArrastrada = null;
     public static double mouseDragY = 0;
+    
+    // Variables para renombrado de capas
+    private static long lastClickTime = 0;
+    private static GlobalGuiSettings.Capa lastClickedCapa = null;
+    public static GlobalGuiSettings.Capa capaEditandoNombre = null;
 
     public static boolean isVisible = true;
 
@@ -83,7 +88,8 @@ public class RightBar {
             }
 
             boolean sel = (capa.panel != null && capa.panel == GlobalGuiSettings.panelSeleccionado)
-                        || (capa.texto != null && capa.texto == GlobalGuiSettings.textoSeleccionado);
+                        || (capa.texto != null && capa.texto == GlobalGuiSettings.textoSeleccionado)
+                        || (capa.dibujo != null && capa.dibujo == GlobalGuiSettings.dibujoSeleccionado);
 
             int bgColor = sel ? 0xFF6E6E6E : 0xFF5A5A5A;
 
@@ -173,6 +179,7 @@ public class RightBar {
 
         int plusX = x1 - 19;
         if (my >= yBase + 2 && my <= yBase + 20 && mx >= plusX) {
+            accionNuevaCapa(); // Llamamos a la nueva función
             return true;
         }
 
@@ -210,20 +217,34 @@ public class RightBar {
                     if (capa.panel != null) capa.panel.visible = capa.visible;
                     if (capa.texto != null) capa.texto.visible = capa.visible;
                     return true;
-            }
-            if (mx >= x1 - 16) {
-                return true; // Clic en hamburguesa
-            }
-            
-            // Seleccionamos el objeto en la pantalla
-            GlobalGuiSettings.panelSeleccionado = capa.panel;
-            GlobalGuiSettings.textoSeleccionado = capa.texto;
-            
-            // ¡AQUÍ ESTABA EL ERROR! Iniciamos el arrastre
-            capaArrastrada = capa;
-            mouseDragY = my;
-            
-            return true;
+                }
+                if (mx >= x1 - 16) {
+                    return true; // Clic en hamburguesa
+                }
+                
+                // --- DOBLE CLIC PARA RENAME ---
+                long now = System.currentTimeMillis();
+                if (capa == lastClickedCapa && (now - lastClickTime) < 500) {
+                    // DOBLE CLIC -> Iniciar edición de nombre (solo si NO es texto)
+                    if (capa.texto == null) {
+                        capaEditandoNombre = capa;
+                        return true;
+                    }
+                }
+                lastClickTime = now;
+                lastClickedCapa = capa;
+                // --- FIN DOBLE CLIC ---
+
+                // Seleccionamos el objeto en la pantalla
+                GlobalGuiSettings.panelSeleccionado = capa.panel;
+                GlobalGuiSettings.textoSeleccionado = capa.texto;
+                GlobalGuiSettings.dibujoSeleccionado = capa.dibujo; // Agregado
+                
+                // ¡AQUÍ ESTABA EL ERROR! Iniciamos el arrastre
+                capaArrastrada = capa;
+                mouseDragY = my;
+                
+                return true;
             }
         }
         return true;
@@ -322,14 +343,18 @@ public class RightBar {
     private static void guardarOrdenCapas() {
         java.util.List<GlobalGuiSettings.PanelConfig> nuevosPaneles = new java.util.ArrayList<>();
         java.util.List<GlobalGuiSettings.TextConfig> nuevosTextos = new java.util.ArrayList<>();
+        java.util.List<GlobalGuiSettings.GrupoDibujo> nuevosDibujos = new java.util.ArrayList<>();
         for (GlobalGuiSettings.Capa c : GlobalGuiSettings.CAPAS_UI) {
             if (c.panel != null) nuevosPaneles.add(c.panel);
             if (c.texto != null) nuevosTextos.add(c.texto);
+            if (c.dibujo != null) nuevosDibujos.add(c.dibujo);
         }
         GlobalGuiSettings.PANELES.clear();
         GlobalGuiSettings.PANELES.addAll(nuevosPaneles);
         GlobalGuiSettings.TEXTOS.clear();
         GlobalGuiSettings.TEXTOS.addAll(nuevosTextos);
+        GlobalGuiSettings.DIBUJOS.clear();
+        GlobalGuiSettings.DIBUJOS.addAll(nuevosDibujos);
     }
 
     // ── ACCIONES DE LOS BOTONES ──
@@ -381,6 +406,9 @@ public class RightBar {
         } else if (GlobalGuiSettings.textoSeleccionado != null) {
             GlobalGuiSettings.TEXTOS.remove(GlobalGuiSettings.textoSeleccionado);
             GlobalGuiSettings.textoSeleccionado = null;
+        } else if (GlobalGuiSettings.dibujoSeleccionado != null) {
+            GlobalGuiSettings.DIBUJOS.remove(GlobalGuiSettings.dibujoSeleccionado);
+            GlobalGuiSettings.dibujoSeleccionado = null;
         }
         GlobalGuiSettings.sincronizarCapas();
     }
@@ -418,10 +446,12 @@ public class RightBar {
             // GUARDADO MAESTRO: Sincronizar el nuevo orden con las listas de dibujado
             java.util.List<GlobalGuiSettings.PanelConfig> nuevosPaneles = new java.util.ArrayList<>();
             java.util.List<GlobalGuiSettings.TextConfig> nuevosTextos = new java.util.ArrayList<>();
+            java.util.List<GlobalGuiSettings.GrupoDibujo> nuevosDibujos = new java.util.ArrayList<>();
             
             for (GlobalGuiSettings.Capa c : GlobalGuiSettings.CAPAS_UI) {
                 if (c.panel != null) nuevosPaneles.add(c.panel);
                 if (c.texto != null) nuevosTextos.add(c.texto);
+                if (c.dibujo != null) nuevosDibujos.add(c.dibujo);
             }
             
             GlobalGuiSettings.PANELES.clear();
@@ -430,8 +460,28 @@ public class RightBar {
             GlobalGuiSettings.TEXTOS.clear();
             GlobalGuiSettings.TEXTOS.addAll(nuevosTextos);
             
+            GlobalGuiSettings.DIBUJOS.clear();
+            GlobalGuiSettings.DIBUJOS.addAll(nuevosDibujos);
+            
             return true;
         }
         return false;
+    }
+
+    private static void accionNuevaCapa() {
+        GlobalGuiSettings.GrupoDibujo nuevoDibujo = new GlobalGuiSettings.GrupoDibujo();
+        nuevoDibujo.pagina = GlobalGuiSettings.paginaActual;
+        GlobalGuiSettings.DIBUJOS.add(nuevoDibujo);
+        GlobalGuiSettings.sincronizarCapas();
+        
+        for (GlobalGuiSettings.Capa c : GlobalGuiSettings.CAPAS_UI) {
+            if (c.dibujo == nuevoDibujo) {
+                GlobalGuiSettings.panelSeleccionado = null;
+                GlobalGuiSettings.textoSeleccionado = null;
+                GlobalGuiSettings.dibujoSeleccionado = nuevoDibujo;
+                capaEditandoNombre = c; // Permite escribir nombre de inmediato
+                break;
+            }
+        }
     }
 }
