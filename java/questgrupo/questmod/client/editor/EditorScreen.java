@@ -53,7 +53,7 @@ public class EditorScreen extends Screen {
             return;
         }
 
-        boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
+        boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION") || pSel.tipo.startsWith("ESTADISTICA_"));
 
         if (tSel != null) {
             TopBar.setVisible(true);

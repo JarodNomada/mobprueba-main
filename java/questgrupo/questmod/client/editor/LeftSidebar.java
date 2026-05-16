@@ -16,6 +16,7 @@ public class LeftSidebar {
     public static boolean showShapesMenu = false;
     public static boolean showInventoryMenu = false;
     public static boolean showNormalMenu = false;
+    public static boolean showStatsMenu = false;
     public static boolean editColorRequested = false;
 
     public static final int TAB_WIDTH = 26;
@@ -159,6 +160,13 @@ public class LeftSidebar {
                 for (int i = 0; i < slots.length; i++) {
                     drawVanillaButton(g, font, PANEL_X + 10, panelY + 20 + (i * 20), 110, 18, slots[i], false);
                 }
+            } else if (showStatsMenu) {
+                drawVanillaPanel(g, PANEL_X, panelY, 130, 105);
+                g.drawString(font, "Estad\u00edstica", PANEL_X + 10, panelY + 6, 0xFF404040, false);
+                String[] stats = {"Salud", "Da\u00f1o", "Defensa", "Velocidad", "Volver"};
+                for (int i = 0; i < stats.length; i++) {
+                    drawVanillaButton(g, font, PANEL_X + 10, panelY + 20 + (i * 20), 110, 18, stats[i], false);
+                }
             } else {
                 drawVanillaPanel(g, PANEL_X, panelY, 130, 85);
                 g.drawString(font, "Widgets RPG", PANEL_X + 10, panelY + 6, 0xFF404040, false);
@@ -275,11 +283,18 @@ public class LeftSidebar {
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 100, 110, 18)) { crearWidget("SLOT_BOTAS", "Slot Botas", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 120, 110, 18)) { crearWidget("SLOT_ESCUDO", "Slot Escudo", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 140, 110, 18)) { showInventoryMenu = false; return true; } // Volver
+                } else if (showStatsMenu) {
+                    panelWidth = 130; panelHeight = 105;
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 110, 18)) { crearWidget("ESTADISTICA_SALUD", "Salud", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 110, 18)) { crearWidget("ESTADISTICA_DANO", "Da\u00f1o", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 110, 18)) { crearWidget("ESTADISTICA_DEFENSA", "Defensa", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 80, 110, 18)) { crearWidget("ESTADISTICA_VELOCIDAD", "Velocidad", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 100, 110, 18)) { showStatsMenu = false; return true; }
                 } else {
                     panelWidth = 130; panelHeight = 85;
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 110, 18)) { crearWidget("MANIQUI", "Widget Maniqui", centerX - 25, centerY - 40, 50, 80); selectedModule = -1; return true; }
-                    if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 110, 18)) { showInventoryMenu = true; return true; }
-                    if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 110, 18)) { crearWidget("ESTADISTICA", "Widget Stats", centerX - 40, centerY - 10, 80, 20); selectedModule = -1; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 110, 18)) { showNormalMenu = true; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 110, 18)) { showStatsMenu = true; return true; }
                 }
             }
 
@@ -296,6 +311,7 @@ public class LeftSidebar {
         showBrushThickness = false;
         showInventoryMenu = false;
         showNormalMenu = false;
+        showStatsMenu = false;
         selectedTool = -1;
         selectedShape = -1;
     }

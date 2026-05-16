@@ -206,6 +206,76 @@ public static void crearBotonPagina(int numPagina) {
             return; // Terminamos para que no dibuje las formas comunes encima
         }
 
+        // ─── RENDERING DEL WIDGET DE ESTADÍSTICAS RPG ───
+        if (p.tipo != null && p.tipo.startsWith("ESTADISTICA_")) {
+            // Fondo general opcional del recuadro
+            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
+            
+            String textoMostrar = "";
+            net.minecraft.world.entity.player.Player player = net.minecraft.client.Minecraft.getInstance().player;
+            
+            if (player != null) {
+                if (p.tipo.equals("ESTADISTICA_SALUD")) {
+                    int hp = (int) Math.ceil(player.getHealth());
+                    int maxHp = (int) Math.ceil(player.getMaxHealth());
+                    textoMostrar = hp + " / " + maxHp;
+                } else if (p.tipo.equals("ESTADISTICA_DANO")) {
+                    double dmg = player.getAttributeBaseValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE);
+                    
+                    net.minecraft.world.item.ItemStack arma = player.getMainHandItem();
+                    if (!arma.isEmpty()) {
+                        com.google.common.collect.Multimap<net.minecraft.world.entity.ai.attributes.Attribute, net.minecraft.world.entity.ai.attributes.AttributeModifier> modificadores = arma.getAttributeModifiers(net.minecraft.world.entity.EquipmentSlot.MAINHAND);
+                        for (net.minecraft.world.entity.ai.attributes.AttributeModifier mod : modificadores.get(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE)) {
+                            dmg += mod.getAmount();
+                        }
+                        
+                        dmg += net.minecraft.world.item.enchantment.EnchantmentHelper.getDamageBonus(arma, net.minecraft.world.entity.MobType.UNDEFINED);
+                    }
+                    
+                    if (player.hasEffect(net.minecraft.world.effect.MobEffects.DAMAGE_BOOST)) {
+                        dmg += 3.0 * (player.getEffect(net.minecraft.world.effect.MobEffects.DAMAGE_BOOST).getAmplifier() + 1);
+                    }
+                    if (player.hasEffect(net.minecraft.world.effect.MobEffects.WEAKNESS)) {
+                        dmg -= 4.0 * (player.getEffect(net.minecraft.world.effect.MobEffects.WEAKNESS).getAmplifier() + 1);
+                    }
+
+                    textoMostrar = String.valueOf((int) Math.max(0, dmg));
+                } else if (p.tipo.equals("ESTADISTICA_DEFENSA")) {
+                    int armor = player.getArmorValue();
+                    textoMostrar = String.valueOf(armor);
+                } else if (p.tipo.equals("ESTADISTICA_VELOCIDAD")) {
+                    double baseSpeed = 0.10000000149011612; // Valor base interno en Minecraft
+                    double currentSpeed = player.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED);
+                    int percent = (int) Math.round((currentSpeed / baseSpeed) * 100);
+                    textoMostrar = percent + "%";
+                }
+            } else if (GlobalGuiSettings.editorActivo) {
+                if (p.tipo.equals("ESTADISTICA_SALUD")) textoMostrar = "20 / 20";
+                else if (p.tipo.equals("ESTADISTICA_DANO")) textoMostrar = "5";
+                else if (p.tipo.equals("ESTADISTICA_DEFENSA")) textoMostrar = "8";
+                else if (p.tipo.equals("ESTADISTICA_VELOCIDAD")) textoMostrar = "100%";
+            }
+
+            net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
+            float scale = p.escalaTexto; 
+            // Centrado perfecto dentro de tu marco
+            float tX = p.x + (p.ancho - (font.width(textoMostrar) * scale)) / 2 + p.offsetXTexto;
+            float tY = p.y + (p.alto - (font.lineHeight * scale)) / 2 + p.offsetYTexto;
+
+            g.pose().pushPose();
+            g.pose().translate(tX, tY, 0);
+            g.pose().scale(scale, scale, 1.0f);
+            
+            net.minecraft.network.chat.Style estilo = net.minecraft.network.chat.Style.EMPTY
+                .withBold(p.negrita).withItalic(p.cursiva).withUnderlined(p.subrayado).withStrikethrough(p.tachado);
+            
+            g.drawString(font, net.minecraft.network.chat.Component.literal(textoMostrar).setStyle(estilo), 0, 0, p.colorTexto, p.sombra);
+            g.pose().popPose();
+
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFFFFFF00);
+            return;
+        }
+
         // ─── RENDERING DE LA HOTBAR (ACCESO RÁPIDO CARRUSEL) ───
         if ("HOTBAR".equals(p.tipo)) {
             int slotSize = p.slotSize;

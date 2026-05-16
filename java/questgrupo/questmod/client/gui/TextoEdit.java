@@ -48,7 +48,7 @@ public class TextoEdit {
         GlobalGuiSettings.TextConfig tSel = tSelSupplier.get();
         GlobalGuiSettings.PanelConfig pSel = pSelSupplier.get();
 
-        boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
+        boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION") || pSel.tipo.startsWith("ESTADISTICA_"));
 
         int barX = LeftSidebar.getSidebarWidth();
         int barW = TopBar.calculateBarWidth(true, false, tSel, pSel);
@@ -91,7 +91,7 @@ public class TextoEdit {
             GlobalGuiSettings.PanelConfig p = pSelSupplier.get();
             if (t != null) t.escala = Math.min(10.0f, t.escala + 0.1f);
             else if (p != null) {
-                if (p.tipo.equals("MISION_TITULO")) p.escalaTexto = Math.min(10.0f, p.escalaTexto + 0.1f);
+                if (p.tipo.equals("MISION_TITULO") || p.tipo.startsWith("ESTADISTICA_")) p.escalaTexto = Math.min(10.0f, p.escalaTexto + 0.1f);
                 else if (p.tipo.equals("MISION_DESCRIPCION")) p.scaleDesc = Math.min(10.0f, p.scaleDesc + 0.1f);
             }
         }).bounds(curX, rowY1, btnSize, btnSize).build();
@@ -134,7 +134,7 @@ public class TextoEdit {
             GlobalGuiSettings.PanelConfig p = pSelSupplier.get();
             if (t != null) t.escala = Math.max(0.1f, t.escala - 0.1f);
             else if (p != null) {
-                if (p.tipo.equals("MISION_TITULO")) p.escalaTexto = Math.max(0.1f, p.escalaTexto - 0.1f);
+                if (p.tipo.equals("MISION_TITULO") || p.tipo.startsWith("ESTADISTICA_")) p.escalaTexto = Math.max(0.1f, p.escalaTexto - 0.1f);
                 else if (p.tipo.equals("MISION_DESCRIPCION")) p.scaleDesc = Math.max(0.1f, p.scaleDesc - 0.1f);
             }
         }).bounds(curX, rowY2, btnSize, btnSize).build();
@@ -163,7 +163,7 @@ public class TextoEdit {
 
     public static void actualizarEstadoBotones(GlobalGuiSettings.TextConfig tSel, GlobalGuiSettings.PanelConfig pSel) {
         boolean visibleTexto = (tSel != null) && TopBar.isVisible();
-        boolean visibleMision = (pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"))) && TopBar.isVisible();
+        boolean visibleMision = (pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION") || pSel.tipo.startsWith("ESTADISTICA_"))) && TopBar.isVisible();
 
         if (btnNegrita != null) {
             boolean visible = visibleTexto || visibleMision;
