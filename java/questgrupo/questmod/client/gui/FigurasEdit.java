@@ -206,22 +206,116 @@ public static void crearBotonPagina(int numPagina) {
             return; // Terminamos para que no dibuje las formas comunes encima
         }
 
+        // ─── RENDERING DE LA HOTBAR (ACCESO RÁPIDO CARRUSEL) ───
+        if ("HOTBAR".equals(p.tipo)) {
+            int slotSize = p.slotSize;
+            int gap = p.gap;
+            
+            if (p.isVertical) {
+                p.ancho = slotSize;
+                p.alto = (p.visibleSlots * slotSize) + ((p.visibleSlots - 1) * gap);
+            } else {
+                p.ancho = (p.visibleSlots * slotSize) + ((p.visibleSlots - 1) * gap);
+                p.alto = slotSize;
+            }
+
+            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
+
+            Player player = Minecraft.getInstance().player;
+            for (int i = 0; i < p.visibleSlots; i++) {
+                int realIndex = p.scrollIndex + i;
+                if (realIndex >= 9) break;
+
+                int slotX = p.x + (p.isVertical ? 0 : i * (slotSize + gap));
+                int slotY = p.y + (p.isVertical ? i * (slotSize + gap) : 0);
+
+                g.fill(slotX, slotY, slotX + slotSize, slotY + slotSize, p.colorSlotBg);
+                g.fill(slotX, slotY, slotX + slotSize - 1, slotY + 1, p.colorSlotDark);
+                g.fill(slotX, slotY, slotX + 1, slotY + slotSize - 1, p.colorSlotDark);
+                g.fill(slotX + 1, slotY + slotSize - 1, slotX + slotSize, slotY + slotSize, p.colorSlotLight);
+                g.fill(slotX + slotSize - 1, slotY + 1, slotX + slotSize, slotY + slotSize, p.colorSlotLight);
+
+                if (player != null) {
+                    net.minecraft.world.item.ItemStack item = player.getInventory().items.get(realIndex);
+                    if (!item.isEmpty()) {
+                        g.pose().pushPose();
+                        float scaleFactor = (float)slotSize / 18.0f;
+                        float iconOffset = (slotSize - (16 * scaleFactor)) / 2.0f;
+                        g.pose().translate(slotX + iconOffset, slotY + iconOffset, 0);
+                        g.pose().scale(scaleFactor, scaleFactor, 1.0f);
+                        g.renderFakeItem(item, 0, 0);
+                        g.renderItemDecorations(Minecraft.getInstance().font, item, 0, 0);
+                        g.pose().popPose();
+                    } else if (GlobalGuiSettings.editorActivo) {
+                        String num = String.valueOf(realIndex + 1);
+                        int nw = Minecraft.getInstance().font.width(num);
+                        g.drawString(Minecraft.getInstance().font, num, slotX + (slotSize - nw)/2, slotY + (slotSize - 8)/2, 0x55FFFFFF, false);
+                    }
+                }
+            }
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFFFFFF00);
+            return;
+        }
+
+        // ─── RENDERING DEL INVENTARIO CUADRÍCULA ───
+        if ("INVENTORY_GRID".equals(p.tipo)) {
+            int slotSize = p.slotSize;
+            int gap = p.gap;
+            Player player = Minecraft.getInstance().player;
+            int totalInvSlots = 27; 
+            int columnas = p.columnas > 0 ? p.columnas : 9;
+            int filas = (int) Math.ceil((double)totalInvSlots / columnas);
+            
+            p.ancho = (columnas * slotSize) + ((columnas - 1) * gap);
+            p.alto = (filas * slotSize) + ((filas - 1) * gap);
+            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB); 
+            
+            for (int i = 0; i < totalInvSlots; i++) {
+                int col = i % columnas;
+                int fil = i / columnas;
+                int slotX = p.x + col * (slotSize + gap);
+                int slotY = p.y + fil * (slotSize + gap);
+                
+                g.fill(slotX, slotY, slotX + slotSize, slotY + slotSize, p.colorSlotBg);
+                g.fill(slotX, slotY, slotX + slotSize - 1, slotY + 1, p.colorSlotDark);
+                g.fill(slotX, slotY, slotX + 1, slotY + slotSize - 1, p.colorSlotDark);
+                g.fill(slotX + 1, slotY + slotSize - 1, slotX + slotSize, slotY + slotSize, p.colorSlotLight);
+                g.fill(slotX + slotSize - 1, slotY + 1, slotX + slotSize, slotY + slotSize, p.colorSlotLight);
+                
+                if (player != null) {
+                    int realIndex = i + 9; 
+                    if (realIndex < player.getInventory().items.size()) {
+                        net.minecraft.world.item.ItemStack item = player.getInventory().items.get(realIndex);
+                        if (!item.isEmpty()) {
+                            g.pose().pushPose();
+                            float scaleFactor = (float)slotSize / 18.0f;
+                            float iconOffset = (slotSize - (16 * scaleFactor)) / 2.0f;
+                            g.pose().translate(slotX + iconOffset, slotY + iconOffset, 0);
+                            g.pose().scale(scaleFactor, scaleFactor, 1.0f);
+                            g.renderFakeItem(item, 0, 0);
+                            g.renderItemDecorations(Minecraft.getInstance().font, item, 0, 0);
+                            g.pose().popPose();
+                        }
+                    }
+                }
+            }
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFFFFFF00);
+            return;
+        }
+
         // ─── RENDERING DEL SLOT DE INVENTARIO RPG (DINÁMICO) ───
         if (p.tipo != null && p.tipo.startsWith("SLOT")) {
-            // 1. Fondo gris clásico de Minecraft
-            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, 0xFF8B8B8B);
+            p.ancho = p.slotSize;
+            p.alto = p.slotSize;
             
-            // 2. Sombra interior (Borde superior e izquierdo oscuros)
-            g.fill(p.x, p.y, p.x + p.ancho - 1, p.y + 1, 0xFF373737);
-            g.fill(p.x, p.y, p.x + 1, p.y + p.alto - 1, 0xFF373737);
-            
-            // 3. Brillo inferior (Borde inferior y derecho blancos)
-            g.fill(p.x + 1, p.y + p.alto - 1, p.x + p.ancho, p.y + p.alto, 0xFFFFFFFF);
-            g.fill(p.x + p.ancho - 1, p.y + 1, p.x + p.ancho, p.y + p.alto, 0xFFFFFFFF);
+            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorSlotBg);
+            g.fill(p.x, p.y, p.x + p.ancho - 1, p.y + 1, p.colorSlotDark);
+            g.fill(p.x, p.y, p.x + 1, p.y + p.alto - 1, p.colorSlotDark);
+            g.fill(p.x + 1, p.y + p.alto - 1, p.x + p.ancho, p.y + p.alto, p.colorSlotLight);
+            g.fill(p.x + p.ancho - 1, p.y + 1, p.x + p.ancho, p.y + p.alto, p.colorSlotLight);
 
-            // 4. Lógica Dinámica: Leer el ítem real del jugador
-            int iconX = p.x + (p.ancho - 16) / 2;
-            int iconY = p.y + (p.alto - 16) / 2;
+            float scaleFactor = (float)p.slotSize / 18.0f;
+            float iconOffset = (p.slotSize - (16 * scaleFactor)) / 2.0f;
             
             net.minecraft.world.item.ItemStack renderItem = net.minecraft.world.item.ItemStack.EMPTY;
             net.minecraft.resources.ResourceLocation watermark = null;
@@ -252,25 +346,23 @@ public static void crearBotonPagina(int numPagina) {
                 }
             }
 
-            // 5. Dibujado final (Ítem real vs Textura vacía original)
+            g.pose().pushPose();
+            g.pose().translate(p.x + iconOffset, p.y + iconOffset, 0);
+            g.pose().scale(scaleFactor, scaleFactor, 1.0f);
+
             if (!renderItem.isEmpty()) {
-                // Si tienes armadura, dibujamos el ítem y su barra de durabilidad
-                g.renderFakeItem(renderItem, iconX, iconY);
-                g.renderItemDecorations(net.minecraft.client.Minecraft.getInstance().font, renderItem, iconX, iconY);
+                g.renderFakeItem(renderItem, 0, 0);
+                g.renderItemDecorations(net.minecraft.client.Minecraft.getInstance().font, renderItem, 0, 0);
             } else if (watermark != null) {
-                // Si NO tienes armadura, dibujamos la marca de agua oficial con 60% de opacidad
                 com.mojang.blaze3d.systems.RenderSystem.enableBlend();
                 com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 0.6f);
-                g.blit(watermark, iconX, iconY, 0, 0, 16, 16, 16, 16);
+                g.blit(watermark, 0, 0, 0, 0, 16, 16, 16, 16);
                 com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
                 com.mojang.blaze3d.systems.RenderSystem.disableBlend();
             }
+            g.pose().popPose();
 
-            // 6. Borde amarillo si lo tenemos seleccionado en el editor
-            if (seleccionado) {
-                g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFFFFFF00);
-            }
-            
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFFFFFF00);
             return; 
         }
 

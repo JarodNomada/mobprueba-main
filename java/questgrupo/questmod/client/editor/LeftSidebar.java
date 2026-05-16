@@ -15,6 +15,7 @@ public class LeftSidebar {
     public static boolean showBrushThickness = false;
     public static boolean showShapesMenu = false;
     public static boolean showInventoryMenu = false;
+    public static boolean showNormalMenu = false;
     public static boolean editColorRequested = false;
 
     public static final int TAB_WIDTH = 26;
@@ -145,10 +146,16 @@ public class LeftSidebar {
         } 
         // --- NUEVO MÓDULO: WIDGETS RPG ---
         else if (selectedModule == 3) {
-            if (showInventoryMenu) {
+            if (showNormalMenu) {
+                drawVanillaPanel(g, PANEL_X, panelY, 130, 85);
+                g.drawString(font, "Slots Base", PANEL_X + 10, panelY + 6, 0xFF404040, false);
+                drawVanillaButton(g, font, PANEL_X + 10, panelY + 20, 110, 18, "Inventario", false);
+                drawVanillaButton(g, font, PANEL_X + 10, panelY + 40, 110, 18, "Acceso R\u00e1pido", false);
+                drawVanillaButton(g, font, PANEL_X + 10, panelY + 60, 110, 18, "Volver", false);
+            } else if (showInventoryMenu) {
                 drawVanillaPanel(g, PANEL_X, panelY, 130, 165);
                 g.drawString(font, "Tipo de Slot", PANEL_X + 10, panelY + 6, 0xFF404040, false);
-                String[] slots = {"Normal", "Casco", "Pechera", "Pantalones", "Botas", "Escudo", "Volver"};
+                String[] slots = {"Slots Base", "Casco", "Pechera", "Pantalones", "Botas", "Escudo", "Volver"};
                 for (int i = 0; i < slots.length; i++) {
                     drawVanillaButton(g, font, PANEL_X + 10, panelY + 20 + (i * 20), 110, 18, slots[i], false);
                 }
@@ -254,9 +261,14 @@ public class LeftSidebar {
             } 
             // --- NUEVOS CLICS DE LOS WIDGETS RPG ---
             else if (selectedModule == 3) {
-                if (showInventoryMenu) {
+                if (showNormalMenu) {
+                    panelWidth = 130; panelHeight = 85;
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 110, 18)) { crearWidget("INVENTORY_GRID", "Inventario", centerX - 90, centerY - 30, 180, 60); selectedModule = -1; showNormalMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 110, 18)) { crearWidget("HOTBAR", "Acceso Rapido", centerX - 50, centerY - 10, 100, 20); selectedModule = -1; showNormalMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 110, 18)) { showNormalMenu = false; showInventoryMenu = true; return true; }
+                } else if (showInventoryMenu) {
                     panelWidth = 130; panelHeight = 165;
-                    if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 110, 18)) { crearWidget("SLOT_NORMAL", "Slot Normal", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 110, 18)) { showNormalMenu = true; showInventoryMenu = false; return true; }
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 110, 18)) { crearWidget("SLOT_CASCO", "Slot Casco", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 110, 18)) { crearWidget("SLOT_PECHERA", "Slot Pechera", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 80, 110, 18)) { crearWidget("SLOT_PANTALON", "Slot Pantalon", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
@@ -283,6 +295,7 @@ public class LeftSidebar {
         showShapesMenu = false;
         showBrushThickness = false;
         showInventoryMenu = false;
+        showNormalMenu = false;
         selectedTool = -1;
         selectedShape = -1;
     }

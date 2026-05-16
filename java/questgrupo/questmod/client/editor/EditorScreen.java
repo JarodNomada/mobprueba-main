@@ -159,8 +159,12 @@ public class EditorScreen extends Screen {
             );
         }
 
-        if (TopBar.isDrawingToolsVisible() && pSel != null && pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
-            TopBar.inicializarBotonesMision(this.width, 5, this::addRenderableWidget, pSel);
+        if (TopBar.isDrawingToolsVisible() && pSel != null) {
+            if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
+                TopBar.inicializarBotonesWidget(this.width, 5, this::addRenderableWidget, pSel);
+            } else if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty() && !pSel.tipo.equals("INVENTORY_GRID")) {
+                TopBar.inicializarBotonesMision(this.width, 5, this::addRenderableWidget, pSel);
+            }
         }
 
         TopBar.initColorPickerWidgets(this.width, 10, this.font, this::addRenderableWidget);
@@ -1040,6 +1044,15 @@ public class EditorScreen extends Screen {
                     if (p.scrollY < 0) p.scrollY = 0;
                     return true;
                 }
+            }
+            // Lógica de Scroll para HOTBAR (Carrusel deslizante)
+            if (p.tipo.equals("HOTBAR") && questgrupo.questmod.client.gui.FigurasEdit.mouseSobreFigura(mx, my, p)) {
+                p.scrollIndex -= (int) Math.signum(scrollDelta);
+                int maxScroll = 9 - p.visibleSlots;
+                if (maxScroll < 0) maxScroll = 0;
+                if (p.scrollIndex < 0) p.scrollIndex = 0;
+                if (p.scrollIndex > maxScroll) p.scrollIndex = maxScroll;
+                return true;
             }
         }
         return super.mouseScrolled(mx, my, scrollDelta);

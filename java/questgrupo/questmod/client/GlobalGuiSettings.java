@@ -68,6 +68,15 @@ public class GlobalGuiSettings {
         public int colorBordeCheckInterno = 0xFFFFFFFF;
         public int colorBordeCheckExterno = 0xFF000000;
         public int pagina = 1;
+        public boolean isVertical = false;
+        public int visibleSlots = 5;
+        public int scrollIndex = 0;
+        public int columnas = 9;
+        public int slotSize = 20;
+        public int gap = 0;
+        public int colorSlotBg = 0xFF8B8B8B;
+        public int colorSlotDark = 0xFF373737;
+        public int colorSlotLight = 0xFFFFFFFF;
         public boolean visible = true;
         public boolean bloqueado = false;
 
