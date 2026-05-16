@@ -1016,9 +1016,12 @@ public class EditorScreen extends Screen {
         }
 
         if (redimensionando && pSel != null) {
-            pSel.ancho = Math.max(5, (int)(mx - pSel.x));
+            int nuevoAncho = Math.max(5, (int)(mx - pSel.x));
+            int nuevoAlto = Math.max(5, (int)(my - pSel.y));
+
+            pSel.ancho = nuevoAncho;
             if (!pSel.tipo.equals("LINEA")) {
-                pSel.alto = Math.max(5, (int)(my - pSel.y));
+                pSel.alto = nuevoAlto;
             }
             return true;
         }

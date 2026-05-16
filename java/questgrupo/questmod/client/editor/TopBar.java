@@ -343,7 +343,7 @@ public class TopBar {
                 w += 6; 
                 return w;
             } else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
-                return 280; // Espacio ampliado para configuración total
+                return 280; // Agrandado para recuperar controles
             } else {
                 int w = 6 + 20 + (pSel.tipo.equals("LINEA") || pSel.tipo.equals("TRIANGULO") ? 0 : 20);
                 if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
@@ -514,7 +514,7 @@ public class TopBar {
             curX += 66;
             drawVerticalSeparator(g, curX, y + 4, 40);
             curX += 6;
-            drawSectionTitle(g, font, "Ajustes de Tamaño", curX, y + 2, 130);
+            drawSectionTitle(g, font, "Ajustes", curX, y + 2, 130);
         } else {
             int currentX = barStartX + 6;
             int boxY = y + 16; 

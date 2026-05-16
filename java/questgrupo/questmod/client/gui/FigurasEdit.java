@@ -211,23 +211,22 @@ public static void crearBotonPagina(int numPagina) {
             int slotSize = p.slotSize;
             int gap = p.gap;
             
-            if (p.isVertical) {
-                p.ancho = slotSize;
-                p.alto = (p.visibleSlots * slotSize) + ((p.visibleSlots - 1) * gap);
-            } else {
-                p.ancho = (p.visibleSlots * slotSize) + ((p.visibleSlots - 1) * gap);
-                p.alto = slotSize;
-            }
-
+            // Dibuja el fondo libremente con el tamaño que elijas en el editor
             g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
+
+            // Centrado automático de los slots dentro del fondo
+            int totalW = p.isVertical ? slotSize : (p.visibleSlots * slotSize) + ((p.visibleSlots - 1) * gap);
+            int totalH = p.isVertical ? (p.visibleSlots * slotSize) + ((p.visibleSlots - 1) * gap) : slotSize;
+            int startX = p.x + (p.ancho - totalW) / 2;
+            int startY = p.y + (p.alto - totalH) / 2;
 
             Player player = Minecraft.getInstance().player;
             for (int i = 0; i < p.visibleSlots; i++) {
                 int realIndex = p.scrollIndex + i;
                 if (realIndex >= 9) break;
 
-                int slotX = p.x + (p.isVertical ? 0 : i * (slotSize + gap));
-                int slotY = p.y + (p.isVertical ? i * (slotSize + gap) : 0);
+                int slotX = startX + (p.isVertical ? 0 : i * (slotSize + gap));
+                int slotY = startY + (p.isVertical ? i * (slotSize + gap) : 0);
 
                 g.fill(slotX, slotY, slotX + slotSize, slotY + slotSize, p.colorSlotBg);
                 g.fill(slotX, slotY, slotX + slotSize - 1, slotY + 1, p.colorSlotDark);
@@ -266,15 +265,19 @@ public static void crearBotonPagina(int numPagina) {
             int columnas = p.columnas > 0 ? p.columnas : 9;
             int filas = (int) Math.ceil((double)totalInvSlots / columnas);
             
-            p.ancho = (columnas * slotSize) + ((columnas - 1) * gap);
-            p.alto = (filas * slotSize) + ((filas - 1) * gap);
             g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB); 
+
+            // Centrado de la cuadrícula
+            int totalW = (columnas * slotSize) + ((columnas - 1) * gap);
+            int totalH = (filas * slotSize) + ((filas - 1) * gap);
+            int startX = p.x + (p.ancho - totalW) / 2;
+            int startY = p.y + (p.alto - totalH) / 2;
             
             for (int i = 0; i < totalInvSlots; i++) {
                 int col = i % columnas;
                 int fil = i / columnas;
-                int slotX = p.x + col * (slotSize + gap);
-                int slotY = p.y + fil * (slotSize + gap);
+                int slotX = startX + col * (slotSize + gap);
+                int slotY = startY + fil * (slotSize + gap);
                 
                 g.fill(slotX, slotY, slotX + slotSize, slotY + slotSize, p.colorSlotBg);
                 g.fill(slotX, slotY, slotX + slotSize - 1, slotY + 1, p.colorSlotDark);
@@ -305,17 +308,21 @@ public static void crearBotonPagina(int numPagina) {
 
         // ─── RENDERING DEL SLOT DE INVENTARIO RPG (DINÁMICO) ───
         if (p.tipo != null && p.tipo.startsWith("SLOT")) {
-            p.ancho = p.slotSize;
-            p.alto = p.slotSize;
+            // Fondo general del slot (por si le quieres dar un recuadro oscuro de fondo)
+            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
             
-            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorSlotBg);
-            g.fill(p.x, p.y, p.x + p.ancho - 1, p.y + 1, p.colorSlotDark);
-            g.fill(p.x, p.y, p.x + 1, p.y + p.alto - 1, p.colorSlotDark);
-            g.fill(p.x + 1, p.y + p.alto - 1, p.x + p.ancho, p.y + p.alto, p.colorSlotLight);
-            g.fill(p.x + p.ancho - 1, p.y + 1, p.x + p.ancho, p.y + p.alto, p.colorSlotLight);
+            int slotSize = p.slotSize;
+            int slotX = p.x + (p.ancho - slotSize) / 2;
+            int slotY = p.y + (p.alto - slotSize) / 2;
+            
+            g.fill(slotX, slotY, slotX + slotSize, slotY + slotSize, p.colorSlotBg);
+            g.fill(slotX, slotY, slotX + slotSize - 1, slotY + 1, p.colorSlotDark);
+            g.fill(slotX, slotY, slotX + 1, slotY + slotSize - 1, p.colorSlotDark);
+            g.fill(slotX + 1, slotY + slotSize - 1, slotX + slotSize, slotY + slotSize, p.colorSlotLight);
+            g.fill(slotX + slotSize - 1, slotY + 1, slotX + slotSize, slotY + slotSize, p.colorSlotLight);
 
-            float scaleFactor = (float)p.slotSize / 18.0f;
-            float iconOffset = (p.slotSize - (16 * scaleFactor)) / 2.0f;
+            float scaleFactor = (float)slotSize / 18.0f;
+            float iconOffset = (slotSize - (16 * scaleFactor)) / 2.0f;
             
             net.minecraft.world.item.ItemStack renderItem = net.minecraft.world.item.ItemStack.EMPTY;
             net.minecraft.resources.ResourceLocation watermark = null;
@@ -347,7 +354,7 @@ public static void crearBotonPagina(int numPagina) {
             }
 
             g.pose().pushPose();
-            g.pose().translate(p.x + iconOffset, p.y + iconOffset, 0);
+            g.pose().translate(slotX + iconOffset, slotY + iconOffset, 0);
             g.pose().scale(scaleFactor, scaleFactor, 1.0f);
 
             if (!renderItem.isEmpty()) {
