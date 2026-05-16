@@ -162,6 +162,8 @@ public class EditorScreen extends Screen {
         if (TopBar.isDrawingToolsVisible() && pSel != null) {
             if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
                 TopBar.inicializarBotonesWidget(this.width, 5, this::addRenderableWidget, pSel);
+            } else if (pSel.tipo.equals("MANIQUI")) {
+                TopBar.inicializarBotonesManiqui(this.width, 5, this::addRenderableWidget, pSel);
             } else if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty() && !pSel.tipo.equals("INVENTORY_GRID")) {
                 TopBar.inicializarBotonesMision(this.width, 5, this::addRenderableWidget, pSel);
             }

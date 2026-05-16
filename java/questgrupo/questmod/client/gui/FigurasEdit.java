@@ -182,28 +182,28 @@ public static void crearBotonPagina(int numPagina) {
         if ("MANIQUI".equals(p.tipo)) {
             Player player = Minecraft.getInstance().player;
             if (player != null) {
-                // 1. Dibujamos un recuadro semi-transparente de fondo para ver los límites en el lienzo
-                g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, 0x15FFFFFF);
-                g.renderOutline(p.x, p.y, p.ancho, p.alto, seleccionado ? 0xFFFFFF00 : 0xFF444444);
+                // 1. Fondo y borde editables desde la TopBar
+                g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
+                g.renderOutline(p.x, p.y, p.ancho, p.alto, seleccionado ? 0xFFFFFF00 : p.colorBorde);
 
-                // 2. Calculamos el centro de la caja y la escala apropiada
+                // 2. Calculamos el centro y aplicamos la escala independiente (usando escalaIcono como multiplicador)
                 int centroX = p.x + (p.ancho / 2);
-                int baseY = p.y + p.alto - 8; // Dejamos un margen abajo para los pies
-                
-                // La escala estándar de Minecraft es 30, la ajustamos según el alto del recuadro
-                int escala = (int) (p.alto * 0.45F); 
+                int baseY = p.y + p.alto - 8; 
+                int escala = (int) (p.alto * 0.45F * p.escalaIcono); 
 
-                // Obtener coordenadas reales del ratón para que el maniquí lo mire fijamente
-                // Usamos valores simples - el maniquí mirará ligeramente hacia la derecha
-                float rotY = 0.3f; // Rotación horizontal (derecha/izquierda)
-                float rotX = 0.0f; // Rotación vertical (arriba/abajo)
+                // 3. Seguimiento real del ratón
+                double mouseX = Minecraft.getInstance().mouseHandler.xpos() * (double) g.guiWidth() / (double) Minecraft.getInstance().getWindow().getScreenWidth();
+                double mouseY = Minecraft.getInstance().mouseHandler.ypos() * (double) g.guiHeight() / (double) Minecraft.getInstance().getWindow().getScreenHeight();
 
-                // 3. Invocamos el renderizador nativo en 3D de Minecraft
+                float rotY = (float) (centroX - mouseX);
+                float rotX = (float) (baseY - (p.alto * 0.45f) - mouseY);
+
+                // 4. Invocamos el renderizador nativo en 3D de Minecraft
                 g.pose().pushPose();
                 InventoryScreen.renderEntityInInventoryFollowsMouse(g, centroX, baseY, escala, rotY, rotX, player);
                 g.pose().popPose();
             }
-            return; // Terminamos para que no dibuje las formas comunes encima
+            return; 
         }
 
         // ─── RENDERING DEL WIDGET DE ESTADÍSTICAS RPG ───

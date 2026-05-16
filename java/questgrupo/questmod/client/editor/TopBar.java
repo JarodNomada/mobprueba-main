@@ -346,6 +346,8 @@ public class TopBar {
                 }
                 w += 6; 
                 return w;
+            } else if (pSel.tipo.equals("MANIQUI")) {
+                return 94; // 6 (margen) + 40 (colores) + 4 (separador) + 38 (titulo) + 6 (margen)
             } else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
                 return 280; // Agrandado para recuperar controles
             } else {
@@ -514,6 +516,16 @@ public class TopBar {
                 drawSectionTitle(g, font, "I", currentX, y + 2, 38);
             }
 
+        } else if (pSel.tipo.equals("MANIQUI")) {
+            int curX = barStartX + 6;
+            int boxY = y + 16;
+            drawColorSwatch(g, pSel.colorARGB, curX, boxY);
+            curX += 20;
+            drawColorSwatch(g, pSel.colorBorde, curX, boxY);
+            curX += 20;
+            drawVerticalSeparator(g, curX, y + 4, 40);
+            curX += 4;
+            drawSectionTitle(g, font, "Escala", curX, y + 2, 38);
         } else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
             int curX = barStartX + 6;
             int boxY = y + 16;
@@ -611,6 +623,13 @@ public class TopBar {
                 if (mx >= colorsX + 20 && mx <= colorsX + 36) return BTN_MISSION_FILL_COLOR;
                 if (mx >= colorsX + 40 && mx <= colorsX + 56) return BTN_MISSION_BORDER_COLOR;
             }
+        } else if (pSel.tipo.equals("MANIQUI")) {
+            int curX = barStartX + 6;
+            int boxY = y + 16;
+            if (my >= boxY && my <= boxY + 16) {
+                if (mx >= curX && mx <= curX + 16) return BTN_FILL_COLOR;
+                if (mx >= curX + 20 && mx <= curX + 36) return BTN_BORDER_COLOR;
+            }
         } else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
             int curX = barStartX + 6;
             if (mx >= curX + 2 && mx <= curX + 18 && my >= y+16 && my <= y+32) return BTN_FILL_COLOR;
@@ -705,5 +724,19 @@ public class TopBar {
         
         adder.accept(Button.builder(Component.literal("G-"), b -> { pSel.gap = Math.max(0, pSel.gap - 1); }).bounds(curX + 66, row2, 20, btnSize).build());
         adder.accept(Button.builder(Component.literal("G+"), b -> { pSel.gap = Math.min(50, pSel.gap + 1); }).bounds(curX + 88, row2, 20, btnSize).build());
+    }
+
+    public static void inicializarBotonesManiqui(int guiWidth, int y, java.util.function.Consumer<Button> adder, GlobalGuiSettings.PanelConfig pSel) {
+        if (pSel == null || !pSel.tipo.equals("MANIQUI")) return;
+        int barX = LeftSidebar.getSidebarWidth();
+        int expectedBarW = calculateBarWidth(false, true, null, pSel);
+        int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
+        int btnSize = 18;
+
+        int curX = barStartX + 6 + 40 + 4; 
+        int btnY = y + 20; 
+        
+        adder.accept(Button.builder(Component.literal("-"), b -> { pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f); }).bounds(curX, btnY, 18, btnSize).build());
+        adder.accept(Button.builder(Component.literal("+"), b -> { pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f); }).bounds(curX + 20, btnY, 18, btnSize).build());
     }
 }
