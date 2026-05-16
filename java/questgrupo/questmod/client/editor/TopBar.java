@@ -224,9 +224,10 @@ public class TopBar {
         
         drawContainer(g, barStartX, y, barWidth, visualBoxHeight);
 
-        boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION") || pSel.tipo.startsWith("ESTADISTICA_"));
+        boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
+        boolean esEstadistica = pSel != null && pSel.tipo.startsWith("ESTADISTICA_");
 
-        if ((textToolsVisible && tSel != null) || esMisionTexto) {
+        if ((textToolsVisible && tSel != null) || esMisionTexto || esEstadistica) {
             renderTextTools(g, barStartX, y, tSel, pSel);
         } else if (drawingToolsVisible) {
             renderDrawingTools(g, barStartX, y, pSel);
@@ -322,12 +323,15 @@ public class TopBar {
     }
 
     public static int calculateBarWidth(boolean textTools, boolean drawTools, GlobalGuiSettings.TextConfig tSel, GlobalGuiSettings.PanelConfig pSel) {
-        boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION") || pSel.tipo.startsWith("ESTADISTICA_"));
-        if (textTools || esMisionTexto) {
+        boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
+        boolean esEstadistica = pSel != null && pSel.tipo.startsWith("ESTADISTICA_");
+        
+        if (textTools || esMisionTexto || esEstadistica) {
             int w = 4;
             w += esMisionTexto ? 38 : 18;
             w += 2; 
-            w += (5 * 18) + (4 * 2); 
+            int cols = esEstadistica ? 4 : 5; // Las stats usan menos botones
+            w += (cols * 18) + ((cols - 1) * 2); 
             w += 4;
             return w;
         } else if (drawTools && pSel != null) {
@@ -360,7 +364,8 @@ public class TopBar {
         int swatchSize = 16;
         int startX = barStartX + 4;
         int rowY = y + 4;
-        boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION") || pSel.tipo.startsWith("ESTADISTICA_"));
+        boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
+        boolean esEstadistica = pSel != null && pSel.tipo.startsWith("ESTADISTICA_");
 
         if (esMisionTexto) {
             int swatch2X = startX + swatchSize + 4;
@@ -368,7 +373,12 @@ public class TopBar {
             drawColorSwatch(g, pSel.colorARGB, startX + 1, rowY + 1);
             drawColorSwatch(g, pSel.colorBorde, swatch2X + 1, rowY + 1);
             drawColorSwatch(g, pSel.colorTexto, startX + 1, rowY2 + 1);
-        } else {
+        } else if (esEstadistica) {
+            int rowY2 = rowY + swatchSize + 4;
+            // Solo dibujamos Fondo y Color de Texto (apilados)
+            drawColorSwatch(g, pSel.colorARGB, startX + 1, rowY + 1);
+            drawColorSwatch(g, pSel.colorTexto, startX + 1, rowY2 + 1);
+        } else if (tSel != null) {
             drawColorSwatch(g, tSel.colorARGB, startX + 1, rowY + 1);
         }
     }
@@ -378,7 +388,8 @@ public class TopBar {
         int barX = LeftSidebar.getSidebarWidth();
         int barW = getWidth();
         int barStartX = barX + (guiWidth - barX - barW) / 2;
-        boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION") || pSel.tipo.startsWith("ESTADISTICA_"));
+        boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
+        boolean esEstadistica = pSel != null && pSel.tipo.startsWith("ESTADISTICA_");
 
         int swatchSize = 16;
         int rowY = y + 4;
@@ -389,6 +400,10 @@ public class TopBar {
             int rowY2 = rowY + swatchSize + 4;
             if (mx >= startX && mx <= startX + swatchSize + 2 && my >= rowY && my <= rowY + swatchSize + 2) return BTN_FILL_COLOR;
             if (mx >= swatch2X && mx <= swatch2X + swatchSize + 2 && my >= rowY && my <= rowY + swatchSize + 2) return BTN_BORDER_COLOR;
+            if (mx >= startX && mx <= startX + swatchSize + 2 && my >= rowY2 && my <= rowY2 + swatchSize + 2) return BTN_TEXT_COLOR;
+        } else if (esEstadistica) {
+            int rowY2 = rowY + swatchSize + 4;
+            if (mx >= startX && mx <= startX + swatchSize + 2 && my >= rowY && my <= rowY + swatchSize + 2) return BTN_FILL_COLOR;
             if (mx >= startX && mx <= startX + swatchSize + 2 && my >= rowY2 && my <= rowY2 + swatchSize + 2) return BTN_TEXT_COLOR;
         } else if (tSel != null) {
             if (mx >= startX && mx <= startX + swatchSize + 2 && my >= rowY && my <= rowY + swatchSize + 2) return BTN_TEXT_COLOR;
