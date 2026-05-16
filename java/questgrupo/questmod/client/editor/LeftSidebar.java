@@ -149,30 +149,31 @@ public class LeftSidebar {
         else if (selectedModule == 3) {
             if (showNormalMenu) {
                 drawVanillaPanel(g, PANEL_X, panelY, 130, 85);
-                g.drawString(font, "Slots Base", PANEL_X + 10, panelY + 6, 0xFF404040, false);
-                drawVanillaButton(g, font, PANEL_X + 10, panelY + 20, 110, 18, "Inventario", false);
+                g.drawString(font, "Inventario", PANEL_X + 10, panelY + 6, 0xFF404040, false);
+                drawVanillaButton(g, font, PANEL_X + 10, panelY + 20, 110, 18, "Cuadr\u00edcula", false);
                 drawVanillaButton(g, font, PANEL_X + 10, panelY + 40, 110, 18, "Acceso R\u00e1pido", false);
                 drawVanillaButton(g, font, PANEL_X + 10, panelY + 60, 110, 18, "Volver", false);
             } else if (showInventoryMenu) {
-                drawVanillaPanel(g, PANEL_X, panelY, 130, 165);
-                g.drawString(font, "Tipo de Slot", PANEL_X + 10, panelY + 6, 0xFF404040, false);
-                String[] slots = {"Slots Base", "Casco", "Pechera", "Pantalones", "Botas", "Escudo", "Volver"};
+                drawVanillaPanel(g, PANEL_X, panelY, 130, 145);
+                g.drawString(font, "Slots", PANEL_X + 10, panelY + 6, 0xFF404040, false);
+                String[] slots = {"Casco", "Pechera", "Pantalones", "Botas", "Escudo", "Volver"};
                 for (int i = 0; i < slots.length; i++) {
                     drawVanillaButton(g, font, PANEL_X + 10, panelY + 20 + (i * 20), 110, 18, slots[i], false);
                 }
             } else if (showStatsMenu) {
-                drawVanillaPanel(g, PANEL_X, panelY, 130, 105);
+                drawVanillaPanel(g, PANEL_X, panelY, 130, 125);
                 g.drawString(font, "Estad\u00edstica", PANEL_X + 10, panelY + 6, 0xFF404040, false);
                 String[] stats = {"Salud", "Da\u00f1o", "Defensa", "Velocidad", "Volver"};
                 for (int i = 0; i < stats.length; i++) {
                     drawVanillaButton(g, font, PANEL_X + 10, panelY + 20 + (i * 20), 110, 18, stats[i], false);
                 }
             } else {
-                drawVanillaPanel(g, PANEL_X, panelY, 130, 85);
+                drawVanillaPanel(g, PANEL_X, panelY, 130, 105);
                 g.drawString(font, "Widgets RPG", PANEL_X + 10, panelY + 6, 0xFF404040, false);
                 drawVanillaButton(g, font, PANEL_X + 10, panelY + 20, 110, 18, "Maniqu\u00ed", false);
                 drawVanillaButton(g, font, PANEL_X + 10, panelY + 40, 110, 18, "Inventario", false);
                 drawVanillaButton(g, font, PANEL_X + 10, panelY + 60, 110, 18, "Estad\u00edstica", false);
+                drawVanillaButton(g, font, PANEL_X + 10, panelY + 80, 110, 18, "Slots", false);
             }
         }
     }
@@ -273,28 +274,28 @@ public class LeftSidebar {
                     panelWidth = 130; panelHeight = 85;
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 110, 18)) { crearWidget("INVENTORY_GRID", "Inventario", centerX - 90, centerY - 30, 180, 60); selectedModule = -1; showNormalMenu = false; return true; }
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 110, 18)) { crearWidget("HOTBAR", "Acceso Rapido", centerX - 50, centerY - 10, 100, 20); selectedModule = -1; showNormalMenu = false; return true; }
-                    if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 110, 18)) { showNormalMenu = false; showInventoryMenu = true; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 110, 18)) { showNormalMenu = false; return true; } // Volver
                 } else if (showInventoryMenu) {
-                    panelWidth = 130; panelHeight = 165;
-                    if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 110, 18)) { showNormalMenu = true; showInventoryMenu = false; return true; }
-                    if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 110, 18)) { crearWidget("SLOT_CASCO", "Slot Casco", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
-                    if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 110, 18)) { crearWidget("SLOT_PECHERA", "Slot Pechera", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
-                    if (isHovered(mx, my, PANEL_X + 10, panelY + 80, 110, 18)) { crearWidget("SLOT_PANTALON", "Slot Pantalon", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
-                    if (isHovered(mx, my, PANEL_X + 10, panelY + 100, 110, 18)) { crearWidget("SLOT_BOTAS", "Slot Botas", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
-                    if (isHovered(mx, my, PANEL_X + 10, panelY + 120, 110, 18)) { crearWidget("SLOT_ESCUDO", "Slot Escudo", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
-                    if (isHovered(mx, my, PANEL_X + 10, panelY + 140, 110, 18)) { showInventoryMenu = false; return true; } // Volver
+                    panelWidth = 130; panelHeight = 145;
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 110, 18)) { crearWidget("SLOT_CASCO", "Slot Casco", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 110, 18)) { crearWidget("SLOT_PECHERA", "Slot Pechera", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 110, 18)) { crearWidget("SLOT_PANTALON", "Slot Pantalon", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 80, 110, 18)) { crearWidget("SLOT_BOTAS", "Slot Botas", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 100, 110, 18)) { crearWidget("SLOT_ESCUDO", "Slot Escudo", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 120, 110, 18)) { showInventoryMenu = false; return true; } // Volver
                 } else if (showStatsMenu) {
-                    panelWidth = 130; panelHeight = 105;
+                    panelWidth = 130; panelHeight = 125;
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 110, 18)) { crearWidget("ESTADISTICA_SALUD", "Salud", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 110, 18)) { crearWidget("ESTADISTICA_DANO", "Da\u00f1o", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 110, 18)) { crearWidget("ESTADISTICA_DEFENSA", "Defensa", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 80, 110, 18)) { crearWidget("ESTADISTICA_VELOCIDAD", "Velocidad", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
-                    if (isHovered(mx, my, PANEL_X + 10, panelY + 100, 110, 18)) { showStatsMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 100, 110, 18)) { showStatsMenu = false; return true; } // Volver
                 } else {
-                    panelWidth = 130; panelHeight = 85;
+                    panelWidth = 130; panelHeight = 105;
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 110, 18)) { crearWidget("MANIQUI", "Widget Maniqui", centerX - 25, centerY - 40, 50, 80); selectedModule = -1; return true; }
-                    if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 110, 18)) { showNormalMenu = true; return true; }
-                    if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 110, 18)) { showStatsMenu = true; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 110, 18)) { showNormalMenu = true; return true; } // Clic en Inventario
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 110, 18)) { showStatsMenu = true; return true; }   // Clic en Estadística
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 80, 110, 18)) { showInventoryMenu = true; return true; } // Clic en Slots
                 }
             }
 
