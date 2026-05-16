@@ -9,11 +9,12 @@ import questgrupo.questmod.client.gui.TextoEdit;
 
 public class LeftSidebar {
     public static boolean sidebarVisible = true;
-    public static int selectedModule = -1; // -1: none, 0: Texto, 1: Herramientas, 2: Funciones
-    public static int selectedTool = -1; // -1: none, 0: Mouse, 1: Pincel, 2: Formas, 3: Linea
-    public static int selectedShape = -1; // -1: none, 0: Cuadrado, 1: Rectangulo, 2: Triangulo, 3: Circulo
+    public static int selectedModule = -1; // -1: none, 0: Texto, 1: Herramientas, 2: Funciones, 3: Widgets RPG
+    public static int selectedTool = -1; 
+    public static int selectedShape = -1; 
     public static boolean showBrushThickness = false;
     public static boolean showShapesMenu = false;
+    public static boolean showInventoryMenu = false;
     public static boolean editColorRequested = false;
 
     public static final int TAB_WIDTH = 26;
@@ -27,7 +28,8 @@ public class LeftSidebar {
     public static int colorBoxRectY = 0;
 
     public static int getSidebarY(int screenHeight) {
-        int totalHeight = 3 * TAB_HEIGHT + 2 * TAB_GAP;
+        // Ahora multiplicamos por 4 botones y 3 espacios
+        int totalHeight = 4 * TAB_HEIGHT + 3 * TAB_GAP;
         return (screenHeight - totalHeight) / 2;
     }
 
@@ -83,6 +85,8 @@ public class LeftSidebar {
         drawVanillaButton(g, font, START_X, startY, TAB_WIDTH, TAB_HEIGHT, "T", selectedModule == 0);
         drawVanillaButton(g, font, START_X, startY + TAB_HEIGHT + TAB_GAP, TAB_WIDTH, TAB_HEIGHT, "H", selectedModule == 1);
         drawVanillaButton(g, font, START_X, startY + 2 * (TAB_HEIGHT + TAB_GAP), TAB_WIDTH, TAB_HEIGHT, "F", selectedModule == 2);
+        // NUEVO BOTÓN: W (Widgets RPG)
+        drawVanillaButton(g, font, START_X, startY + 3 * (TAB_HEIGHT + TAB_GAP), TAB_WIDTH, TAB_HEIGHT, "W", selectedModule == 3);
 
         if (selectedModule >= 0) {
             renderSubPanel(g, font, screenWidth, screenHeight);
@@ -138,6 +142,23 @@ public class LeftSidebar {
             for (int i = 0; i < func.length; i++) {
                 drawVanillaButton(g, font, PANEL_X + 10, panelY + 20 + (i * 20), 120, 18, func[i], false);
             }
+        } 
+        // --- NUEVO MÓDULO: WIDGETS RPG ---
+        else if (selectedModule == 3) {
+            if (showInventoryMenu) {
+                drawVanillaPanel(g, PANEL_X, panelY, 130, 165);
+                g.drawString(font, "Tipo de Slot", PANEL_X + 10, panelY + 6, 0xFF404040, false);
+                String[] slots = {"Normal", "Casco", "Pechera", "Pantalones", "Botas", "Escudo", "Volver"};
+                for (int i = 0; i < slots.length; i++) {
+                    drawVanillaButton(g, font, PANEL_X + 10, panelY + 20 + (i * 20), 110, 18, slots[i], false);
+                }
+            } else {
+                drawVanillaPanel(g, PANEL_X, panelY, 130, 85);
+                g.drawString(font, "Widgets RPG", PANEL_X + 10, panelY + 6, 0xFF404040, false);
+                drawVanillaButton(g, font, PANEL_X + 10, panelY + 20, 110, 18, "Maniqu\u00ed", false);
+                drawVanillaButton(g, font, PANEL_X + 10, panelY + 40, 110, 18, "Inventario", false);
+                drawVanillaButton(g, font, PANEL_X + 10, panelY + 60, 110, 18, "Estad\u00edstica", false);
+            }
         }
     }
 
@@ -145,11 +166,29 @@ public class LeftSidebar {
         return mx >= x && mx <= x + w && my >= y && my <= y + h;
     }
 
+    // --- FUNCIÓN AUXILIAR PARA CREAR WIDGETS ---
+    private static void crearWidget(String tipo, String nombreCapa, int x, int y, int w, int h) {
+        GlobalGuiSettings.PanelConfig widget = new GlobalGuiSettings.PanelConfig(x, y, w, h);
+        widget.tipo = tipo;
+        widget.pagina = GlobalGuiSettings.paginaActual;
+        
+        if (tipo.equals("ESTADISTICA")) {
+            widget.textoAsociado = "Salud"; // Por defecto, luego lo editaremos
+        } else {
+            widget.textoAsociado = nombreCapa; // Nombre para que se vea bonito en la RightBar
+        }
+        
+        GlobalGuiSettings.PANELES.add(widget);
+        GlobalGuiSettings.sincronizarCapas();
+        GlobalGuiSettings.panelSeleccionado = widget;
+    }
+
     public static boolean handleClick(double mx, double my, int screenHeight, int screenWidth, GlobalGuiSettings.TextConfig tSel, GlobalGuiSettings.PanelConfig pSel) {
         if (!sidebarVisible) return false;
 
         int startY = getSidebarY(screenHeight);
 
+        // Detección de clics en las pestañas principales
         if (isHovered(mx, my, START_X, startY, TAB_WIDTH, TAB_HEIGHT)) {
             toggleModule(0); return true;
         }
@@ -158,6 +197,9 @@ public class LeftSidebar {
         }
         if (isHovered(mx, my, START_X, startY + 2 * (TAB_HEIGHT + TAB_GAP), TAB_WIDTH, TAB_HEIGHT)) {
             toggleModule(2); return true;
+        }
+        if (isHovered(mx, my, START_X, startY + 3 * (TAB_HEIGHT + TAB_GAP), TAB_WIDTH, TAB_HEIGHT)) {
+            toggleModule(3); return true; // Clic en pestaña W
         }
 
         if (selectedModule >= 0) {
@@ -209,6 +251,24 @@ public class LeftSidebar {
                 if (isHovered(mx, my, PANEL_X + 10, panelY + 80, 120, 18)) { FigurasEdit.crearPiezaMision("MISION_TITULO", centerX - 75, centerY - 15); selectedModule = -1; return true; }
                 if (isHovered(mx, my, PANEL_X + 10, panelY + 100, 120, 18)) { FigurasEdit.crearPiezaMision("MISION_DESCRIPCION", centerX - 75, centerY - 30); selectedModule = -1; return true; }
                 if (isHovered(mx, my, PANEL_X + 10, panelY + 120, 120, 18)) { FigurasEdit.crearPiezaMision("MISION_OBJETIVOS", centerX - 75, centerY - 50); selectedModule = -1; return true; }
+            } 
+            // --- NUEVOS CLICS DE LOS WIDGETS RPG ---
+            else if (selectedModule == 3) {
+                if (showInventoryMenu) {
+                    panelWidth = 130; panelHeight = 165;
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 110, 18)) { crearWidget("SLOT_NORMAL", "Slot Normal", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 110, 18)) { crearWidget("SLOT_CASCO", "Slot Casco", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 110, 18)) { crearWidget("SLOT_PECHERA", "Slot Pechera", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 80, 110, 18)) { crearWidget("SLOT_PANTALON", "Slot Pantalon", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 100, 110, 18)) { crearWidget("SLOT_BOTAS", "Slot Botas", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 120, 110, 18)) { crearWidget("SLOT_ESCUDO", "Slot Escudo", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 140, 110, 18)) { showInventoryMenu = false; return true; } // Volver
+                } else {
+                    panelWidth = 130; panelHeight = 85;
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 110, 18)) { crearWidget("MANIQUI", "Widget Maniqui", centerX - 25, centerY - 40, 50, 80); selectedModule = -1; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 110, 18)) { showInventoryMenu = true; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 110, 18)) { crearWidget("ESTADISTICA", "Widget Stats", centerX - 40, centerY - 10, 80, 20); selectedModule = -1; return true; }
+                }
             }
 
             if (isHovered(mx, my, PANEL_X, panelY, panelWidth, panelHeight)) {
@@ -222,6 +282,7 @@ public class LeftSidebar {
         selectedModule = (selectedModule == module) ? -1 : module;
         showShapesMenu = false;
         showBrushThickness = false;
+        showInventoryMenu = false;
         selectedTool = -1;
         selectedShape = -1;
     }

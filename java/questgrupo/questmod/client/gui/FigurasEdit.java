@@ -1,9 +1,12 @@
 package questgrupo.questmod.client.gui;
 
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
 import questgrupo.questmod.Config;
 import questgrupo.questmod.client.GlobalGuiSettings;
+import net.minecraft.client.Minecraft;
 import java.util.Collections;
 import java.util.List;
 
@@ -175,6 +178,102 @@ public static void crearBotonPagina(int numPagina) {
     }
 
     public static void renderizar(GuiGraphics g, GlobalGuiSettings.PanelConfig p, boolean seleccionado, boolean escribiendo) {
+        // ─── RENDERING EN 3D DEL MANIQUÍ RPG ───
+        if ("MANIQUI".equals(p.tipo)) {
+            Player player = Minecraft.getInstance().player;
+            if (player != null) {
+                // 1. Dibujamos un recuadro semi-transparente de fondo para ver los límites en el lienzo
+                g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, 0x15FFFFFF);
+                g.renderOutline(p.x, p.y, p.ancho, p.alto, seleccionado ? 0xFFFFFF00 : 0xFF444444);
+
+                // 2. Calculamos el centro de la caja y la escala apropiada
+                int centroX = p.x + (p.ancho / 2);
+                int baseY = p.y + p.alto - 8; // Dejamos un margen abajo para los pies
+                
+                // La escala estándar de Minecraft es 30, la ajustamos según el alto del recuadro
+                int escala = (int) (p.alto * 0.45F); 
+
+                // Obtener coordenadas reales del ratón para que el maniquí lo mire fijamente
+                // Usamos valores simples - el maniquí mirará ligeramente hacia la derecha
+                float rotY = 0.3f; // Rotación horizontal (derecha/izquierda)
+                float rotX = 0.0f; // Rotación vertical (arriba/abajo)
+
+                // 3. Invocamos el renderizador nativo en 3D de Minecraft
+                g.pose().pushPose();
+                InventoryScreen.renderEntityInInventoryFollowsMouse(g, centroX, baseY, escala, rotY, rotX, player);
+                g.pose().popPose();
+            }
+            return; // Terminamos para que no dibuje las formas comunes encima
+        }
+
+        // ─── RENDERING DEL SLOT DE INVENTARIO RPG (DINÁMICO) ───
+        if (p.tipo != null && p.tipo.startsWith("SLOT")) {
+            // 1. Fondo gris clásico de Minecraft
+            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, 0xFF8B8B8B);
+            
+            // 2. Sombra interior (Borde superior e izquierdo oscuros)
+            g.fill(p.x, p.y, p.x + p.ancho - 1, p.y + 1, 0xFF373737);
+            g.fill(p.x, p.y, p.x + 1, p.y + p.alto - 1, 0xFF373737);
+            
+            // 3. Brillo inferior (Borde inferior y derecho blancos)
+            g.fill(p.x + 1, p.y + p.alto - 1, p.x + p.ancho, p.y + p.alto, 0xFFFFFFFF);
+            g.fill(p.x + p.ancho - 1, p.y + 1, p.x + p.ancho, p.y + p.alto, 0xFFFFFFFF);
+
+            // 4. Lógica Dinámica: Leer el ítem real del jugador
+            int iconX = p.x + (p.ancho - 16) / 2;
+            int iconY = p.y + (p.alto - 16) / 2;
+            
+            net.minecraft.world.item.ItemStack renderItem = net.minecraft.world.item.ItemStack.EMPTY;
+            net.minecraft.resources.ResourceLocation watermark = null;
+            net.minecraft.world.entity.player.Player player = net.minecraft.client.Minecraft.getInstance().player;
+
+            if (player != null) {
+                switch (p.tipo) {
+                    case "SLOT_CASCO":   
+                        renderItem = player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.HEAD);
+                        if (renderItem.isEmpty()) watermark = net.minecraft.resources.ResourceLocation.parse("minecraft:textures/item/empty_armor_slot_helmet.png");
+                        break;
+                    case "SLOT_PECHERA": 
+                        renderItem = player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.CHEST);
+                        if (renderItem.isEmpty()) watermark = net.minecraft.resources.ResourceLocation.parse("minecraft:textures/item/empty_armor_slot_chestplate.png");
+                        break;
+                    case "SLOT_PANTALON":
+                        renderItem = player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.LEGS);
+                        if (renderItem.isEmpty()) watermark = net.minecraft.resources.ResourceLocation.parse("minecraft:textures/item/empty_armor_slot_leggings.png");
+                        break;
+                    case "SLOT_BOTAS":   
+                        renderItem = player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.FEET);
+                        if (renderItem.isEmpty()) watermark = net.minecraft.resources.ResourceLocation.parse("minecraft:textures/item/empty_armor_slot_boots.png");
+                        break;
+                    case "SLOT_ESCUDO":  
+                        renderItem = player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.OFFHAND);
+                        if (renderItem.isEmpty()) watermark = net.minecraft.resources.ResourceLocation.parse("minecraft:textures/item/empty_armor_slot_shield.png");
+                        break;
+                }
+            }
+
+            // 5. Dibujado final (Ítem real vs Textura vacía original)
+            if (!renderItem.isEmpty()) {
+                // Si tienes armadura, dibujamos el ítem y su barra de durabilidad
+                g.renderFakeItem(renderItem, iconX, iconY);
+                g.renderItemDecorations(net.minecraft.client.Minecraft.getInstance().font, renderItem, iconX, iconY);
+            } else if (watermark != null) {
+                // Si NO tienes armadura, dibujamos la marca de agua oficial con 60% de opacidad
+                com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+                com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 0.6f);
+                g.blit(watermark, iconX, iconY, 0, 0, 16, 16, 16, 16);
+                com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+                com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+            }
+
+            // 6. Borde amarillo si lo tenemos seleccionado en el editor
+            if (seleccionado) {
+                g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFFFFFF00);
+            }
+            
+            return; 
+        }
+
         if (p.tipo.equals("LINEA")) {
             if (p.x2 != 0 || p.y2 != 0) {
                 drawLineThick(g, p.x, p.y, p.x2, p.y2, p.colorARGB, p.grosor);
