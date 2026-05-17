@@ -445,15 +445,10 @@ this.inputColor.setResponder(s -> {
         int viewportWidth = this.width - sidebarReserved;
         int viewportHeight = this.height - viewportY;
 
-        // No canvas background - show Minecraft world directly
-
         Viewport.renderBorder(g, sidebarReserved, viewportY, viewportWidth, viewportHeight);
 
-        LeftSidebar.render(g, this.width, this.height);
-        RightBar.render(g, this.width, this.height);
-
+        // 1. DIBUJAR EL LIENZO Y LAS CAPAS PRIMERO (Al fondo)
         g.pose().pushPose();
-        // Draw elements at fixed position - sidebarReserved affects only click detection, not rendering
         g.pose().translate(0, viewportY, 0);
 
         float zOffset = 0;
@@ -462,7 +457,7 @@ this.inputColor.setResponder(s -> {
             if (capa.pagina != GlobalGuiSettings.paginaActual && capa.pagina != 0) continue;
 
             g.pose().pushPose();
-            g.pose().translate(0, 0, zOffset); // Empujamos cada capa un poco más hacia el frente
+            g.pose().translate(0, 0, zOffset); // Empujamos cada capa un poco más hacia el frente entre sí
             
             if (capa.dibujo != null) {
                 for (GlobalGuiSettings.BrushStroke stroke : capa.dibujo.trazos) renderBrushStroke(g, stroke);
@@ -474,7 +469,7 @@ this.inputColor.setResponder(s -> {
             }
 
             g.pose().popPose();
-            zOffset += 0.1f; // Cada capa está 0.1 píxeles delante de la anterior
+            zOffset += 0.1f; 
         }
 
         if (drawingBrush && currentStroke != null) {
@@ -486,8 +481,14 @@ this.inputColor.setResponder(s -> {
             int currentY = (int)my;
             drawLineThick(g, lineStartX, lineStartY, currentX, currentY, GlobalGuiSettings.colorHerramientas, GlobalGuiSettings.grosorPincel);
         }
-
         g.pose().popPose();
+
+        // 2. DIBUJAR LA INTERFAZ DE USUARIO ENCIMA (Barras y Menús)
+        g.pose().pushPose();
+        g.pose().translate(0, 0, 300); // Elevamos todo el UI 300 niveles en Z para aplastar el lienzo
+
+        LeftSidebar.render(g, this.width, this.height);
+        RightBar.render(g, this.width, this.height);
 
         TopBar.setCurrentPanel(pSel);
         TopBar.render(g, this.width, 5, tSel, pSel);
@@ -496,9 +497,8 @@ this.inputColor.setResponder(s -> {
             DownBar.render(g, this.width, this.height);
         }
 
-        // Color popup: styled Minecraft window with title, EditBox, and buttons
+        // Color popup
         if (inputColor.visible) {
-            // Calculate popup anchor position based on context
             int anchorX;
             int anchorY;
             if (editandoColorHerramientas) {
@@ -524,29 +524,9 @@ this.inputColor.setResponder(s -> {
             }
             colorPopupX = anchorX - COLOR_POPUP_W / 2;
             colorPopupY = anchorY;
-            // Clamp to screen
             if (colorPopupX < 2) colorPopupX = 2;
             if (colorPopupX + COLOR_POPUP_W > this.width - 2) colorPopupX = this.width - 2 - COLOR_POPUP_W;
             dibujarPopupColor(g, colorPopupX, colorPopupY);
-        }
-
-        // Always update button visibility for scale buttons based on pSel
-        if (pSel != null && pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
-            int barX = LeftSidebar.getSidebarWidth();
-            int barW = TopBar.getWidth(); 
-            int barStartX = barX + (this.width - barX - barW) / 2;
-            
-            int curX = barStartX + 10;
-            if (pSel.tipo.startsWith("DESPLEGABLE")) {
-                curX += 155; 
-            } else {
-                curX += 20; // Skip Relleno
-                if (!pSel.tipo.equals("LINEA") && !pSel.tipo.equals("TRIANGULO")) {
-                    curX += 20; // Skip Borde
-                }
-            }
-
-            curX += 10; // Gap before T
         }
 
         actualizarVisibilidadYBotones();
@@ -556,7 +536,10 @@ this.inputColor.setResponder(s -> {
         if (menuRotarVisible) dibujarMenuRotar(g, mx, my);
         if (spacingPanelVisible) dibujarPanelEspaciado(g, mx, my);
 
+        // 3. Renderizamos los botones y textos nativos (Aceptar, Cancelar, + , B, I) también en lo más alto
         super.render(g, mx, my, pt);
+
+        g.pose().popPose(); // Restauramos la altura al terminar
     }
 
     private void drawLine1px(GuiGraphics g, int x0, int y0, int x1, int y1, int color) {
