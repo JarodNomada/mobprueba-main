@@ -349,7 +349,9 @@ public class TopBar {
             } else if (pSel.tipo.equals("MANIQUI")) {
                 return 94; // 6 (margen) + 40 (colores) + 4 (separador) + 38 (titulo) + 6 (margen)
             } else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
-                return 280; // Agrandado para recuperar controles
+                return 280; 
+            } else if (pSel.tipo.startsWith("SLOT")) {
+                return 160; // Barra super compacta para el Slot individual
             } else {
                 int w = 6 + 20 + (pSel.tipo.equals("LINEA") || pSel.tipo.equals("TRIANGULO") ? 0 : 20);
                 if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
@@ -542,6 +544,22 @@ public class TopBar {
             drawVerticalSeparator(g, curX, y + 4, 40);
             curX += 6;
             drawSectionTitle(g, font, "Ajustes", curX, y + 2, 130);
+        } else if (pSel.tipo.startsWith("SLOT")) {
+            int curX = barStartX + 6;
+            int boxY = y + 16;
+            drawSectionTitle(g, font, "Fondo", curX, y + 2, 20);
+            drawColorSwatch(g, pSel.colorARGB, curX + 2, boxY);
+            curX += 26;
+            drawVerticalSeparator(g, curX, y + 4, 40);
+            curX += 6;
+            drawSectionTitle(g, font, "Slot", curX, y + 2, 60);
+            drawColorSwatch(g, pSel.colorSlotBg, curX, boxY);
+            drawColorSwatch(g, pSel.colorSlotDark, curX + 20, boxY);
+            drawColorSwatch(g, pSel.colorSlotLight, curX + 40, boxY);
+            curX += 66;
+            drawVerticalSeparator(g, curX, y + 4, 40);
+            curX += 6;
+            drawSectionTitle(g, font, "Escala", curX, y + 2, 42);
         } else {
             int currentX = barStartX + 6;
             int boxY = y + 16; 
@@ -631,6 +649,13 @@ public class TopBar {
                 if (mx >= curX + 20 && mx <= curX + 36) return BTN_BORDER_COLOR;
             }
         } else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
+            int curX = barStartX + 6;
+            if (mx >= curX + 2 && mx <= curX + 18 && my >= y+16 && my <= y+32) return BTN_FILL_COLOR;
+            curX += 32;
+            if (mx >= curX && mx <= curX + 16 && my >= y+16 && my <= y+32) return BTN_SLOT_BG;
+            if (mx >= curX + 20 && mx <= curX + 36 && my >= y+16 && my <= y+32) return BTN_SLOT_DARK;
+            if (mx >= curX + 40 && mx <= curX + 56 && my >= y+16 && my <= y+32) return BTN_SLOT_LIGHT;
+        } else if (pSel.tipo.startsWith("SLOT")) {
             int curX = barStartX + 6;
             if (mx >= curX + 2 && mx <= curX + 18 && my >= y+16 && my <= y+32) return BTN_FILL_COLOR;
             curX += 32;
@@ -738,5 +763,19 @@ public class TopBar {
         
         adder.accept(Button.builder(Component.literal("-"), b -> { pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f); }).bounds(curX, btnY, 18, btnSize).build());
         adder.accept(Button.builder(Component.literal("+"), b -> { pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f); }).bounds(curX + 20, btnY, 18, btnSize).build());
+    }
+
+    public static void inicializarBotonesSlot(int guiWidth, int y, Consumer<Button> adder, GlobalGuiSettings.PanelConfig pSel) {
+        if (pSel == null || !pSel.tipo.startsWith("SLOT")) return;
+        int barX = LeftSidebar.getSidebarWidth();
+        int expectedBarW = calculateBarWidth(false, true, null, pSel);
+        int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
+        int btnSize = 18;
+
+        int curX = barStartX + 6 + 26 + 6 + 66 + 6; 
+        int btnY = y + 16; 
+        
+        adder.accept(Button.builder(Component.literal("-"), b -> { pSel.slotSize = Math.max(5, pSel.slotSize - 1); }).bounds(curX, btnY, 20, btnSize).build());
+        adder.accept(Button.builder(Component.literal("+"), b -> { pSel.slotSize = Math.min(100, pSel.slotSize + 1); }).bounds(curX + 22, btnY, 20, btnSize).build());
     }
 }

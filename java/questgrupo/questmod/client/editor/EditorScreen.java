@@ -164,6 +164,8 @@ public class EditorScreen extends Screen {
                 TopBar.inicializarBotonesWidget(this.width, 5, this::addRenderableWidget, pSel);
             } else if (pSel.tipo.equals("MANIQUI")) {
                 TopBar.inicializarBotonesManiqui(this.width, 5, this::addRenderableWidget, pSel);
+            } else if (pSel.tipo.startsWith("SLOT")) {
+                TopBar.inicializarBotonesSlot(this.width, 5, this::addRenderableWidget, pSel);
             } else if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty() && !pSel.tipo.equals("INVENTORY_GRID")) {
                 TopBar.inicializarBotonesMision(this.width, 5, this::addRenderableWidget, pSel);
             }
