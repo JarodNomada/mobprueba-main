@@ -87,12 +87,17 @@ public class EditorScreen extends Screen {
         // 1. EL LIMPIADOR VA PRIMERO
         this.clearWidgets();
 
-        // 2. EL BUSCADOR VA DESPUÉS (Y lo bajamos un poco en Y de -70 a -50)
+        // 2. EL BUSCADOR MODERNO
         this.texturasFiltradas.clear();
         this.texturasFiltradas.addAll(GlobalGuiSettings.TODAS_LAS_TEXTURAS);
         
-        this.buscadorTexturas = new net.minecraft.client.gui.components.EditBox(this.font, this.width / 2 - 80, this.height / 2 - 50, 160, 16, net.minecraft.network.chat.Component.literal("Buscar..."));
+        int modalW = 280, modalH = 210;
+        int mX = (this.width - modalW) / 2, mY = (this.height - modalH) / 2;
+        
+        this.buscadorTexturas = new net.minecraft.client.gui.components.EditBox(this.font, mX + 45, mY + 42, 200, 16, net.minecraft.network.chat.Component.literal("Buscar..."));
         this.buscadorTexturas.setMaxLength(50);
+        this.buscadorTexturas.setBordered(false); // Le quitamos el marco vainilla
+        this.buscadorTexturas.setTextColor(0xFFFFFFFF); // Letra blanca
         this.buscadorTexturas.setResponder(s -> {
             this.paginaTexturas = 0;
             this.texturasFiltradas.clear();
@@ -571,46 +576,103 @@ this.inputColor.setResponder(s -> {
         g.pose().pushPose();
         g.pose().translate(0, 0, 400);
         
-        int modalW = 240, modalH = 160;
+        int modalW = 280, modalH = 210;
         int mX = (this.width - modalW) / 2, mY = (this.height - modalH) / 2;
 
-        if (mostrarModalGaleria) {
-            g.fill(0, 0, this.width, this.height, 0xAA000000); // Fondo oscuro
-            LeftSidebar.drawVanillaPanel(g, mX, mY, modalW, modalH);
-            g.drawCenteredString(font, "Galer\u00eda Personalizada", mX + modalW/2, mY + 10, 0xFFFFFF);
-            LeftSidebar.drawVanillaButton(g, font, mX + modalW - 25, mY + 5, 20, 20, "X", false);
-            
-            int maxPags = (int) Math.ceil(GlobalGuiSettings.CUSTOM_IMAGES.size() / 10.0);
-            for (int i = 0; i < 10; i++) {
-                int idx = paginaGaleria * 10 + i;
-                if (idx >= GlobalGuiSettings.CUSTOM_IMAGES.size()) break;
-                int col = i % 5, row = i / 5;
-                int ix = mX + 20 + (col * 40), iy = mY + 40 + (row * 40);
-                g.fill(ix, iy, ix + 32, iy + 32, 0x55000000); // Fondo cuadrito
-                g.blit(GlobalGuiSettings.CUSTOM_IMAGES.get(idx), ix, iy, 0, 0, 32, 32, 32, 32);
+        if (mostrarModalGaleria || mostrarModalTexturas) {
+            g.fill(0, 0, this.width, this.height, 0x66000000); // Fondo oscuro más elegante
+
+            // Panel Principal (Gris clásico de TopBar/LeftBar)
+            drawRoundedRect(g, mX - 1, mY - 1, modalW + 2, modalH + 2, 0xFF555555); // Borde exterior oscuro
+            drawRoundedRect(g, mX, mY, modalW, modalH, 0xFFC6C6C6); // Fondo Vainilla
+
+            // Título
+            String titulo = mostrarModalGaleria ? "Galer\u00eda Personalizada" : "Texturas del Juego";
+            g.drawString(font, titulo, mX + (modalW - font.width(titulo))/2, mY + 15, 0xFF202020, false);
+
+            // Botón X (Cerrar)
+            boolean hoverX = mx >= mX + modalW - 30 && mx <= mX + modalW - 10 && my >= mY + 10 && my <= mY + 30;
+            drawModernButton(g, font, mX + modalW - 30, mY + 10, 20, 20, "X", hoverX);
+
+            if (mostrarModalTexturas) {
+                // Buscador Redondeado Gris Oscuro
+                drawRoundedRect(g, mX + 20, mY + 40, 240, 20, 0xFF333333); 
+                // Lupa dibujada a mano
+                g.renderOutline(mX + 26, mY + 45, 6, 6, 0xFFAAAAAA);
+                g.fill(mX + 31, mY + 50, mX + 34, mY + 53, 0xFFAAAAAA);
+                
+                this.buscadorTexturas.visible = true;
+                
+                // Grilla de Texturas
+                int maxPags = (int) Math.ceil(texturasFiltradas.size() / 10.0);
+                int gridX = mX + 24, gridY = mY + 75;
+                for (int i = 0; i < 10; i++) {
+                    int idx = paginaTexturas * 10 + i;
+                    if (idx >= texturasFiltradas.size()) break;
+                    int col = i % 5, row = i / 5;
+                    int itemX = gridX + (col * 48), itemY = gridY + (row * 48);
+                    
+                    boolean hoverItem = mx >= itemX && mx <= itemX + 40 && my >= itemY && my <= itemY + 40;
+                    
+                    // 1. Borde gris claro exterior
+                    drawRoundedRect(g, itemX - 1, itemY - 1, 42, 42, hoverItem ? 0xFF888888 : 0xFFAAAAAA);
+                    // 2. Un pixel dentro de blanco
+                    drawRoundedRect(g, itemX, itemY, 40, 40, 0xFFFFFFFF);
+                    // 3. Fondo del slot (gris vainilla)
+                    drawRoundedRect(g, itemX + 1, itemY + 1, 38, 38, hoverItem ? 0xFFBDBDBD : 0xFFC6C6C6);
+                    
+                    g.pose().pushPose();
+                    // Escala más grande (1.5x) -> Centrado exacto en un cuadro de 40x40 (offset de +8)
+                    g.pose().translate(itemX + 8, itemY + 8, 0);
+                    g.pose().scale(1.5f, 1.5f, 1.0f);
+                    g.renderFakeItem(texturasFiltradas.get(idx), 0, 0);
+                    g.pose().popPose();
+                }
+                
+                // Paginación
+                int pagY = mY + modalH - 35;
+                boolean hoverPrev = mx >= mX + 20 && mx <= mX + 50 && my >= pagY && my <= pagY + 20;
+                boolean hoverNext = mx >= mX + modalW - 50 && mx <= mX + modalW - 20 && my >= pagY && my <= pagY + 20;
+                drawModernButton(g, font, mX + 20, pagY, 30, 20, "<", hoverPrev);
+                drawModernButton(g, font, mX + modalW - 50, pagY, 30, 20, ">", hoverNext);
+                
+                String pagText = "P\u00e1gina " + (paginaTexturas + 1) + " de " + Math.max(1, maxPags);
+                g.drawString(font, pagText, mX + (modalW - font.width(pagText)) / 2, pagY + 6, 0xFF404040, false);
+
+            } else {
+                // Modal de Galería (Idéntico pero sin buscador)
+                this.buscadorTexturas.visible = false;
+                
+                int maxPags = (int) Math.ceil(GlobalGuiSettings.CUSTOM_IMAGES.size() / 10.0);
+                int gridX = mX + 24, gridY = mY + 60; 
+                for (int i = 0; i < 10; i++) {
+                    int idx = paginaGaleria * 10 + i;
+                    if (idx >= GlobalGuiSettings.CUSTOM_IMAGES.size()) break;
+                    int col = i % 5, row = i / 5;
+                    int itemX = gridX + (col * 48), itemY = gridY + (row * 48);
+                    
+                    boolean hoverItem = mx >= itemX && mx <= itemX + 40 && my >= itemY && my <= itemY + 40;
+                    
+                    // 1. Borde gris claro exterior
+                    drawRoundedRect(g, itemX - 1, itemY - 1, 42, 42, hoverItem ? 0xFF888888 : 0xFFAAAAAA);
+                    // 2. Un pixel dentro de blanco
+                    drawRoundedRect(g, itemX, itemY, 40, 40, 0xFFFFFFFF);
+                    // 3. Fondo del slot (gris vainilla)
+                    drawRoundedRect(g, itemX + 1, itemY + 1, 38, 38, hoverItem ? 0xFFBDBDBD : 0xFFC6C6C6);
+                    
+                    // Los PNGs ya tienen 32x32, quedan perfectos con offset de +4
+                    g.blit(GlobalGuiSettings.CUSTOM_IMAGES.get(idx), itemX + 4, itemY + 4, 0, 0, 32, 32, 32, 32);
+                }
+                
+                int pagY = mY + modalH - 35;
+                boolean hoverPrev = mx >= mX + 20 && mx <= mX + 50 && my >= pagY && my <= pagY + 20;
+                boolean hoverNext = mx >= mX + modalW - 50 && mx <= mX + modalW - 20 && my >= pagY && my <= pagY + 20;
+                drawModernButton(g, font, mX + 20, pagY, 30, 20, "<", hoverPrev);
+                drawModernButton(g, font, mX + modalW - 50, pagY, 30, 20, ">", hoverNext);
+                
+                String pagText = "P\u00e1gina " + (paginaGaleria + 1) + " de " + Math.max(1, maxPags);
+                g.drawString(font, pagText, mX + (modalW - font.width(pagText)) / 2, pagY + 6, 0xFF404040, false);
             }
-            g.drawString(font, "Pag " + (paginaGaleria + 1) + "/" + Math.max(1, maxPags), mX + modalW/2 - 20, mY + modalH - 20, 0xFFFFFF);
-            LeftSidebar.drawVanillaButton(g, font, mX + 20, mY + modalH - 25, 30, 20, "<", false);
-            LeftSidebar.drawVanillaButton(g, font, mX + modalW - 50, mY + modalH - 25, 30, 20, ">", false);
-        } 
-        else if (mostrarModalTexturas) {
-            g.fill(0, 0, this.width, this.height, 0xAA000000); // Fondo oscuro
-            LeftSidebar.drawVanillaPanel(g, mX, mY, modalW, modalH);
-            g.drawCenteredString(font, "Texturas del Juego", mX + modalW/2, mY + 10, 0xFFFFFF);
-            LeftSidebar.drawVanillaButton(g, font, mX + modalW - 25, mY + 5, 20, 20, "X", false);
-            this.buscadorTexturas.visible = true; // Activar barra de busqueda
-            
-            int maxPags = (int) Math.ceil(texturasFiltradas.size() / 10.0);
-            for (int i = 0; i < 10; i++) {
-                int idx = paginaTexturas * 10 + i;
-                if (idx >= texturasFiltradas.size()) break;
-                int col = i % 5, row = i / 5;
-                int ix = mX + 25 + (col * 40), iy = mY + 50 + (row * 40);
-                g.renderFakeItem(texturasFiltradas.get(idx), ix, iy);
-            }
-            g.drawString(font, "Pag " + (paginaTexturas + 1) + "/" + Math.max(1, maxPags), mX + modalW/2 - 20, mY + modalH - 20, 0xFFFFFF);
-            LeftSidebar.drawVanillaButton(g, font, mX + 20, mY + modalH - 25, 30, 20, "<", false);
-            LeftSidebar.drawVanillaButton(g, font, mX + modalW - 50, mY + modalH - 25, 30, 20, ">", false);
         } else {
             this.buscadorTexturas.visible = false;
         }
@@ -802,32 +864,38 @@ this.inputColor.setResponder(s -> {
             return true; 
         }
 
-        // --- LÓGICA DE CLICS DE MODALES ---
+// --- LÓGICA DE CLICS DE MODALES ---
         if (mostrarModalGaleria || mostrarModalTexturas) {
-            int modalW = 240, modalH = 160;
+            int modalW = 280, modalH = 210;
             int mX = (this.width - modalW) / 2, mY = (this.height - modalH) / 2;
             
             // Clic en la X (Cerrar)
-            if (mx >= mX + modalW - 25 && mx <= mX + modalW - 5 && my >= mY + 5 && my <= mY + 25) {
+            if (mx >= mX + modalW - 30 && mx <= mX + modalW - 10 && my >= mY + 10 && my <= mY + 30) {
                 mostrarModalGaleria = false; mostrarModalTexturas = false; return true;
             }
+            
             // Flechas <- y ->
-            if (mx >= mX + 20 && mx <= mX + 50 && my >= mY + modalH - 25 && my <= mY + modalH - 5) {
+            int pagY = mY + modalH - 35;
+            if (mx >= mX + 20 && mx <= mX + 50 && my >= pagY && my <= pagY + 20) {
                 if (mostrarModalGaleria && paginaGaleria > 0) paginaGaleria--;
                 if (mostrarModalTexturas && paginaTexturas > 0) paginaTexturas--;
                 return true;
             }
-            if (mx >= mX + modalW - 50 && mx <= mX + modalW - 20 && my >= mY + modalH - 25 && my <= mY + modalH - 5) {
+            if (mx >= mX + modalW - 50 && mx <= mX + modalW - 20 && my >= pagY && my <= pagY + 20) {
                 if (mostrarModalGaleria && paginaGaleria < (int) Math.ceil(GlobalGuiSettings.CUSTOM_IMAGES.size() / 10.0) - 1) paginaGaleria++;
                 if (mostrarModalTexturas && paginaTexturas < (int) Math.ceil(texturasFiltradas.size() / 10.0) - 1) paginaTexturas++;
                 return true;
             }
             
             // Clic en los ítems
+            int gridX = mX + 24;
+            int gridY = mostrarModalTexturas ? mY + 75 : mY + 60;
             for (int i = 0; i < 10; i++) {
                 int col = i % 5, row = i / 5;
-                int ix = mX + 20 + (col * 40), iy = mY + (mostrarModalTexturas ? 50 : 40) + (row * 40);
-                if (mx >= ix && mx <= ix + 32 && my >= iy && my <= iy + 32) {
+                int itemX = gridX + (col * 48);
+                int itemY = gridY + (row * 48);
+                
+                if (mx >= itemX && mx <= itemX + 40 && my >= itemY && my <= itemY + 40) {
                     if (mostrarModalGaleria) {
                         int idx = paginaGaleria * 10 + i;
                         if (idx < GlobalGuiSettings.CUSTOM_IMAGES.size()) {
@@ -846,12 +914,11 @@ this.inputColor.setResponder(s -> {
                         }
                     }
                 }
-}
+            }
             
-            // Clic en la barra de búsqueda (Para que sepas que estás escribiendo en ella)
+            // Clic en la barra de búsqueda (Para enfocarla)
             if (this.buscadorTexturas.visible) {
-                if (mx >= this.buscadorTexturas.getX() && mx <= this.buscadorTexturas.getX() + this.buscadorTexturas.getWidth() &&
-                    my >= this.buscadorTexturas.getY() && my <= this.buscadorTexturas.getY() + this.buscadorTexturas.getHeight()) {
+                if (mx >= mX + 20 && mx <= mX + 260 && my >= mY + 40 && my <= mY + 60) {
                     this.buscadorTexturas.setFocused(true);
                     this.buscadorTexturas.mouseClicked(mx, my, btn);
                     return true;
@@ -859,7 +926,7 @@ this.inputColor.setResponder(s -> {
                     this.buscadorTexturas.setFocused(false);
                 }
             }
-            return true; // Si hace clic en cualquier otro lado del modal, ignorarlo (escudo)
+            return true; // Escudo: clics en el resto del modal no hacen nada.
         }
 
         int barX = LeftSidebar.getSidebarWidth();
@@ -1365,4 +1432,26 @@ this.inputColor.setResponder(s -> {
     }
 
     @Override public boolean isPauseScreen() { return false; }
+
+    private void drawRoundedRect(GuiGraphics g, int x, int y, int width, int height, int color) {
+        g.fill(x + 2, y, x + width - 2, y + height, color); // Centro
+        g.fill(x, y + 2, x + width, y + height - 2, color); // Lados
+        g.fill(x + 1, y + 1, x + 2, y + 2, color); // Esq. Sup Izq
+        g.fill(x + width - 2, y + 1, x + width - 1, y + 2, color); // Esq. Sup Der
+        g.fill(x + 1, y + height - 2, x + 2, y + height - 1, color); // Esq. Inf Izq
+        g.fill(x + width - 2, y + height - 2, x + width - 1, y + height - 1, color); // Esq. Inf Der
+    }
+
+    private void drawModernButton(GuiGraphics g, Font font, int x, int y, int width, int height, String text, boolean isHovered) {
+        // 1. Borde gris claro exterior
+        drawRoundedRect(g, x - 1, y - 1, width + 2, height + 2, isHovered ? 0xFF888888 : 0xFFAAAAAA);
+        // 2. Un pixel dentro de blanco
+        drawRoundedRect(g, x, y, width, height, 0xFFFFFFFF);
+        // 3. Fondo del botón (gris vainilla)
+        drawRoundedRect(g, x + 1, y + 1, width - 2, height - 2, isHovered ? 0xFFBDBDBD : 0xFFC6C6C6);
+        
+        // Texto centrado en gris oscuro
+        int textWidth = font.width(text);
+        g.drawString(font, text, x + (width - textWidth) / 2, y + (height - font.lineHeight) / 2 + 1, 0xFF202020, false);
+    }
 }
