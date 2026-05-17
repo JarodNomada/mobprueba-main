@@ -37,6 +37,14 @@ public class EditorScreen extends Screen {
     private boolean spacingPanelVisible = false;
     private int spacingPanelX, spacingPanelY;
 
+    // -- MODALES DE IMÁGENES --
+    private boolean mostrarModalGaleria = false;
+    private boolean mostrarModalTexturas = false;
+    private int paginaGaleria = 0;
+    private int paginaTexturas = 0;
+    private net.minecraft.client.gui.components.EditBox buscadorTexturas;
+    private java.util.List<net.minecraft.world.item.ItemStack> texturasFiltradas = new java.util.ArrayList<>();
+
     private boolean drawingLine = false;
     private int lineStartX, lineStartY;
     private boolean drawingBrush = false;
@@ -72,12 +80,33 @@ public class EditorScreen extends Screen {
     @Override
     protected void init() {
         GlobalGuiSettings.sincronizarCapas();
-
-        // Repoblar las misiones desde las aceptadas cada vez que se abre el editor
+        GlobalGuiSettings.cargarImagenesCustom();
+        GlobalGuiSettings.cargarTexturasJuego();
         Config.inyectarMisionesEnEditor();
         
+        // 1. EL LIMPIADOR VA PRIMERO
         this.clearWidgets();
 
+        // 2. EL BUSCADOR VA DESPUÉS (Y lo bajamos un poco en Y de -70 a -50)
+        this.texturasFiltradas.clear();
+        this.texturasFiltradas.addAll(GlobalGuiSettings.TODAS_LAS_TEXTURAS);
+        
+        this.buscadorTexturas = new net.minecraft.client.gui.components.EditBox(this.font, this.width / 2 - 80, this.height / 2 - 50, 160, 16, net.minecraft.network.chat.Component.literal("Buscar..."));
+        this.buscadorTexturas.setMaxLength(50);
+        this.buscadorTexturas.setResponder(s -> {
+            this.paginaTexturas = 0;
+            this.texturasFiltradas.clear();
+            String query = s.toLowerCase();
+            for(net.minecraft.world.item.ItemStack stack : GlobalGuiSettings.TODAS_LAS_TEXTURAS) {
+                String name = stack.getHoverName().getString().toLowerCase();
+                String id = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(stack.getItem()).toString().toLowerCase();
+                if (name.contains(query) || id.contains(query)) this.texturasFiltradas.add(stack);
+            }
+        });
+        this.buscadorTexturas.visible = false;
+        this.addRenderableWidget(this.buscadorTexturas);
+
+        // 3. AHORA SÍ, LO DEMÁS
         this.inputColor = new EditBox(this.font, 0, 0, 60, 12, Component.literal(""));
         this.inputColor.setMaxLength(8);
 this.inputColor.setResponder(s -> {
@@ -167,6 +196,8 @@ this.inputColor.setResponder(s -> {
                 TopBar.inicializarBotonesManiqui(this.width, 5, this::addRenderableWidget, pSel);
             } else if (pSel.tipo.startsWith("SLOT")) {
                 TopBar.inicializarBotonesSlot(this.width, 5, this::addRenderableWidget, pSel);
+            } else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) {
+                TopBar.inicializarBotonesImagen(this.width, 5, this::addRenderableWidget, pSel);
             } else if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty() && !pSel.tipo.equals("INVENTORY_GRID")) {
                 TopBar.inicializarBotonesMision(this.width, 5, this::addRenderableWidget, pSel);
             }
@@ -536,8 +567,60 @@ this.inputColor.setResponder(s -> {
         if (menuRotarVisible) dibujarMenuRotar(g, mx, my);
         if (spacingPanelVisible) dibujarPanelEspaciado(g, mx, my);
 
-        // 3. Renderizamos los botones y textos nativos (Aceptar, Cancelar, + , B, I) también en lo más alto
+        // --- DIBUJO DE MODALES DE IMÁGENES (Z=400) ---
+        g.pose().pushPose();
+        g.pose().translate(0, 0, 400);
+        
+        int modalW = 240, modalH = 160;
+        int mX = (this.width - modalW) / 2, mY = (this.height - modalH) / 2;
+
+        if (mostrarModalGaleria) {
+            g.fill(0, 0, this.width, this.height, 0xAA000000); // Fondo oscuro
+            LeftSidebar.drawVanillaPanel(g, mX, mY, modalW, modalH);
+            g.drawCenteredString(font, "Galer\u00eda Personalizada", mX + modalW/2, mY + 10, 0xFFFFFF);
+            LeftSidebar.drawVanillaButton(g, font, mX + modalW - 25, mY + 5, 20, 20, "X", false);
+            
+            int maxPags = (int) Math.ceil(GlobalGuiSettings.CUSTOM_IMAGES.size() / 10.0);
+            for (int i = 0; i < 10; i++) {
+                int idx = paginaGaleria * 10 + i;
+                if (idx >= GlobalGuiSettings.CUSTOM_IMAGES.size()) break;
+                int col = i % 5, row = i / 5;
+                int ix = mX + 20 + (col * 40), iy = mY + 40 + (row * 40);
+                g.fill(ix, iy, ix + 32, iy + 32, 0x55000000); // Fondo cuadrito
+                g.blit(GlobalGuiSettings.CUSTOM_IMAGES.get(idx), ix, iy, 0, 0, 32, 32, 32, 32);
+            }
+            g.drawString(font, "Pag " + (paginaGaleria + 1) + "/" + Math.max(1, maxPags), mX + modalW/2 - 20, mY + modalH - 20, 0xFFFFFF);
+            LeftSidebar.drawVanillaButton(g, font, mX + 20, mY + modalH - 25, 30, 20, "<", false);
+            LeftSidebar.drawVanillaButton(g, font, mX + modalW - 50, mY + modalH - 25, 30, 20, ">", false);
+        } 
+        else if (mostrarModalTexturas) {
+            g.fill(0, 0, this.width, this.height, 0xAA000000); // Fondo oscuro
+            LeftSidebar.drawVanillaPanel(g, mX, mY, modalW, modalH);
+            g.drawCenteredString(font, "Texturas del Juego", mX + modalW/2, mY + 10, 0xFFFFFF);
+            LeftSidebar.drawVanillaButton(g, font, mX + modalW - 25, mY + 5, 20, 20, "X", false);
+            this.buscadorTexturas.visible = true; // Activar barra de busqueda
+            
+            int maxPags = (int) Math.ceil(texturasFiltradas.size() / 10.0);
+            for (int i = 0; i < 10; i++) {
+                int idx = paginaTexturas * 10 + i;
+                if (idx >= texturasFiltradas.size()) break;
+                int col = i % 5, row = i / 5;
+                int ix = mX + 25 + (col * 40), iy = mY + 50 + (row * 40);
+                g.renderFakeItem(texturasFiltradas.get(idx), ix, iy);
+            }
+            g.drawString(font, "Pag " + (paginaTexturas + 1) + "/" + Math.max(1, maxPags), mX + modalW/2 - 20, mY + modalH - 20, 0xFFFFFF);
+            LeftSidebar.drawVanillaButton(g, font, mX + 20, mY + modalH - 25, 30, 20, "<", false);
+            LeftSidebar.drawVanillaButton(g, font, mX + modalW - 50, mY + modalH - 25, 30, 20, ">", false);
+        } else {
+            this.buscadorTexturas.visible = false;
+        }
+        g.pose().popPose();
+
+        // 3. Renderizamos los botones y textos nativos (Aceptar, Cancelar, Buscador) también en lo más alto
+        g.pose().pushPose();
+        g.pose().translate(0, 0, 500); // 300 base + 500 = 800 (Por encima de ABSOLUTAMENTE TODO)
         super.render(g, mx, my, pt);
+        g.pose().popPose();
 
         g.pose().popPose(); // Restauramos la altura al terminar
     }
@@ -719,12 +802,77 @@ this.inputColor.setResponder(s -> {
             return true; 
         }
 
+        // --- LÓGICA DE CLICS DE MODALES ---
+        if (mostrarModalGaleria || mostrarModalTexturas) {
+            int modalW = 240, modalH = 160;
+            int mX = (this.width - modalW) / 2, mY = (this.height - modalH) / 2;
+            
+            // Clic en la X (Cerrar)
+            if (mx >= mX + modalW - 25 && mx <= mX + modalW - 5 && my >= mY + 5 && my <= mY + 25) {
+                mostrarModalGaleria = false; mostrarModalTexturas = false; return true;
+            }
+            // Flechas <- y ->
+            if (mx >= mX + 20 && mx <= mX + 50 && my >= mY + modalH - 25 && my <= mY + modalH - 5) {
+                if (mostrarModalGaleria && paginaGaleria > 0) paginaGaleria--;
+                if (mostrarModalTexturas && paginaTexturas > 0) paginaTexturas--;
+                return true;
+            }
+            if (mx >= mX + modalW - 50 && mx <= mX + modalW - 20 && my >= mY + modalH - 25 && my <= mY + modalH - 5) {
+                if (mostrarModalGaleria && paginaGaleria < (int) Math.ceil(GlobalGuiSettings.CUSTOM_IMAGES.size() / 10.0) - 1) paginaGaleria++;
+                if (mostrarModalTexturas && paginaTexturas < (int) Math.ceil(texturasFiltradas.size() / 10.0) - 1) paginaTexturas++;
+                return true;
+            }
+            
+            // Clic en los ítems
+            for (int i = 0; i < 10; i++) {
+                int col = i % 5, row = i / 5;
+                int ix = mX + 20 + (col * 40), iy = mY + (mostrarModalTexturas ? 50 : 40) + (row * 40);
+                if (mx >= ix && mx <= ix + 32 && my >= iy && my <= iy + 32) {
+                    if (mostrarModalGaleria) {
+                        int idx = paginaGaleria * 10 + i;
+                        if (idx < GlobalGuiSettings.CUSTOM_IMAGES.size()) {
+                            LeftSidebar.crearWidget("IMAGEN_CUSTOM", "", this.width/2 - 32, this.height/2 - 32, 64, 64);
+                            GlobalGuiSettings.PanelConfig newP = GlobalGuiSettings.PANELES.get(GlobalGuiSettings.PANELES.size()-1);
+                            newP.recursoPath = GlobalGuiSettings.CUSTOM_IMAGES.get(idx).toString();
+                            mostrarModalGaleria = false; return true;
+                        }
+                    } else if (mostrarModalTexturas) {
+                        int idx = paginaTexturas * 10 + i;
+                        if (idx < texturasFiltradas.size()) {
+                            LeftSidebar.crearWidget("TEXTURA_JUEGO", "", this.width/2 - 16, this.height/2 - 16, 32, 32);
+                            GlobalGuiSettings.PanelConfig newP = GlobalGuiSettings.PANELES.get(GlobalGuiSettings.PANELES.size()-1);
+                            newP.recursoPath = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(texturasFiltradas.get(idx).getItem()).toString();
+                            mostrarModalTexturas = false; return true;
+                        }
+                    }
+                }
+}
+            
+            // Clic en la barra de búsqueda (Para que sepas que estás escribiendo en ella)
+            if (this.buscadorTexturas.visible) {
+                if (mx >= this.buscadorTexturas.getX() && mx <= this.buscadorTexturas.getX() + this.buscadorTexturas.getWidth() &&
+                    my >= this.buscadorTexturas.getY() && my <= this.buscadorTexturas.getY() + this.buscadorTexturas.getHeight()) {
+                    this.buscadorTexturas.setFocused(true);
+                    this.buscadorTexturas.mouseClicked(mx, my, btn);
+                    return true;
+                } else {
+                    this.buscadorTexturas.setFocused(false);
+                }
+            }
+            return true; // Si hace clic en cualquier otro lado del modal, ignorarlo (escudo)
+        }
+
         int barX = LeftSidebar.getSidebarWidth();
         int topBarHeight = TopBar.getHeight();
         int visualY = 10;
 
         if (TopBar.isVisible() && my >= visualY && my <= visualY + topBarHeight) {
             
+            // Revisar si tocó el Slider de Opacidad de la Imagen
+            if (pSel != null && (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO"))) {
+                if (TopBar.handleOpacitySliderClick(mx, my, this.width, visualY, pSel)) return true;
+            }
+
             // AQUÍ UNIFICAMOS LA LÓGICA DE DIBUJO Y TEXTO
             int colorID = -1;
             
@@ -836,20 +984,28 @@ this.inputColor.setResponder(s -> {
         }
 
         // 4. Interacción en MODO ON (Editor activo)
-        // El menú de la izquierda ahora es flotante, procesamos sus clics primero.
         if (GlobalGuiSettings.editorActivo) {
             int textosAnteriores = GlobalGuiSettings.TEXTOS.size();
             if (LeftSidebar.handleClick(mx, my, this.height, this.width, tSel, pSel)) {
                 if (LeftSidebar.editColorRequested) {
                     LeftSidebar.editColorRequested = false;
-                    // Abrimos el menú unificado de la TopBar sin reiniciar la pantalla
                     TopBar.openPicker(GlobalGuiSettings.colorHerramientas, TopBar.BTN_TOOL_COLOR, null, null);
+                } else if (LeftSidebar.showGaleriaRequested) {
+                    LeftSidebar.showGaleriaRequested = false;
+                    this.mostrarModalGaleria = true;
+                    this.paginaGaleria = 0;
+                    GlobalGuiSettings.cargarImagenesCustom(); // Lee la carpeta al instante
+                } else if (LeftSidebar.showTexturasRequested) {
+                    LeftSidebar.showTexturasRequested = false;
+                    this.mostrarModalTexturas = true;
+                    this.paginaTexturas = 0;
+                    this.buscadorTexturas.setValue(""); // Limpia la búsqueda anterior
                 } else {
                     if (GlobalGuiSettings.TEXTOS.size() > textosAnteriores) {
                         this.tSel = GlobalGuiSettings.TEXTOS.get(GlobalGuiSettings.TEXTOS.size() - 1);
                         this.pSel = null;
                     }
-                    this.init(); // Solo reiniciamos la pantalla si NO se abrió el color
+                    this.init(); 
                 }
                 return true;
             }
@@ -951,6 +1107,7 @@ this.inputColor.setResponder(s -> {
     @Override
     public boolean mouseReleased(double mx, double my, int btn) {
         TopBar.stopDragging();
+        TopBar.isDraggingOpacityImage = false; // <--- AÑADIR ESTO
 
         // Solo necesitamos el nuevo método
         if (RightBar.handleMouseReleased(mx, my, btn)) return true;
@@ -999,6 +1156,12 @@ this.inputColor.setResponder(s -> {
         if (RightBar.handleMouseDragged(mx, my, btn, this.width, this.height)) return true;
         
         TopBar.handleModalDrag(mx);
+
+        // NUEVO: Arrastre de Opacidad
+        if (TopBar.isDraggingOpacityImage) {
+            TopBar.handleOpacitySliderDrag(mx, pSel);
+            return true;
+        }
 
         if (drawingLine && LeftSidebar.selectedTool == 3) {
             return true;
@@ -1057,6 +1220,11 @@ this.inputColor.setResponder(s -> {
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
+        // PRIORIDAD CERO: Escribir en el buscador de texturas
+        if (this.buscadorTexturas != null && this.buscadorTexturas.visible && this.buscadorTexturas.isFocused()) {
+            return this.buscadorTexturas.charTyped(codePoint, modifiers);
+        }
+
         // 1. PRIORIDAD: Escribir el nombre de una capa en la RightBar
         if (questgrupo.questmod.client.editor.RightBar.capaEditandoNombre != null) {
             questgrupo.questmod.client.editor.RightBar.capaEditandoNombre.nombre += codePoint;
@@ -1092,6 +1260,12 @@ this.inputColor.setResponder(s -> {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        // PRIORIDAD CERO: Manejar teclado en el buscador de texturas
+        if (this.buscadorTexturas != null && this.buscadorTexturas.visible && this.buscadorTexturas.isFocused()) {
+            if (keyCode == 256) { this.buscadorTexturas.setFocused(false); return true; } // ESC para soltar el buscador
+            return this.buscadorTexturas.keyPressed(keyCode, scanCode, modifiers);
+        } 
+
         // 1. PRIORIDAD: Borrar o Guardar nombre de capa en la RightBar
         if (questgrupo.questmod.client.editor.RightBar.capaEditandoNombre != null) {
             if (keyCode == 259) { // Tecla Backspace (Borrar)

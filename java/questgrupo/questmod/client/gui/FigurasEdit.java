@@ -813,7 +813,8 @@ public static void crearBotonPagina(int numPagina) {
                 }
                 g.pose().popPose();
             }
-        } else {
+        } else if (!p.tipo.equals("IMAGEN_CUSTOM") && !p.tipo.equals("TEXTURA_JUEGO")) {
+            // Dibuja el fondo SOLO si no es una imagen ni una textura
             g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
         }
 
@@ -852,6 +853,74 @@ public static void crearBotonPagina(int numPagina) {
                 g.drawString(font, "|", textWidth + 1, 0, p.colorTexto, false);
             }
             g.pose().popPose();
+        }
+
+        // ─── RENDERING DE IMÁGENES E ÍCONOS ───
+        if ("IMAGEN_CUSTOM".equals(p.tipo)) {
+            net.minecraft.resources.ResourceLocation rl = net.minecraft.resources.ResourceLocation.tryParse(p.recursoPath);
+            if (rl != null) {
+                com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+                com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+                
+                g.setColor(1.0f, 1.0f, 1.0f, p.opacidad);
+                g.blit(rl, p.x, p.y, 0, 0, p.ancho, p.alto, p.ancho, p.alto);
+                g.setColor(1.0f, 1.0f, 1.0f, 1.0f); // Restaurar color normal
+                
+                com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+            }
+        } else if ("TEXTURA_JUEGO".equals(p.tipo)) {
+            net.minecraft.resources.ResourceLocation rl = net.minecraft.resources.ResourceLocation.tryParse(p.recursoPath);
+            if (rl != null) {
+                net.minecraft.world.item.Item item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(rl);
+                if (item != null && item != net.minecraft.world.item.Items.AIR) {
+                    net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(item);
+                    
+                    g.pose().pushPose();
+                    g.pose().translate(p.x, p.y, 0);
+                    
+                    float scaleX = (float)p.ancho / 16.0f;
+                    float scaleY = (float)p.alto / 16.0f;
+                    g.pose().scale(scaleX, scaleY, 1.0f);
+                    
+                    if (p.opacidad >= 0.99f) {
+                        // Si la opacidad está al 100%, usamos el motor normal sin alteraciones
+                        g.renderFakeItem(stack, 0, 0);
+                    } else {
+                        // --- HACK DE TRANSPARENCIA 3D PROFUNDA ---
+                        // Simulamos las coordenadas internas que usa Minecraft para centrar los ítems
+                        g.pose().translate(8.0F, 8.0F, 150.0F); 
+                        g.pose().scale(16.0F, -16.0F, 16.0F); 
+                        
+                        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+                        net.minecraft.client.renderer.MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
+                        
+                        // Creamos un "Interceptador" para engañar al motor gráfico
+                        net.minecraft.client.renderer.MultiBufferSource wrapper = type -> {
+                            // Forzamos al motor a procesar TODO como una entidad translúcida
+                            net.minecraft.client.renderer.RenderType translucent = net.minecraft.client.renderer.RenderType.entityTranslucent(net.minecraft.world.inventory.InventoryMenu.BLOCK_ATLAS);
+                            return bufferSource.getBuffer(translucent);
+                        };
+                        
+                        com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+                        com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+                        
+                        // Inyectamos nuestro porcentaje de opacidad en la memoria de luz
+                        com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, p.opacidad);
+                        
+                        // Mandamos a dibujar el modelo 3D pasándole nuestro Interceptador (wrapper)
+                        mc.getItemRenderer().renderStatic(stack, net.minecraft.world.item.ItemDisplayContext.GUI, 15728880, net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY, g.pose(), wrapper, mc.level, 0);
+                        
+                        // Empujamos el dibujo forzado a la pantalla
+                        bufferSource.endBatch();
+                        
+                        // Restauramos la normalidad
+                        com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+                        com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+                    }
+                    
+                    g.pose().popPose();
+                }
+            }
         }
 
         if (seleccionado) {

@@ -18,6 +18,8 @@ public class LeftSidebar {
     public static boolean showNormalMenu = false;
     public static boolean showStatsMenu = false;
     public static boolean editColorRequested = false;
+    public static boolean showGaleriaRequested = false;
+    public static boolean showTexturasRequested = false;
 
     public static final int TAB_WIDTH = 26;
     public static final int TAB_HEIGHT = 26;
@@ -30,8 +32,8 @@ public class LeftSidebar {
     public static int colorBoxRectY = 0;
 
     public static int getSidebarY(int screenHeight) {
-        // Ahora multiplicamos por 4 botones y 3 espacios
-        int totalHeight = 4 * TAB_HEIGHT + 3 * TAB_GAP;
+        // Ahora multiplicamos por 5 botones y 4 espacios
+        int totalHeight = 5 * TAB_HEIGHT + 4 * TAB_GAP;
         return (screenHeight - totalHeight) / 2;
     }
 
@@ -89,6 +91,9 @@ public class LeftSidebar {
         drawVanillaButton(g, font, START_X, startY + 2 * (TAB_HEIGHT + TAB_GAP), TAB_WIDTH, TAB_HEIGHT, "F", selectedModule == 2);
         // NUEVO BOTÓN: W (Widgets RPG)
         drawVanillaButton(g, font, START_X, startY + 3 * (TAB_HEIGHT + TAB_GAP), TAB_WIDTH, TAB_HEIGHT, "W", selectedModule == 3);
+        // NUEVO BOTÓN: Imágenes e Íconos (Renderiza un bloque de tierra real)
+        drawVanillaButton(g, font, START_X, startY + 4 * (TAB_HEIGHT + TAB_GAP), TAB_WIDTH, TAB_HEIGHT, "", selectedModule == 4);
+        g.renderFakeItem(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.GRASS_BLOCK), START_X + 5, startY + 4 * (TAB_HEIGHT + TAB_GAP) + 5);
 
         if (selectedModule >= 0) {
             renderSubPanel(g, font, screenWidth, screenHeight);
@@ -175,6 +180,13 @@ public class LeftSidebar {
                 drawVanillaButton(g, font, PANEL_X + 10, panelY + 60, 110, 18, "Estad\u00edstica", false);
                 drawVanillaButton(g, font, PANEL_X + 10, panelY + 80, 110, 18, "Slots", false);
             }
+        } 
+        // --- NUEVO MÓDULO: IMÁGENES E ÍCONOS ---
+        else if (selectedModule == 4) {
+            drawVanillaPanel(g, PANEL_X, panelY, 135, 65);
+            g.drawString(font, "Im\u00e1genes e \u00cdconos", PANEL_X + 10, panelY + 6, 0xFF404040, false);
+            drawVanillaButton(g, font, PANEL_X + 10, panelY + 20, 115, 18, "Galer\u00eda (PNGs)", false);
+            drawVanillaButton(g, font, PANEL_X + 10, panelY + 40, 115, 18, "Texturas (Juego)", false);
         }
     }
 
@@ -183,7 +195,7 @@ public class LeftSidebar {
     }
 
     // --- FUNCIÓN AUXILIAR PARA CREAR WIDGETS ---
-    private static void crearWidget(String tipo, String nombreCapa, int x, int y, int w, int h) {
+    public static void crearWidget(String tipo, String nombreCapa, int x, int y, int w, int h) {
         GlobalGuiSettings.PanelConfig widget = new GlobalGuiSettings.PanelConfig(x, y, w, h);
         widget.tipo = tipo;
         widget.pagina = GlobalGuiSettings.paginaActual;
@@ -216,6 +228,9 @@ public class LeftSidebar {
         }
         if (isHovered(mx, my, START_X, startY + 3 * (TAB_HEIGHT + TAB_GAP), TAB_WIDTH, TAB_HEIGHT)) {
             toggleModule(3); return true; // Clic en pestaña W
+        }
+        if (isHovered(mx, my, START_X, startY + 4 * (TAB_HEIGHT + TAB_GAP), TAB_WIDTH, TAB_HEIGHT)) {
+            toggleModule(4); return true; // Clic en pestaña Tierra
         }
 
         if (selectedModule >= 0) {
@@ -296,6 +311,16 @@ public class LeftSidebar {
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 110, 18)) { showNormalMenu = true; return true; } // Clic en Inventario
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 110, 18)) { showStatsMenu = true; return true; }   // Clic en Estadística
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 80, 110, 18)) { showInventoryMenu = true; return true; } // Clic en Slots
+                }
+            }
+            // --- CLICS DE IMÁGENES E ÍCONOS ---
+            else if (selectedModule == 4) {
+                panelWidth = 135; panelHeight = 65;
+                if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 115, 18)) { 
+                    showGaleriaRequested = true; selectedModule = -1; return true; 
+                }
+                if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 115, 18)) { 
+                    showTexturasRequested = true; selectedModule = -1; return true; 
                 }
             }
 

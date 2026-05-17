@@ -89,6 +89,9 @@ public class GlobalGuiSettings {
         public List<String> listaPrincipales = new ArrayList<>();
         public List<String> listaSecundarias = new ArrayList<>();
 
+        public String recursoPath = ""; // Guarda el nombre de la imagen o el ID del ítem
+        public float opacidad = 1.0f; // 1.0 = 100% visible, 0.0 = invisible
+
         public PanelConfig(int x, int y, int ancho, int alto) {
             this.x = x;
             this.y = y;
@@ -191,4 +194,63 @@ public class GlobalGuiSettings {
     public static final java.util.List<GrupoDibujo> DIBUJOS = new java.util.ArrayList<>();
     public static int grosorPincel = 2;
     public static int colorHerramientas = 0xFF000000;
+
+    // --- SISTEMA DE IMÁGENES CUSTOM ---
+    public static final java.util.List<net.minecraft.resources.ResourceLocation> CUSTOM_IMAGES = new java.util.ArrayList<>();
+    private static boolean imagenesCustomCargadas = false;
+
+    public static void cargarImagenesCustom() {
+        java.nio.file.Path dir = net.minecraftforge.fml.loading.FMLPaths.GAMEDIR.get().resolve("questmod_images");
+        if (!java.nio.file.Files.exists(dir)) {
+            try { java.nio.file.Files.createDirectories(dir); } catch (Exception e) { e.printStackTrace(); }
+            CUSTOM_IMAGES.clear(); // Limpiamos si la carpeta desaparece
+            return;
+        }
+
+        java.io.File[] files = dir.toFile().listFiles((d, name) -> name.toLowerCase().endsWith(".png"));
+        if (files == null) {
+            CUSTOM_IMAGES.clear(); // Limpiamos si no hay archivos
+            return;
+        }
+
+        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+        net.minecraft.client.renderer.texture.TextureManager tm = mc.getTextureManager();
+
+        // Creamos una lista temporal para ver qué imágenes existen AHORA MISMO
+        java.util.List<net.minecraft.resources.ResourceLocation> imagenesActuales = new java.util.ArrayList<>();
+
+        for (java.io.File f : files) {
+            String nombreLimpio = f.getName().toLowerCase().replace(" ", "_").replace(".png", "");
+            nombreLimpio = nombreLimpio.replaceAll("[^a-z0-9_.-]", ""); 
+            net.minecraft.resources.ResourceLocation rl = net.minecraft.resources.ResourceLocation.tryParse("questnomas:custom_" + nombreLimpio);
+            
+            if (rl != null) {
+                imagenesActuales.add(rl); // La anotamos en la lista actual
+                
+                // Si es una imagen nueva que no teníamos registrada, la procesamos
+                if (!CUSTOM_IMAGES.contains(rl)) {
+                    try (java.io.InputStream in = new java.io.FileInputStream(f)) {
+                        com.mojang.blaze3d.platform.NativeImage nativeImage = com.mojang.blaze3d.platform.NativeImage.read(in);
+                        net.minecraft.client.renderer.texture.DynamicTexture dynamicTexture = new net.minecraft.client.renderer.texture.DynamicTexture(nativeImage);
+                        tm.register(rl, dynamicTexture);
+                        CUSTOM_IMAGES.add(rl);
+                    } catch (Exception e) {
+                        System.out.println("Error al cargar imagen custom: " + f.getName());
+                    }
+                }
+            }
+        }
+        
+        // El toque maestro: Eliminamos de nuestra memoria las imágenes que ya no están en la carpeta
+        CUSTOM_IMAGES.removeIf(rl -> !imagenesActuales.contains(rl));
+    }
+
+    public static final java.util.List<net.minecraft.world.item.ItemStack> TODAS_LAS_TEXTURAS = new java.util.ArrayList<>();
+    
+    public static void cargarTexturasJuego() {
+        if (!TODAS_LAS_TEXTURAS.isEmpty()) return;
+        for (net.minecraft.world.item.Item item : net.minecraftforge.registries.ForgeRegistries.ITEMS) {
+            TODAS_LAS_TEXTURAS.add(new net.minecraft.world.item.ItemStack(item));
+        }
+    }
 }

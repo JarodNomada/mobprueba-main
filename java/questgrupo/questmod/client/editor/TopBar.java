@@ -16,6 +16,9 @@ public class TopBar {
     private static boolean drawingToolsVisible = false;
     private static int barWidth = 0;
 
+    public static boolean isDraggingOpacityImage = false;
+    private static int sliderImageX = 0;
+
     public static final int BTN_FILL_COLOR = 10, BTN_BORDER_COLOR = 11, BTN_TEXT_COLOR = 20;
     public static final int BTN_MISSION_FILL_COLOR = 21, BTN_MISSION_BORDER_COLOR = 22;
     public static final int BTN_HEADER_FILL_COLOR = 30, BTN_HEADER_BORDER_COLOR = 31;
@@ -359,7 +362,9 @@ public class TopBar {
             } else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
                 return 280; 
             } else if (pSel.tipo.startsWith("SLOT")) {
-                return 160; // Barra super compacta para el Slot individual
+                return 160; 
+            } else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) {
+                return 200; // Barra mediana para la opacidad
             } else {
                 int w = 6 + 20 + (pSel.tipo.equals("LINEA") || pSel.tipo.equals("TRIANGULO") ? 0 : 20);
                 if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
@@ -568,6 +573,22 @@ public class TopBar {
             drawVerticalSeparator(g, curX, y + 4, 40);
             curX += 6;
             drawSectionTitle(g, font, "Escala", curX, y + 2, 42);
+        } else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) {
+            int curX = barStartX + 6;
+            drawSectionTitle(g, font, "Escala", curX, y + 2, 42);
+            curX += 48;
+            drawVerticalSeparator(g, curX, y + 4, 40);
+            curX += 6;
+            drawSectionTitle(g, font, "Opacidad: " + (int)(pSel.opacidad * 100) + "%", curX, y + 2, 140);
+            
+            sliderImageX = curX + 10;
+            int sY = y + 24;
+            int sW = 120;
+            g.fill(sliderImageX, sY, sliderImageX + sW, sY + 6, 0xFF888888); 
+            g.renderOutline(sliderImageX - 1, sY - 1, sW + 2, 8, 0xFF000000);
+            int knobX = sliderImageX + (int)(pSel.opacidad * (sW - 8));
+            g.fill(knobX, sY - 2, knobX + 8, sY + 8, 0xFF555555); 
+            g.renderOutline(knobX, sY - 2, 8, 10, 0xFF000000);
         } else {
             int currentX = barStartX + 6;
             int boxY = y + 16; 
@@ -670,6 +691,8 @@ public class TopBar {
             if (mx >= curX && mx <= curX + 16 && my >= y+16 && my <= y+32) return BTN_SLOT_BG;
             if (mx >= curX + 20 && mx <= curX + 36 && my >= y+16 && my <= y+32) return BTN_SLOT_DARK;
             if (mx >= curX + 40 && mx <= curX + 56 && my >= y+16 && my <= y+32) return BTN_SLOT_LIGHT;
+        } else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) {
+            return -1; // Ignoramos el clic de color porque las imágenes solo tienen botones +/-
         } else {
             int currentX = barStartX + 6;
             int boxY = y + 16;
@@ -785,5 +808,45 @@ public class TopBar {
         
         adder.accept(Button.builder(Component.literal("-"), b -> { pSel.slotSize = Math.max(5, pSel.slotSize - 1); }).bounds(curX, btnY, 20, btnSize).build());
         adder.accept(Button.builder(Component.literal("+"), b -> { pSel.slotSize = Math.min(100, pSel.slotSize + 1); }).bounds(curX + 22, btnY, 20, btnSize).build());
+    }
+
+    public static boolean handleOpacitySliderClick(double mx, double my, int guiWidth, int y, GlobalGuiSettings.PanelConfig pSel) {
+        if (!drawingToolsVisible || pSel == null) return false;
+        if (!pSel.tipo.equals("IMAGEN_CUSTOM") && !pSel.tipo.equals("TEXTURA_JUEGO")) return false;
+        
+        int sY = y + 24;
+        if (mx >= sliderImageX && mx <= sliderImageX + 120 && my >= sY - 2 && my <= sY + 10) {
+            isDraggingOpacityImage = true;
+            handleOpacitySliderDrag(mx, pSel);
+            return true;
+        }
+        return false;
+    }
+    
+    public static void handleOpacitySliderDrag(double mx, GlobalGuiSettings.PanelConfig pSel) {
+        if (pSel == null) return;
+        float rel = (float)(mx - sliderImageX) / 112.0f;
+        pSel.opacidad = Math.max(0.0f, Math.min(1.0f, rel));
+    }
+
+    public static void inicializarBotonesImagen(int guiWidth, int y, Consumer<Button> adder, GlobalGuiSettings.PanelConfig pSel) {
+        if (pSel == null || (!pSel.tipo.equals("IMAGEN_CUSTOM") && !pSel.tipo.equals("TEXTURA_JUEGO"))) return;
+        int barX = LeftSidebar.getSidebarWidth();
+        int expectedBarW = calculateBarWidth(false, true, null, pSel);
+        int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
+        int btnSize = 18;
+
+        int curX = barStartX + 6 + 2; 
+        int btnY = y + 16; 
+        
+        adder.accept(Button.builder(Component.literal("-"), b -> { 
+            pSel.ancho = Math.max(5, pSel.ancho - 5); 
+            pSel.alto = Math.max(5, pSel.alto - 5); 
+        }).bounds(curX, btnY, 18, btnSize).build());
+        
+        adder.accept(Button.builder(Component.literal("+"), b -> { 
+            pSel.ancho += 5; 
+            pSel.alto += 5; 
+        }).bounds(curX + 20, btnY, 18, btnSize).build());
     }
 }
