@@ -80,10 +80,11 @@ public class EditorScreen extends Screen {
 
         this.inputColor = new EditBox(this.font, 0, 0, 60, 12, Component.literal(""));
         this.inputColor.setMaxLength(8);
-        this.inputColor.setResponder(s -> {
-            if (s.length() >= 8 && s.matches("[0-9a-fA-F]+")) {
+this.inputColor.setResponder(s -> {
+            if ((s.length() == 6 || s.length() == 8) && s.matches("[0-9a-fA-F]+")) {
                 try {
-                    int color = (int) Long.parseLong(s, 16);
+                    long val = Long.parseLong(s, 16);
+                    int color = s.length() == 6 ? (int)(0xFF000000 | val) : (int)val;
                     if (tSel != null) tSel.colorARGB = color;
                     if (pSel != null) {
                         if (FigurasEdit.editandoColorIndex == 0) pSel.colorARGB = color;
@@ -103,7 +104,7 @@ public class EditorScreen extends Screen {
                 } catch (NumberFormatException e) {
                 }
             }
-});
+        });
         this.inputColor.visible = false;
         this.addRenderableWidget(inputColor);
 
@@ -699,13 +700,16 @@ public class EditorScreen extends Screen {
 
     private void renderBrushStroke(GuiGraphics g, GlobalGuiSettings.BrushStroke stroke) {
         int prevX = -1, prevY = -1;
+        int grosor = Math.max(1, stroke.grosor);
+        
         for (int[] punto : stroke.puntos) {
             if (prevX != -1) {
-                for (int dx = -stroke.grosor/2; dx <= stroke.grosor/2; dx++) {
-                    for (int dy = -stroke.grosor/2; dy <= stroke.grosor/2; dy++) {
-                        g.fill(prevX + dx, prevY + dy, punto[0] + dx, punto[1] + dy, stroke.colorARGB);
-                    }
-                }
+                // Usa nuestro interpolador matemático para dibujar una línea sólida y continua
+                drawLineThick(g, prevX, prevY, punto[0], punto[1], stroke.colorARGB, grosor);
+            } else if (stroke.puntos.size() == 1) {
+                // Si el jugador solo hizo un clic (un solo punto), dibujamos un cuadrito
+                int halfGrosor = grosor / 2;
+                g.fill(punto[0] - halfGrosor, punto[1] - halfGrosor, punto[0] - halfGrosor + grosor, punto[1] - halfGrosor + grosor, stroke.colorARGB);
             }
             prevX = punto[0];
             prevY = punto[1];
@@ -727,13 +731,8 @@ public class EditorScreen extends Screen {
 
         // --- 1. ESCUDO Y MANEJO DEL MODAL DE COLOR ---
         if (TopBar.colorPickerVisible) {
-            // Dejamos que los botones de Aceptar/Cancelar y el Texto funcionen
             if (super.mouseClicked(mx, my, btn)) return true;
-            
-            // Si el jugador clica el Slider o el fondo del modal, lo atrapamos
             if (TopBar.handleModalClick(mx, my)) return true;
-            
-            // Bloqueamos cualquier clic "vacío" para que no quite el panel de atrás
             return true; 
         }
 
@@ -856,12 +855,19 @@ public class EditorScreen extends Screen {
         // 4. Interacción en MODO ON (Editor activo)
         // El menú de la izquierda ahora es flotante, procesamos sus clics primero.
         if (GlobalGuiSettings.editorActivo) {
+            int textosAnteriores = GlobalGuiSettings.TEXTOS.size();
             if (LeftSidebar.handleClick(mx, my, this.height, this.width, tSel, pSel)) {
-                if (!GlobalGuiSettings.TEXTOS.isEmpty()) {
-                    this.tSel = GlobalGuiSettings.TEXTOS.get(GlobalGuiSettings.TEXTOS.size() - 1);
-                    this.pSel = null;
+                if (LeftSidebar.editColorRequested) {
+                    LeftSidebar.editColorRequested = false;
+                    // Abrimos el menú unificado de la TopBar sin reiniciar la pantalla
+                    TopBar.openPicker(GlobalGuiSettings.colorHerramientas, TopBar.BTN_TOOL_COLOR, null, null);
+                } else {
+                    if (GlobalGuiSettings.TEXTOS.size() > textosAnteriores) {
+                        this.tSel = GlobalGuiSettings.TEXTOS.get(GlobalGuiSettings.TEXTOS.size() - 1);
+                        this.pSel = null;
+                    }
+                    this.init(); // Solo reiniciamos la pantalla si NO se abrió el color
                 }
-                this.init();
                 return true;
             }
         }
@@ -985,7 +991,8 @@ public class EditorScreen extends Screen {
 
         if (drawingBrush && LeftSidebar.selectedTool == 1) {
             drawingBrush = false;
-            if (currentStroke != null && currentStroke.puntos.size() > 1) {
+            // CAMBIO CLAVE: Ahora guardamos el trazo incluso si es solo 1 punto (tamaño > 0 en vez de > 1)
+            if (currentStroke != null && currentStroke.puntos.size() > 0) {
                 if (GlobalGuiSettings.dibujoSeleccionado != null) {
                     GlobalGuiSettings.dibujoSeleccionado.trazos.add(currentStroke);
                 } else {

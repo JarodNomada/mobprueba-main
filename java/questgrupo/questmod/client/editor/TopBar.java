@@ -19,6 +19,7 @@ public class TopBar {
     public static final int BTN_FILL_COLOR = 10, BTN_BORDER_COLOR = 11, BTN_TEXT_COLOR = 20;
     public static final int BTN_MISSION_FILL_COLOR = 21, BTN_MISSION_BORDER_COLOR = 22;
     public static final int BTN_HEADER_FILL_COLOR = 30, BTN_HEADER_BORDER_COLOR = 31;
+    public static final int BTN_TOOL_COLOR = -2;
 
     public static final int BTN_MINUS_TEXT_SCALE = 40, BTN_PLUS_TEXT_SCALE = 41;
     public static final int BTN_MINUS_ICON_SCALE = 42, BTN_PLUS_ICON_SCALE = 43;
@@ -142,7 +143,7 @@ public class TopBar {
         if (hexInput != null) {
             hexInput.setValue(String.format("%06X", editingColorPacked & 0x00FFFFFF));
             hexInput.visible = true;
-            hexInput.setFocused(false);
+            hexInput.setFocused(true); // <--- Ahora se enfoca automáticamente
         }
         if (btnAccept != null) btnAccept.visible = true;
         if (btnCancel != null) btnCancel.visible = true;
@@ -172,7 +173,9 @@ public class TopBar {
     private static void applyFinalColor() {
         int finalColor = (Math.round(currentOpacity * 255.0f) << 24) | (editingColorPacked & 0x00FFFFFF);
         
-        if (panelEnEdicion != null) {
+        if (currentEditingID == BTN_TOOL_COLOR) {
+            GlobalGuiSettings.colorHerramientas = finalColor;
+        } else if (panelEnEdicion != null) {
             switch (currentEditingID) {
                 case BTN_FILL_COLOR: panelEnEdicion.colorARGB = finalColor; break;
                 case BTN_BORDER_COLOR: panelEnEdicion.colorBorde = finalColor; break;
@@ -215,24 +218,29 @@ public class TopBar {
     }
 
     public static void render(GuiGraphics g, int guiWidth, int y, GlobalGuiSettings.TextConfig tSel, GlobalGuiSettings.PanelConfig pSel) {
-        if (!visible) return;
+        // Si la barra está oculta Y el selector de color también, no dibujamos nada.
+        if (!visible && !colorPickerVisible) return;
 
-        int barX = LeftSidebar.getSidebarWidth();
-        barWidth = calculateBarWidth(textToolsVisible, drawingToolsVisible, tSel, pSel);
-        int barStartX = barX + (guiWidth - barX - barWidth) / 2;
-        int visualBoxHeight = getHeight(); 
-        
-        drawContainer(g, barStartX, y, barWidth, visualBoxHeight);
+        // Si la barra superior está visible, dibujamos sus herramientas
+        if (visible) {
+            int barX = LeftSidebar.getSidebarWidth();
+            barWidth = calculateBarWidth(textToolsVisible, drawingToolsVisible, tSel, pSel);
+            int barStartX = barX + (guiWidth - barX - barWidth) / 2;
+            int visualBoxHeight = getHeight(); 
+            
+            drawContainer(g, barStartX, y, barWidth, visualBoxHeight);
 
-        boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
-        boolean esEstadistica = pSel != null && pSel.tipo.startsWith("ESTADISTICA_");
+            boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
+            boolean esEstadistica = pSel != null && pSel.tipo.startsWith("ESTADISTICA_");
 
-        if ((textToolsVisible && tSel != null) || esMisionTexto || esEstadistica) {
-            renderTextTools(g, barStartX, y, tSel, pSel);
-        } else if (drawingToolsVisible) {
-            renderDrawingTools(g, barStartX, y, pSel);
+            if ((textToolsVisible && tSel != null) || esMisionTexto || esEstadistica) {
+                renderTextTools(g, barStartX, y, tSel, pSel);
+            } else if (drawingToolsVisible) {
+                renderDrawingTools(g, barStartX, y, pSel);
+            }
         }
 
+        // Si el selector de color fue activado (desde cualquier herramienta), DIBUJAMOS SU FONDO
         if (colorPickerVisible) {
             renderModal(g);
         }
