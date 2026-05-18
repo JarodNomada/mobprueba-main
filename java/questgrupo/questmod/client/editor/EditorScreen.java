@@ -134,6 +134,7 @@ this.inputColor.setResponder(s -> {
                         else if (FigurasEdit.editandoColorIndex == 7) pSel.colorARGB = color;
                         else if (FigurasEdit.editandoColorIndex == 8) pSel.colorBorde = color;
                         else if (FigurasEdit.editandoColorIndex == 9) pSel.colorTexto = color;
+                        else if (FigurasEdit.editandoColorIndex == 10) pSel.colorBarraLleno = color;
                     }
                     if (editandoColorHerramientas) {
                         GlobalGuiSettings.colorHerramientas = color;
@@ -168,6 +169,7 @@ this.inputColor.setResponder(s -> {
                 else if (FigurasEdit.editandoColorIndex == 7) pSel.colorARGB = colorOriginalGuardado;
                 else if (FigurasEdit.editandoColorIndex == 8) pSel.colorBorde = colorOriginalGuardado;
                 else if (FigurasEdit.editandoColorIndex == 9) pSel.colorTexto = colorOriginalGuardado;
+                else if (FigurasEdit.editandoColorIndex == 10) pSel.colorBarraLleno = colorOriginalGuardado;
             } else if (editandoColorHerramientas) {
                 GlobalGuiSettings.colorHerramientas = colorOriginalGuardado;
             }
@@ -235,6 +237,14 @@ this.inputColor.setResponder(s -> {
         int colorX = barStartX + 10;
 
         switch (btnId) {
+            case TopBar.BTN_PROG_FILL:
+                FigurasEdit.editandoColorIndex = 10;
+                LeftSidebar.selectedModule = -1;
+                colorOriginalGuardado = pSel.colorBarraLleno;
+                inputColor.setValue(String.format("%08X", pSel.colorBarraLleno));
+                inputColor.visible = true; btnAceptarColor.visible = true; btnCancelarColor.visible = true;
+                inputColor.setFocused(true);
+                break;
             case TopBar.BTN_HEADER_FILL_COLOR:
                 FigurasEdit.editandoColorIndex = 5;
                 LeftSidebar.selectedModule = -1;
@@ -558,7 +568,9 @@ this.inputColor.setResponder(s -> {
                     else if (FigurasEdit.editandoColorIndex == 3) colorX = barStartX + 10 + 91 + 10 + (50 - 34)/2;
                     else if (FigurasEdit.editandoColorIndex == 4) colorX = barStartX + 10 + 91 + 10 + (50 - 34)/2 + 19;
                 } else if (pSel != null && pSel.tipo.equals("PROGRESO")) {
-                    colorX = barStartX + TopBar.getWidth() - 170;
+                    if (FigurasEdit.editandoColorIndex == 0) colorX = barStartX + 6;
+                    else if (FigurasEdit.editandoColorIndex == 1) colorX = barStartX + 26;
+                    else colorX = barStartX + 6;
                 } else if (pSel != null) {
                     if (FigurasEdit.editandoColorIndex == 1) colorX += 20;
                 }
@@ -804,6 +816,7 @@ this.inputColor.setResponder(s -> {
             else if (FigurasEdit.editandoColorIndex == 4) previewColor = pSel.colorBordeMision;
             else if (FigurasEdit.editandoColorIndex == 5) previewColor = pSel.colorFondoCabecera;
             else if (FigurasEdit.editandoColorIndex == 6) previewColor = pSel.colorBordeCabecera;
+            else if (FigurasEdit.editandoColorIndex == 10) previewColor = pSel.colorBarraLleno;
         }
         int pvX = px + 5;
         int pvY = py + 16;

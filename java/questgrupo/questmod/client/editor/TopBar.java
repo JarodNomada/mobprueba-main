@@ -345,41 +345,23 @@ public class TopBar {
         boolean esEstadistica = pSel != null && pSel.tipo.startsWith("ESTADISTICA_");
         
         if (textTools || esMisionTexto || esEstadistica) {
-            int w = 4;
-            w += esMisionTexto ? 38 : 18;
-            w += 2; 
-            int cols = esEstadistica ? 4 : 5; // Las stats usan menos botones
-            w += (cols * 18) + ((cols - 1) * 2); 
-            w += 4;
+            int w = 4; w += esMisionTexto ? 38 : 18; w += 2; 
+            int cols = esEstadistica ? 4 : 5; w += (cols * 18) + ((cols - 1) * 2); w += 4;
             return w;
         } else if (drawTools && pSel != null) {
-            if (pSel.tipo.equals("MISION_OBJETIVOS") || pSel.tipo.equals("DETALLE_MISION")) {
-                return 244;
-            } else if (pSel.tipo.equals("BOTON_PAGINA")) {
-                return 96;
-            } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
-                int w = 6 + 80; 
-                if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
-                    w += 46 * 3; 
-                }
-                w += 6; 
-                return w;
-            } else if (pSel.tipo.equals("MANIQUI")) {
-                return 94; // 6 (margen) + 40 (colores) + 4 (separador) + 38 (titulo) + 6 (margen)
-            } else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
-                return 280; 
-            } else if (pSel.tipo.startsWith("SLOT")) {
-                return 160; 
-            } else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) {
-                return 200; // Barra mediana para la opacidad
-            } else if (pSel.tipo.equals("PROGRESO")) {
-            return pSel.progresoTipo == 2 ? 300 : 440;
-        } else {
+            if (pSel.tipo.equals("MISION_OBJETIVOS") || pSel.tipo.equals("DETALLE_MISION")) return 244;
+            else if (pSel.tipo.equals("BOTON_PAGINA")) return 96;
+            else if (pSel.tipo.startsWith("DESPLEGABLE")) {
+                int w = 6 + 80; if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) w += 46 * 3; w += 6; return w;
+            } else if (pSel.tipo.equals("MANIQUI")) return 94;
+            else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) return 280;
+            else if (pSel.tipo.startsWith("SLOT")) return 160;
+            else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) return 200;
+            else if (pSel.tipo.equals("PROGRESO")) {
+                return 152;
+            } else {
                 int w = 6 + 20 + (pSel.tipo.equals("LINEA") || pSel.tipo.equals("TRIANGULO") ? 0 : 20);
-                if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
-                    w += 46 * 2; 
-                }
-                w += 6;
+                if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) w += 46 * 2; w += 6;
                 return w;
             }
         }
@@ -599,50 +581,46 @@ public class TopBar {
             g.fill(knobX, sY - 2, knobX + 8, sY + 8, 0xFF555555); 
             g.renderOutline(knobX, sY - 2, 8, 10, 0xFF000000);
         } else if (pSel.tipo.equals("PROGRESO")) {
-            int expectedBarW = pSel.progresoTipo == 2 ? 300 : 440;
             int curX = barStartX + 6;
-
-            if (pSel.progresoTipo != 2) {
-                curX += 76;
-                if (btnProgDiseno != null) btnProgDiseno.visible = (pSel.progresoEstilo == 0);
-                curX += 86;
-            }
-
-            curX += 76;
-            drawVerticalSeparator(g, curX, y + 4, 40);
-            curX += 6;
-
-            if (pSel.progresoTipo != 2) {
-                if (pSel.progresoEstilo == 0) {
-                    drawSectionTitle(g, font, "Color Barra", curX, y + 2, 60);
-                    drawColorSwatch(g, pSel.colorBarraLleno, curX + 20, y + 16);
-                } else {
-                    drawSectionTitle(g, font, "Color Texto", curX, y + 2, 60);
-                    drawColorSwatch(g, pSel.colorTexto, curX + 20, y + 16);
-                }
-                curX += 65;
+            int row1Y = y + 6;
+            int row2Y = y + 26;
+            int swatchSize = 16;
+            
+            drawColorSwatch(g, pSel.colorARGB, curX, row1Y);
+            drawColorSwatch(g, pSel.colorBorde, curX + swatchSize + 4, row1Y);
+            if (pSel.progresoTipo != 2 && pSel.progresoEstilo == 0) {
+                drawColorSwatch(g, pSel.colorBarraLleno, curX, row2Y);
             } else {
-                drawSectionTitle(g, font, "Color Texto", curX, y + 2, 60);
-                drawColorSwatch(g, pSel.colorTexto, curX + 20, y + 16);
-                curX += 65;
+                drawColorSwatch(g, pSel.colorTexto, curX, row2Y);
             }
-
-            drawVerticalSeparator(g, curX, y + 4, 40);
-            curX += 6;
-            drawSectionTitle(g, font, "Fondo / Borde", curX, y + 2, 80);
-            drawColorSwatch(g, pSel.colorARGB, curX + 15, y + 16);
-            drawColorSwatch(g, pSel.colorBorde, curX + 45, y + 16);
-            curX += 85;
-
-            boolean showScale = (pSel.progresoTipo == 2 || pSel.progresoEstilo != 0);
-            if (btnProgEscalaMinus != null) btnProgEscalaMinus.visible = showScale;
-            if (btnProgEscalaPlus != null) btnProgEscalaPlus.visible = showScale;
-
-            if (showScale) {
-                drawVerticalSeparator(g, curX, y + 4, 40);
-                curX += 6;
-                drawSectionTitle(g, font, "Escala", curX, y + 2, 44);
+            
+            int btnCol1 = curX + 36 + 4;
+            int btnCol2 = btnCol1 + 48 + 4;
+            
+            int btnY1 = row1Y - 1;
+            int btnY2 = row2Y - 1;
+            
+            if (btnProgEstilo != null) btnProgEstilo.visible = false;
+            if (btnProgDiseno != null) btnProgDiseno.visible = false;
+            if (btnProgBorde != null) btnProgBorde.visible = false;
+            if (btnProgEscalaMinus != null) btnProgEscalaMinus.visible = false;
+            if (btnProgEscalaPlus != null) btnProgEscalaPlus.visible = false;
+            
+            if (pSel.progresoTipo == 2) {
+                if (btnProgBorde != null) { btnProgBorde.visible = true; btnProgBorde.setX(btnCol1); btnProgBorde.setY(btnY1); }
+                if (btnProgEscalaMinus != null) { btnProgEscalaMinus.visible = true; btnProgEscalaMinus.setX(btnCol1); btnProgEscalaMinus.setY(btnY2); }
+                if (btnProgEscalaPlus != null) { btnProgEscalaPlus.visible = true; btnProgEscalaPlus.setX(btnCol1 + 26); btnProgEscalaPlus.setY(btnY2); }
+            } else if (pSel.progresoEstilo == 0) {
+                if (btnProgEstilo != null) { btnProgEstilo.visible = true; btnProgEstilo.setX(btnCol1); btnProgEstilo.setY(btnY1); }
+                if (btnProgDiseno != null) { btnProgDiseno.visible = true; btnProgDiseno.setX(btnCol1); btnProgDiseno.setY(btnY2); }
+                if (btnProgBorde != null) { btnProgBorde.visible = true; btnProgBorde.setX(btnCol2); btnProgBorde.setY(btnY1); }
+            } else {
+                if (btnProgEstilo != null) { btnProgEstilo.visible = true; btnProgEstilo.setX(btnCol1); btnProgEstilo.setY(btnY1); }
+                if (btnProgBorde != null) { btnProgBorde.visible = true; btnProgBorde.setX(btnCol1); btnProgBorde.setY(btnY2); }
+                if (btnProgEscalaMinus != null) { btnProgEscalaMinus.visible = true; btnProgEscalaMinus.setX(btnCol2); btnProgEscalaMinus.setY(btnY1); }
+                if (btnProgEscalaPlus != null) { btnProgEscalaPlus.visible = true; btnProgEscalaPlus.setX(btnCol2 + 26); btnProgEscalaPlus.setY(btnY1); }
             }
+            return;
         } else {
             int currentX = barStartX + 6;
             int boxY = y + 16; 
@@ -670,7 +648,8 @@ public class TopBar {
     public static int getDrawingButtonAt(int mx, int my, int guiWidth, int y, GlobalGuiSettings.PanelConfig pSel) {
         if (!drawingToolsVisible || pSel == null || my < y + 14 || my > y + 32) return -1;
         int barX = LeftSidebar.getSidebarWidth();
-        int barStartX = barX + (guiWidth - barX - barWidth) / 2;
+        int expectedBarW = calculateBarWidth(false, true, null, pSel);
+        int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
 
         if (pSel.tipo.equals("MISION_OBJETIVOS") || pSel.tipo.equals("DETALLE_MISION")) {
             int rowY = y + 14;
@@ -749,22 +728,14 @@ public class TopBar {
             return -1; // Ignoramos el clic de color porque las imágenes solo tienen botones +/-
 } else if (pSel.tipo.equals("PROGRESO")) {
             int curX = barStartX + 6;
-
-            if (pSel.progresoTipo != 2) {
-                curX += 76;
-                curX += 86;
-            }
-            curX += 76;
-
-            curX += 6;
-            if (my >= y + 16 && my <= y + 32 && mx >= curX + 20 && mx <= curX + 36) {
+            int row1Y = y + 6;
+            int row2Y = y + 26;
+            int swatchSize = 16;
+            
+            if (mx >= curX && mx <= curX + swatchSize && my >= row1Y && my <= row1Y + swatchSize) return BTN_FILL_COLOR;
+            if (mx >= curX + swatchSize + 4 && mx <= curX + swatchSize + 4 + swatchSize && my >= row1Y && my <= row1Y + swatchSize) return BTN_BORDER_COLOR;
+            if (mx >= curX && mx <= curX + swatchSize && my >= row2Y && my <= row2Y + swatchSize) {
                 return (pSel.progresoTipo != 2 && pSel.progresoEstilo == 0) ? BTN_PROG_FILL : BTN_TEXT_COLOR;
-            }
-            curX += 65;
-            curX += 6;
-            if (my >= y + 16 && my <= y + 32) {
-                if (mx >= curX + 15 && mx <= curX + 31) return BTN_FILL_COLOR;
-                if (mx >= curX + 45 && mx <= curX + 61) return BTN_BORDER_COLOR;
             }
             return -1;
         } else {
@@ -927,63 +898,36 @@ public class TopBar {
     public static void inicializarBotonesProgreso(int guiWidth, int y, Consumer<Button> adder, GlobalGuiSettings.PanelConfig pSel) {
         if (pSel == null || !pSel.tipo.equals("PROGRESO")) return;
 
-        int barX = LeftSidebar.getSidebarWidth();
-        int expectedBarW = pSel.progresoTipo == 2 ? 300 : 440;
-        int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
-        int curX = barStartX + 6;
-        int btnY = y + 14;
+        btnProgEstilo = Button.builder(Component.literal(getProgresoEstiloName(pSel.progresoEstilo)), b -> {
+            pSel.progresoEstilo = (pSel.progresoEstilo + 1) % 3;
+            b.setMessage(Component.literal(getProgresoEstiloName(pSel.progresoEstilo)));
+        }).bounds(0, 0, 48, 18).build();
+        adder.accept(btnProgEstilo);
 
-        if (pSel.progresoTipo != 2) {
-            btnProgEstilo = Button.builder(Component.literal(getProgresoEstiloName(pSel.progresoEstilo)), b -> {
-                pSel.progresoEstilo = (pSel.progresoEstilo + 1) % 3;
-                b.setMessage(Component.literal(getProgresoEstiloName(pSel.progresoEstilo)));
-            }).bounds(curX, btnY, 70, 20).build();
-            adder.accept(btnProgEstilo);
-            curX += 76;
+        btnProgDiseno = Button.builder(Component.literal(getProgresoDisenoName(pSel.disenoBarra)), b -> {
+            pSel.disenoBarra = (pSel.disenoBarra + 1) % 2;
+            b.setMessage(Component.literal(getProgresoDisenoName(pSel.disenoBarra)));
+        }).bounds(0, 0, 48, 18).build();
+        adder.accept(btnProgDiseno);
 
-            btnProgDiseno = Button.builder(Component.literal(getProgresoDisenoName(pSel.disenoBarra)), b -> {
-                pSel.disenoBarra = (pSel.disenoBarra + 1) % 2;
-                b.setMessage(Component.literal(getProgresoDisenoName(pSel.disenoBarra)));
-            }).bounds(curX, btnY, 80, 20).build();
-            adder.accept(btnProgDiseno);
-            curX += 86;
-        }
-
-        btnProgBorde = Button.builder(Component.literal("Borde: " + pSel.redondezBorde + "px"), b -> {
+        btnProgBorde = Button.builder(Component.literal("Borde " + pSel.redondezBorde), b -> {
             pSel.redondezBorde = pSel.redondezBorde >= 5 ? 0 : pSel.redondezBorde + 1;
-            b.setMessage(Component.literal("Borde: " + pSel.redondezBorde + "px"));
-        }).bounds(curX, btnY, 70, 20).build();
+            b.setMessage(Component.literal("Borde " + pSel.redondezBorde));
+        }).bounds(0, 0, 48, 18).build();
         adder.accept(btnProgBorde);
-        curX += 76;
 
-        curX += 65;
-        curX += 85;
-
-        btnProgEscalaMinus = Button.builder(Component.literal("-"), b -> {
-            pSel.escalaTexto = Math.max(0.5f, pSel.escalaTexto - 0.1f);
-        }).bounds(curX, btnY, 20, 20).build();
+        btnProgEscalaMinus = Button.builder(Component.literal("-"), b -> pSel.escalaTexto = Math.max(0.5f, pSel.escalaTexto - 0.1f)).bounds(0, 0, 22, 18).build();
         adder.accept(btnProgEscalaMinus);
 
-        btnProgEscalaPlus = Button.builder(Component.literal("+"), b -> {
-            pSel.escalaTexto = Math.min(3.0f, pSel.escalaTexto + 0.1f);
-        }).bounds(curX + 24, btnY, 20, 20).build();
+        btnProgEscalaPlus = Button.builder(Component.literal("+"), b -> pSel.escalaTexto = Math.min(3.0f, pSel.escalaTexto + 0.1f)).bounds(0, 0, 22, 18).build();
         adder.accept(btnProgEscalaPlus);
     }
 
-    private static String getProgresoDisenoName(int diseno) {
-        switch(diseno) {
-            case 0: return "Dise\u00f1o: Plana";
-            case 1: return "Dise\u00f1o: Hitos";
-            default: return "Dise\u00f1o: Plana";
-        }
+    private static String getProgresoEstiloName(int estilo) {
+        switch(estilo) { case 0: return "Estilo 1"; case 1: return "Estilo 2"; case 2: return "Estilo 3"; default: return "Estilo 1"; }
     }
 
-    private static String getProgresoEstiloName(int estilo) {
-        switch(estilo) {
-            case 0: return "Estilo: Barra";
-            case 1: return "Estilo: %";
-            case 2: return "Estilo: X/Y";
-            default: return "Estilo: ---";
-        }
+    private static String getProgresoDisenoName(int diseno) {
+        switch(diseno) { case 0: return "Dise\u00f1o 1"; case 1: return "Dise\u00f1o 2"; default: return "Dise\u00f1o 1"; }
     }
 }

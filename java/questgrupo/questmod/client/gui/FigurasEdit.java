@@ -208,58 +208,59 @@ public static void crearBotonPagina(int numPagina) {
 
         // ─── RENDERING DEL WIDGET DE PROGRESO ───
         if ("PROGRESO".equals(p.tipo)) {
-            int r = p.redondezBorde;
-
-            // 1. DIBUJAR BORDE (Capa Exterior Sólida)
-            fillRoundedRect(g, p.x, p.y, p.ancho, p.alto, r, p.colorBorde);
-
-            // 2. DIBUJAR FONDO (Capa Interior Sólida)
+            int r = p.redondezBorde; 
+            
             int innerX = p.x + 1;
             int innerY = p.y + 1;
             int innerW = p.ancho - 2;
             int innerH = p.alto - 2;
             int innerR = Math.max(0, r - 1);
-            fillRoundedRect(g, innerX, innerY, innerW, innerH, innerR, p.colorARGB);
 
+            if (p.colorARGB != 0) {
+                for (int dy = 0; dy < innerH; dy++) {
+                    int inset = getCornerInset(dy, innerH, innerR);
+                    g.fill(innerX + inset, innerY + dy, innerX + innerW - inset, innerY + dy + 1, p.colorARGB);
+                }
+            }
+            
             String textoMostrar = "";
             boolean dibujarBarra = false;
             float porcentajeLlenado = 0.0f;
             int maxProgreso = 1, actualProgreso = 0;
 
             if (GlobalGuiSettings.editorActivo) {
-                maxProgreso = 100; actualProgreso = 65;
+                maxProgreso = 100; actualProgreso = 65; 
                 if (p.progresoTipo == 2) textoMostrar = "02h 45m";
             } else {
                 net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
                 if (p.progresoTipo == 0) {
                     maxProgreso = 0;
                     for (java.util.List<Config.MisionData> lista : Config.misionesCargadas.values()) maxProgreso += lista.size();
-                    if (maxProgreso == 0) maxProgreso = 1;
+                    if (maxProgreso == 0) maxProgreso = 1; 
                     actualProgreso = questgrupo.questmod.events.ClickAldeano.getMisionesCompletadasCount();
                 } else if (p.progresoTipo == 1) {
                     maxProgreso = 30; actualProgreso = mc.player != null ? mc.player.experienceLevel : 0;
                 } else if (p.progresoTipo == 2) {
                     if (mc.level != null) {
-                        long tSecs = mc.level.getGameTime() / 20;
+                        long tSecs = mc.level.getGameTime() / 20; 
                         textoMostrar = (tSecs / 3600) + "h " + ((tSecs % 3600) / 60) + "m";
                     }
                 } else if (p.progresoTipo == 3) {
-                    maxProgreso = 53; actualProgreso = 12;
+                    maxProgreso = 53; actualProgreso = 12; 
                 }
             }
 
-            if (p.progresoTipo != 2) {
+            if (p.progresoTipo != 2) { 
                 porcentajeLlenado = Math.min(1.0f, (float) actualProgreso / maxProgreso);
                 if (p.progresoEstilo == 0) dibujarBarra = true;
                 else if (p.progresoEstilo == 1) textoMostrar = (int)(porcentajeLlenado * 100) + "%";
                 else if (p.progresoEstilo == 2) textoMostrar = actualProgreso + " / " + maxProgreso;
             }
 
-            // 3. DIBUJAR LA BARRA DE PROGRESO
             if (dibujarBarra) {
                 int anchoLleno = (int) (innerW * porcentajeLlenado);
                 if (porcentajeLlenado >= 1.0f) anchoLleno = innerW;
-
+                
                 if (anchoLleno > 0) {
                     for (int dy = 0; dy < innerH; dy++) {
                         int inset = getCornerInset(dy, innerH, innerR);
@@ -274,7 +275,6 @@ public static void crearBotonPagina(int numPagina) {
                     }
                 }
 
-                // 4. DIBUJAR HITOS (Transparentes cada 15%)
                 if (p.disenoBarra == 1) {
                     int hitColor = (p.colorBorde & 0x00FFFFFF) | 0x44000000;
                     for (int i = 1; i <= 6; i++) {
@@ -291,7 +291,7 @@ public static void crearBotonPagina(int numPagina) {
                 }
             } else if (!textoMostrar.isEmpty()) {
                 net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
-                float scale = p.escalaTexto;
+                float scale = p.escalaTexto; 
                 float tX = p.x + (p.ancho - (font.width(textoMostrar) * scale)) / 2 + p.offsetXTexto;
                 float tY = p.y + (p.alto - (font.lineHeight * scale)) / 2 + p.offsetYTexto;
 
@@ -300,6 +300,8 @@ public static void crearBotonPagina(int numPagina) {
                 g.drawString(font, net.minecraft.network.chat.Component.literal(textoMostrar).setStyle(estilo), 0, 0, p.colorTexto, p.sombra);
                 g.pose().popPose();
             }
+
+            drawRoundedOutline(g, p.x, p.y, p.ancho, p.alto, r, p.colorBorde);
 
             if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFFFFFF00);
             return;
@@ -1093,11 +1095,28 @@ public static void crearBotonPagina(int numPagina) {
         return 0;
     }
 
-    private static void fillRoundedRect(GuiGraphics g, int x, int y, int w, int h, int r, int color) {
+    private static void drawRoundedOutline(GuiGraphics g, int x, int y, int w, int h, int r, int color) {
         if (color == 0 || (color & 0xFF000000) == 0 || w <= 0 || h <= 0) return;
         for (int dy = 0; dy < h; dy++) {
             int inset = getCornerInset(dy, h, r);
-            g.fill(x + inset, y + dy, x + w - inset, y + dy + 1, color);
+            
+            g.fill(x + inset, y + dy, x + inset + 1, y + dy + 1, color);
+            g.fill(x + w - 1 - inset, y + dy, x + w - inset, y + dy + 1, color);
+            
+            if (dy > 0) {
+                int prevInset = getCornerInset(dy - 1, h, r);
+                if (prevInset > inset) {
+                    g.fill(x + inset + 1, y + dy, x + prevInset + 1, y + dy + 1, color);
+                    g.fill(x + w - 1 - prevInset, y + dy, x + w - 1 - inset, y + dy + 1, color);
+                } else if (prevInset < inset) {
+                    g.fill(x + prevInset + 1, y + dy - 1, x + inset + 1, y + dy, color);
+                    g.fill(x + w - 1 - inset, y + dy - 1, x + w - 1 - prevInset, y + dy, color);
+                }
+            }
+            
+            if (dy == 0 || dy == h - 1) {
+                g.fill(x + inset + 1, y + dy, x + w - 1 - inset, y + dy + 1, color);
+            }
         }
     }
 }
