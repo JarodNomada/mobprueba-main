@@ -1140,7 +1140,7 @@ public static void crearBotonPagina(int numPagina) {
     private static final java.util.Set<String> biomasDescubiertos = new java.util.HashSet<>();
 
     private static int[] obtenerLogrosYBiomasCached(net.minecraft.client.Minecraft mc) {
-        if (mc.player == null || mc.level == null) return new int[]{0, 114, biomasDescubiertos.size(), 53}; 
+        if (mc.player == null || mc.level == null) return new int[]{0, 1, biomasDescubiertos.size(), 53}; 
         
         net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> currentBiome = mc.level.getBiome(mc.player.blockPosition());
         currentBiome.unwrapKey().ifPresent(key -> biomasDescubiertos.add(key.location().toString()));
@@ -1157,9 +1157,18 @@ public static void crearBotonPagina(int numPagina) {
         }
         ultimoChequeoLogros = ahora;
         
-        int logrosCompletados = 0, logrosTotalesDescubiertos = 0;
-        net.minecraft.client.multiplayer.ClientAdvancements mgr = mc.player.connection.getAdvancements();
+        int logrosCompletados = 0;
+        int logrosTotales = 0;
         
+        if (mc.getSingleplayerServer() != null) {
+            for (net.minecraft.advancements.Advancement adv : mc.getSingleplayerServer().getAdvancements().getAllAdvancements()) {
+                if (adv.getDisplay() != null) {
+                    logrosTotales++;
+                }
+            }
+        }
+        
+        net.minecraft.client.multiplayer.ClientAdvancements mgr = mc.player.connection.getAdvancements();
         try {
             if (advancementsProgressField == null) {
                 for (java.lang.reflect.Field f : mgr.getClass().getDeclaredFields()) {
@@ -1173,23 +1182,27 @@ public static void crearBotonPagina(int numPagina) {
             if (advancementsProgressField != null) {
                 java.util.Map<?, ?> map = (java.util.Map<?, ?>) advancementsProgressField.get(mgr);
                 if (map != null) {
+                    int descubiertosCliente = 0;
                     for (java.util.Map.Entry<?, ?> entry : map.entrySet()) {
                         if (entry.getKey() instanceof net.minecraft.advancements.Advancement adv && 
                             entry.getValue() instanceof net.minecraft.advancements.AdvancementProgress prog) {
                             
-                            if (!adv.getId().getPath().startsWith("recipes/") && adv.getDisplay() != null) {
-                                logrosTotalesDescubiertos++;
+                            if (adv.getDisplay() != null) {
+                                descubiertosCliente++;
                                 if (prog.isDone()) logrosCompletados++;
                             }
                         }
+                    }
+                    if (logrosTotales == 0) {
+                        logrosTotales = descubiertosCliente;
                     }
                 }
             }
         } catch (Exception e) {}
         
-        int maxLogros = Math.max(114, logrosTotalesDescubiertos);
+        if (logrosTotales == 0) logrosTotales = 1;
         
-        cacheLogros = new int[]{logrosCompletados, maxLogros, biomasVisitados, maxBiomas};
+        cacheLogros = new int[]{logrosCompletados, logrosTotales, biomasVisitados, maxBiomas};
         return cacheLogros;
     }
 }
