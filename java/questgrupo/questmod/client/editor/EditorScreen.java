@@ -208,6 +208,8 @@ this.inputColor.setResponder(s -> {
                 TopBar.inicializarBotonesSlot(this.width, 5, this::addRenderableWidget, pSel);
             } else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) {
                 TopBar.inicializarBotonesImagen(this.width, 5, this::addRenderableWidget, pSel);
+            } else if (pSel.tipo.equals("LISTA_LOGROS")) {
+                TopBar.inicializarBotonesLogros(this.width, 5, this::addRenderableWidget, pSel);
             } else if (pSel.tipo.equals("PROGRESO")) { // <--- ¡LO MOVIMOS ARRIBA PARA QUE NO SE CONFUNDA!
                 TopBar.inicializarBotonesProgreso(this.width, 0, this::addRenderableWidget, pSel);
             } else if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty() && !pSel.tipo.equals("INVENTORY_GRID")) {
@@ -1294,6 +1296,13 @@ this.inputColor.setResponder(s -> {
                 if (maxScroll < 0) maxScroll = 0;
                 if (p.scrollIndex < 0) p.scrollIndex = 0;
                 if (p.scrollIndex > maxScroll) p.scrollIndex = maxScroll;
+                return true;
+            }
+            
+            // Lógica de Scroll para LA LISTA DE LOGROS
+            if (p.tipo.equals("LISTA_LOGROS") && questgrupo.questmod.client.gui.FigurasEdit.mouseSobreFigura(mx, my, p)) {
+                p.scrollY -= scrollDelta * 25;
+                if (p.scrollY < 0) p.scrollY = 0;
                 return true;
             }
         }

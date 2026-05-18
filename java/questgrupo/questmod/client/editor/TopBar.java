@@ -357,6 +357,7 @@ public class TopBar {
             else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) return 280;
             else if (pSel.tipo.startsWith("SLOT")) return 160;
             else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) return 200;
+            else if (pSel.tipo.equals("LISTA_LOGROS")) return 270;
             else if (pSel.tipo.equals("PROGRESO")) {
                 return 152;
             } else {
@@ -580,6 +581,38 @@ public class TopBar {
             int knobX = sliderImageX + (int)(pSel.opacidad * (sW - 8));
             g.fill(knobX, sY - 2, knobX + 8, sY + 8, 0xFF555555); 
             g.renderOutline(knobX, sY - 2, 8, 10, 0xFF000000);
+        } else if (pSel.tipo.equals("LISTA_LOGROS")) {
+            int curX = barStartX + 6;
+            int row1Y = y + 6;
+            int row2Y = y + 26;
+
+            drawColorSwatch(g, pSel.colorARGB, curX, row1Y);
+            drawColorSwatch(g, pSel.colorBorde, curX + 20, row1Y);
+            drawColorSwatch(g, pSel.colorFondoIcono, curX, row2Y);
+            drawColorSwatch(g, pSel.colorBordeIcono, curX + 20, row2Y);
+
+            curX += 44;
+            drawVerticalSeparator(g, curX, y + 4, 40);
+            curX += 6;
+
+            drawColorSwatch(g, pSel.colorFondoRenglon, curX, row1Y);
+            drawColorSwatch(g, pSel.colorBordeRenglon, curX + 20, row1Y);
+            drawColorSwatch(g, pSel.colorFondoCheck, curX, row2Y);
+            drawColorSwatch(g, pSel.colorBordeCheckInterno, curX + 20, row2Y);
+
+            curX += 44;
+            drawVerticalSeparator(g, curX, y + 4, 40);
+            curX += 6;
+
+            drawColorSwatch(g, pSel.colorTexto, curX, row1Y);
+            drawColorSwatch(g, pSel.colorSlotBg, curX + 20, row1Y); 
+            
+            curX += 44;
+            drawVerticalSeparator(g, curX, y + 4, 40);
+            curX += 6;
+            
+            drawSectionTitle(g, font, "Tit/Desc", curX, y + 2, 44);
+            drawSectionTitle(g, font, "Caja/Item", curX + 50, y + 2, 44);
         } else if (pSel.tipo.equals("PROGRESO")) {
             int curX = barStartX + 6;
             int row1Y = y + 6;
@@ -726,7 +759,26 @@ public class TopBar {
             if (mx >= curX + 40 && mx <= curX + 56 && my >= y+16 && my <= y+32) return BTN_SLOT_LIGHT;
         } else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) {
             return -1; // Ignoramos el clic de color porque las imágenes solo tienen botones +/-
-} else if (pSel.tipo.equals("PROGRESO")) {
+        } else if (pSel.tipo.equals("LISTA_LOGROS")) {
+            int curX = barStartX + 6;
+            int row1Y = y + 6;
+            int row2Y = y + 26;
+            
+            if (my >= row1Y && my <= row1Y + 16) {
+                if (mx >= curX && mx <= curX + 16) return BTN_FILL_COLOR;
+                if (mx >= curX + 20 && mx <= curX + 36) return BTN_BORDER_COLOR;
+                if (mx >= curX + 50 && mx <= curX + 66) return BTN_OBJ_ROW_FILL;
+                if (mx >= curX + 70 && mx <= curX + 86) return BTN_OBJ_ROW_BORDER;
+                if (mx >= curX + 100 && mx <= curX + 116) return BTN_TEXT_COLOR;
+                if (mx >= curX + 120 && mx <= curX + 136) return BTN_SLOT_BG;
+            }
+            if (my >= row2Y && my <= row2Y + 16) {
+                if (mx >= curX && mx <= curX + 16) return BTN_OBJ_ICON_FILL;
+                if (mx >= curX + 20 && mx <= curX + 36) return BTN_OBJ_ICON_BORDER;
+                if (mx >= curX + 50 && mx <= curX + 66) return BTN_OBJ_CHECK_FILL;
+                if (mx >= curX + 70 && mx <= curX + 86) return BTN_OBJ_CHECK_BORDER_IN;
+            }
+        } else if (pSel.tipo.equals("PROGRESO")) {
             int curX = barStartX + 6;
             int row1Y = y + 6;
             int row2Y = y + 26;
@@ -893,6 +945,30 @@ public class TopBar {
             pSel.ancho += 5; 
             pSel.alto += 5; 
         }).bounds(curX + 20, btnY, 18, btnSize).build());
+    }
+
+    public static void inicializarBotonesLogros(int guiWidth, int y, Consumer<Button> adder, GlobalGuiSettings.PanelConfig pSel) {
+        if (pSel == null || !pSel.tipo.equals("LISTA_LOGROS")) return;
+        int barX = LeftSidebar.getSidebarWidth();
+        int expectedBarW = calculateBarWidth(false, true, null, pSel);
+        int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
+        int btnSize = 18;
+
+        int curX = barStartX + 6 + 150;
+        int btnY1 = y + 10;
+        int btnY2 = y + 28;
+
+        adder.accept(Button.builder(Component.literal("T-"), b -> { pSel.escalaTexto = Math.max(0.4f, pSel.escalaTexto - 0.1f); }).bounds(curX, btnY1, 20, btnSize).build());
+        adder.accept(Button.builder(Component.literal("T+"), b -> { pSel.escalaTexto = Math.min(3.0f, pSel.escalaTexto + 0.1f); }).bounds(curX + 22, btnY1, 20, btnSize).build());
+        
+        adder.accept(Button.builder(Component.literal("C-"), b -> { pSel.escalaIcono = Math.max(0.4f, pSel.escalaIcono - 0.1f); }).bounds(curX + 50, btnY1, 20, btnSize).build());
+        adder.accept(Button.builder(Component.literal("C+"), b -> { pSel.escalaIcono = Math.min(3.0f, pSel.escalaIcono + 0.1f); }).bounds(curX + 72, btnY1, 20, btnSize).build());
+
+        adder.accept(Button.builder(Component.literal("D-"), b -> { pSel.escalaDesc = Math.max(0.4f, pSel.escalaDesc - 0.1f); }).bounds(curX, btnY2, 20, btnSize).build());
+        adder.accept(Button.builder(Component.literal("D+"), b -> { pSel.escalaDesc = Math.min(3.0f, pSel.escalaDesc + 0.1f); }).bounds(curX + 22, btnY2, 20, btnSize).build());
+        
+        adder.accept(Button.builder(Component.literal("I-"), b -> { pSel.escalaItem = Math.max(0.4f, pSel.escalaItem - 0.1f); }).bounds(curX + 50, btnY2, 20, btnSize).build());
+        adder.accept(Button.builder(Component.literal("I+"), b -> { pSel.escalaItem = Math.min(3.0f, pSel.escalaItem + 0.1f); }).bounds(curX + 72, btnY2, 20, btnSize).build());
     }
 
     public static void inicializarBotonesProgreso(int guiWidth, int y, Consumer<Button> adder, GlobalGuiSettings.PanelConfig pSel) {

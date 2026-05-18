@@ -574,6 +574,163 @@ public static void crearBotonPagina(int numPagina) {
             return; 
         }
 
+        if ("LISTA_LOGROS".equals(p.tipo)) {
+            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
+            
+            g.fill(p.x, p.y, p.x + p.ancho, p.y + 1, p.colorBorde);
+            g.fill(p.x, p.y + p.alto - 1, p.x + p.ancho, p.y + p.alto, p.colorBorde);
+            g.fill(p.x, p.y, p.x + 1, p.y + p.alto, p.colorBorde);
+            g.fill(p.x + p.ancho - 1, p.y, p.x + p.ancho, p.y + p.alto, p.colorBorde);
+            
+            int padding = 4;
+            g.enableScissor(p.x + 1, p.y + 1, p.x + p.ancho - 1, p.y + p.alto - 1);
+            g.pose().pushPose();
+            g.pose().translate(0, -p.scrollY, 0);
+            
+            float eIcon = p.escalaIcono > 0.1f ? p.escalaIcono : 1.0f;
+            float eText = p.escalaTexto > 0.1f ? p.escalaTexto : 1.0f;
+            float eDesc = p.escalaDesc > 0.1f ? p.escalaDesc : (eText * 0.85f);
+            float eItem = p.escalaItem > 0.1f ? p.escalaItem : 1.0f;
+            
+            int baseRowH = 46;
+            int rowH = (int)(baseRowH * Math.max(eIcon, Math.max(eText, eDesc))); 
+            int curY = p.y + padding;
+            
+            java.util.List<LogroInfo> logros = obtenerListaLogrosCached(net.minecraft.client.Minecraft.getInstance());
+            java.util.List<LogroInfo> renderLogros = new java.util.ArrayList<>(logros);
+            
+            if (renderLogros.isEmpty() && GlobalGuiSettings.editorActivo) {
+                for(int i=0; i<6; i++) {
+                    LogroInfo dummy = new LogroInfo();
+                    dummy.titulo = "Logro Ejemplar " + (i+1);
+                    dummy.descripcion = "Completa esta tarea para avanzar.";
+                    dummy.icono = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_SWORD);
+                    dummy.completado = i % 2 == 0;
+                    dummy.progresoTxt = dummy.completado ? "Completado" : "4/10";
+                    if (i == 3) dummy.progresoTxt = "";
+                    renderLogros.add(dummy);
+                }
+            }
+            
+            renderLogros.sort((a, b) -> {
+                if (a.completado && !b.completado) return -1;
+                if (!a.completado && b.completado) return 1;
+                return a.titulo.compareToIgnoreCase(b.titulo);
+            });
+            
+            net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
+            
+            for (LogroInfo info : renderLogros) {
+                int cFondoIcono = (p.colorFondoIcono != 0) ? p.colorFondoIcono : 0xFF151515;
+                int cBordeIcono = (p.colorBordeIcono != 0) ? p.colorBordeIcono : 0xFF2A2A2A;
+                int cFondoTexto = (p.colorFondoRenglon != 0) ? p.colorFondoRenglon : 0xFF181818;
+                int cBordeTexto = (p.colorBordeRenglon != 0) ? p.colorBordeRenglon : 0xFF2A2A2A;
+                int cFondoCheck = (p.colorFondoCheck != 0) ? p.colorFondoCheck : 0xFF111111;
+                int cBordeCheck = (p.colorBordeCheckInterno != 0) ? p.colorBordeCheckInterno : 0xFF2A2A2A;
+                
+                int colorT = (p.colorTexto != 0) ? p.colorTexto : 0xFFFFFFFF;
+                int colorDesc = (p.colorSlotBg != 0) ? p.colorSlotBg : 0xFFAAAAAA;
+
+                int iconCellW = (int)(42 * eIcon);
+                int iconCellX = p.x + padding;
+                
+                g.fill(iconCellX, curY, iconCellX + iconCellW, curY + rowH, cFondoIcono);
+                g.renderOutline(iconCellX, curY, iconCellW, rowH, cBordeIcono);
+                
+                if (info.icono != null) {
+                    g.pose().pushPose();
+                    float scaleF = eIcon * 1.5f * eItem;
+                    float offsetItemX = (iconCellW - (16 * scaleF)) / 2.0f;
+                    float offsetItemY = (rowH - (16 * scaleF)) / 2.0f;
+                    g.pose().translate(iconCellX + offsetItemX, curY + offsetItemY, 0);
+                    g.pose().scale(scaleF, scaleF, 1.0f);
+                    g.renderFakeItem(info.icono, 0, 0);
+                    g.pose().popPose();
+                }
+                
+                int textCellX = iconCellX + iconCellW + 1;
+                int textCellW = p.ancho - (padding * 2) - iconCellW - 1;
+                
+                if (textCellW > 10) {
+                    g.fill(textCellX, curY, textCellX + textCellW, curY + rowH, cFondoTexto);
+                    g.renderOutline(textCellX, curY, textCellW, rowH, cBordeTexto);
+                    
+int checkSize = (int)(16 * eIcon);
+                    int checkX = textCellX + textCellW - padding - checkSize;
+                    int checkY = curY + (rowH - checkSize) / 2;
+                    
+                    g.fill(checkX, checkY, checkX + checkSize, checkY + checkSize, cFondoCheck);
+                    g.renderOutline(checkX, checkY, checkSize, checkSize, info.completado ? 0xFF00B01B : cBordeCheck);
+                    
+                    if (info.completado) {
+                        g.pose().pushPose();
+                        g.pose().translate(checkX, checkY, 0);
+                        g.pose().scale(eIcon, eIcon, 1.0f);
+                        
+                        int shadow = 0xFF003808; 
+                        g.fill(5, 9, 7, 11, shadow);
+                        g.fill(7, 11, 10, 14, shadow);
+                        g.fill(10, 9, 12, 11, shadow);
+                        g.fill(12, 7, 14, 9, shadow);
+                        g.fill(14, 5, 16, 7, shadow);
+
+                        int checkColor = 0xFF00B01B;
+                        g.fill(4, 8, 6, 10, checkColor);
+                        g.fill(6, 10, 9, 13, checkColor);
+                        g.fill(9, 8, 11, 10, checkColor);
+                        g.fill(11, 6, 13, 8, checkColor);
+                        g.fill(13, 4, 15, 6, checkColor);
+                        
+                        g.pose().popPose();
+                    }
+                    
+                    String dateTxt = info.progresoTxt;
+                    int progressTextW = 0;
+                    if (dateTxt != null && !dateTxt.isEmpty()) {
+                        progressTextW = (int)(font.width(dateTxt) * eDesc);
+                        g.pose().pushPose();
+                        g.pose().translate(checkX - 6 - progressTextW, curY + (rowH / 2.0f) - (4 * eDesc), 0);
+                        g.pose().scale(eDesc, eDesc, 1.0f);
+                        g.drawString(font, dateTxt, 0, 0, colorDesc, false);
+                        g.pose().popPose();
+                    }
+                    
+                    int maxTextW = (checkX - 6 - progressTextW) - (textCellX + 8);
+                    if (maxTextW > 10) {
+                        String safeTitulo = font.plainSubstrByWidth(info.titulo, (int)(maxTextW / eText));
+                        if (safeTitulo.length() < info.titulo.length()) safeTitulo += "...";
+                        
+                        String safeDesc = font.plainSubstrByWidth(info.descripcion, (int)(maxTextW / eDesc));
+                        if (safeDesc.length() < info.descripcion.length()) safeDesc += "...";
+
+                        g.pose().pushPose();
+                        g.pose().translate(textCellX + 8, curY + 6 + ( (rowH/2.0f - 14) * eText ), 0);
+                        g.pose().scale(eText, eText, 1.0f);
+                        g.drawString(font, safeTitulo, 0, 0, colorT, false);
+                        g.pose().popPose();
+                        
+                        g.pose().pushPose();
+                        g.pose().translate(textCellX + 8, curY + (rowH / 2.0f) + (2 * eDesc), 0);
+                        g.pose().scale(eDesc, eDesc, 1.0f);
+                        g.drawString(font, safeDesc, 0, 0, colorDesc, false); 
+                        g.pose().popPose();
+                    }
+                }
+                curY += rowH + 1;
+            }
+            
+            int maxScroll = (curY - p.y) - p.alto;
+            if (maxScroll < 0) maxScroll = 0;
+            if (p.scrollY > maxScroll) p.scrollY = maxScroll;
+            if (p.scrollY < 0) p.scrollY = 0;
+            
+            g.pose().popPose();
+            g.disableScissor();
+            
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFFFFFF00);
+            return;
+        }
+
         if (p.tipo.equals("LINEA")) {
             if (p.x2 != 0 || p.y2 != 0) {
                 drawLineThick(g, p.x, p.y, p.x2, p.y2, p.colorARGB, p.grosor);
@@ -1266,5 +1423,94 @@ public static void crearBotonPagina(int numPagina) {
         
         cacheLogros = new int[]{logrosCompletados, logrosTotales, biomasVisitados, maxBiomas};
         return cacheLogros;
+    }
+
+    static class LogroInfo {
+        String id;
+        net.minecraft.world.item.ItemStack icono;
+        String titulo;
+        String descripcion;
+        boolean completado;
+        String progresoTxt;
+    }
+    
+    private static long ultimoChequeoListaLogros = 0;
+    private static java.util.List<LogroInfo> cacheListaLogros = new java.util.ArrayList<>();
+    
+    private static java.util.List<LogroInfo> obtenerListaLogrosCached(net.minecraft.client.Minecraft mc) {
+        long ahora = System.currentTimeMillis();
+        if (ahora - ultimoChequeoListaLogros < 2000) return cacheListaLogros;
+        ultimoChequeoListaLogros = ahora;
+        
+        cacheListaLogros.clear();
+        if (mc.player == null) return cacheListaLogros;
+        
+        java.util.Map<String, LogroInfo> mapa = new java.util.LinkedHashMap<>();
+        net.minecraft.client.multiplayer.ClientAdvancements mgr = mc.player.connection.getAdvancements();
+        
+        try {
+            if (advancementsProgressField == null) {
+                for (java.lang.reflect.Field f : mgr.getClass().getDeclaredFields()) {
+                    if (java.util.Map.class.isAssignableFrom(f.getType())) {
+                        f.setAccessible(true);
+                        advancementsProgressField = f;
+                        break; 
+                    }
+                }
+            }
+            
+            if (advancementsProgressField != null) {
+                java.util.Map<?, ?> map = (java.util.Map<?, ?>) advancementsProgressField.get(mgr);
+                if (map != null) {
+                    for (java.util.Map.Entry<?, ?> entry : map.entrySet()) {
+                        if (entry.getKey() instanceof net.minecraft.advancements.Advancement adv && 
+                            entry.getValue() instanceof net.minecraft.advancements.AdvancementProgress prog) {
+                            
+                            if (!adv.getId().getPath().startsWith("recipes/") && adv.getDisplay() != null) {
+                                LogroInfo info = new LogroInfo();
+                                info.id = adv.getId().toString();
+                                info.icono = adv.getDisplay().getIcon();
+                                info.titulo = adv.getDisplay().getTitle().getString();
+                                info.descripcion = adv.getDisplay().getDescription().getString();
+                                info.completado = prog.isDone();
+                                
+                                int count = 0;
+                                for(String c : prog.getCompletedCriteria()) count++;
+                                int total = adv.getCriteria().size();
+                                
+                                if (total > 1) {
+                                    info.progresoTxt = count + "/" + total;
+                                } else {
+                                    info.progresoTxt = info.completado ? "Completado" : "";
+                                }
+                                mapa.put(info.id, info);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {}
+        
+        if (mc.getSingleplayerServer() != null) {
+            for (net.minecraft.advancements.Advancement adv : mc.getSingleplayerServer().getAdvancements().getAllAdvancements()) {
+                if (!adv.getId().getPath().startsWith("recipes/") && adv.getDisplay() != null) {
+                    String id = adv.getId().toString();
+                    if (!mapa.containsKey(id)) {
+                        LogroInfo info = new LogroInfo();
+                        info.id = id;
+                        info.icono = adv.getDisplay().getIcon();
+                        info.titulo = adv.getDisplay().getTitle().getString();
+                        info.descripcion = adv.getDisplay().getDescription().getString();
+                        info.completado = false;
+                        int total = adv.getCriteria().size();
+                        info.progresoTxt = (total > 1) ? "0/" + total : "";
+                        mapa.put(id, info);
+                    }
+                }
+            }
+        }
+        
+        cacheListaLogros.addAll(mapa.values());
+        return cacheListaLogros;
     }
 }

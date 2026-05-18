@@ -25,12 +25,25 @@ public class GlobalGuiSettings {
         public int colorBordeMision = 0xFFAAAAAA;
         public int colorFondoCabecera = 0xFF222222;
         public int colorBordeCabecera = 0xFFFFFFFF;
+        public int colorFondoMisionDetalle = 0xFF222222;
+        public int colorBordeMisionDetalle = 0xFFAAAAAA;
+        
+        public int colorSecundario = 0xFF181818; 
+        public int colorFondoIcono = 0xFF111111;
+        public int colorBordeIcono = 0xFF333333;
+        public int colorFondoRenglon = 0xFF181818;
+        public int colorBordeRenglon = 0xFF2A2A2A;
+        public int colorFondoCheck = 0xFF111111;
+        public int colorBordeCheckInterno = 0xFF2A2A2A;
+        
         public String tipo = "CUADRADO";
         public int grosor = 2; // Para pincel y formas
         public String textoAsociado = null;
         public ResourceLocation iconoRL = null;
         public float escalaTexto = 1.0f;
         public float escalaIcono = 1.0f;
+        public float escalaDesc = 0.85f;
+        public float escalaItem = 1.0f;
         public float offsetXTexto = 0.0f;
         public float offsetYTexto = 0.0f;
         public float escalaTextoMision = 1.0f;
@@ -60,12 +73,6 @@ public class GlobalGuiSettings {
         public int colorRec = 0xFFFFFFFF;
 
         // Nuevos colores para Objetivos
-        public int colorFondoRenglon = 0x22FFFFFF;
-        public int colorBordeRenglon = 0xFFA6A6A6;
-        public int colorFondoIcono = 0x00000000;
-        public int colorBordeIcono = 0xFFAAAAAA;
-        public int colorFondoCheck = 0x44000000;
-        public int colorBordeCheckInterno = 0xFFFFFFFF;
         public int colorBordeCheckExterno = 0xFF000000;
         public int pagina = 1;
         public boolean isVertical = false;

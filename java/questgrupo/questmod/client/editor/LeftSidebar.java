@@ -175,12 +175,13 @@ public class LeftSidebar {
                     drawVanillaButton(g, font, PANEL_X + 10, panelY + 20 + (i * 20), 120, 18, stats[i], false);
                 }
             } else if (showProgresoMenu) {
-                drawVanillaPanel(g, PANEL_X, panelY, 130, 105);
+                drawVanillaPanel(g, PANEL_X, panelY, 130, 125);
                 g.drawString(font, "Progreso", PANEL_X + 10, panelY + 6, 0xFF404040, false);
                 drawVanillaButton(g, font, PANEL_X + 10, panelY + 20, 110, 18, "Misiones", false);
                 drawVanillaButton(g, font, PANEL_X + 10, panelY + 40, 110, 18, "Logros", false);
                 drawVanillaButton(g, font, PANEL_X + 10, panelY + 60, 110, 18, "Tiempo Jugado", false);
-                drawVanillaButton(g, font, PANEL_X + 10, panelY + 80, 110, 18, "Biomas", false); // ¡CAMBIADO AQUÍ!
+                drawVanillaButton(g, font, PANEL_X + 10, panelY + 80, 110, 18, "Biomas", false); 
+                drawVanillaButton(g, font, PANEL_X + 10, panelY + 100, 110, 18, "Logros Dest.", false);
             } else {
                 drawVanillaPanel(g, PANEL_X, panelY, 130, 125); 
                 g.drawString(font, "Widgets RPG", PANEL_X + 10, panelY + 6, 0xFF404040, false);
@@ -321,11 +322,12 @@ public class LeftSidebar {
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 180, 120, 18)) { crearWidget("ESTADISTICA_DANO_RECIBIDO", "Da\u00f1o Rec.", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 200, 120, 18)) { showStatsMenu = false; return true; }
                 } else if (showProgresoMenu) {
-                    panelWidth = 130; panelHeight = 105;
+                    panelWidth = 130; panelHeight = 125;
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 110, 18)) { crearWidget("PROGRESO", "Misiones", centerX - 50, centerY - 10, 100, 20); GlobalGuiSettings.panelSeleccionado.progresoTipo = 0; selectedModule = -1; showProgresoMenu = false; return true; }
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 110, 18)) { crearWidget("PROGRESO", "Logros", centerX - 50, centerY - 10, 100, 20); GlobalGuiSettings.panelSeleccionado.progresoTipo = 1; selectedModule = -1; showProgresoMenu = false; return true; }
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 110, 18)) { crearWidget("PROGRESO", "Tiempo", centerX - 50, centerY - 10, 100, 20); GlobalGuiSettings.panelSeleccionado.progresoTipo = 2; selectedModule = -1; showProgresoMenu = false; return true; }
-                    if (isHovered(mx, my, PANEL_X + 10, panelY + 80, 110, 18)) { crearWidget("PROGRESO", "Biomas", centerX - 50, centerY - 10, 100, 20); GlobalGuiSettings.panelSeleccionado.progresoTipo = 3; selectedModule = -1; showProgresoMenu = false; return true; } // ¡CAMBIADO AQUÍ!
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 80, 110, 18)) { crearWidget("PROGRESO", "Biomas", centerX - 50, centerY - 10, 100, 20); GlobalGuiSettings.panelSeleccionado.progresoTipo = 3; selectedModule = -1; showProgresoMenu = false; return true; } 
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 100, 110, 18)) { crearWidget("LISTA_LOGROS", "Logros Dest.", centerX - 120, centerY - 100, 260, 200); GlobalGuiSettings.panelSeleccionado.colorARGB = 0xEE1A1A1A; selectedModule = -1; showProgresoMenu = false; return true; }
                 } else {
                     panelWidth = 130; panelHeight = 125; 
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 110, 18)) { crearWidget("MANIQUI", "Widget Maniqui", centerX - 25, centerY - 40, 50, 80); selectedModule = -1; return true; }
