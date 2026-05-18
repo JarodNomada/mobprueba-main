@@ -228,25 +228,39 @@ public static void crearBotonPagina(int numPagina) {
             float porcentajeLlenado = 0.0f;
             int maxProgreso = 1, actualProgreso = 0;
 
-            if (GlobalGuiSettings.editorActivo) {
-                maxProgreso = 100; actualProgreso = 65; 
-                if (p.progresoTipo == 2) textoMostrar = "02h 45m";
-            } else {
-                net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
-                if (p.progresoTipo == 0) {
-                    maxProgreso = 0;
-                    for (java.util.List<Config.MisionData> lista : Config.misionesCargadas.values()) maxProgreso += lista.size();
-                    if (maxProgreso == 0) maxProgreso = 1; 
-                    actualProgreso = questgrupo.questmod.events.ClickAldeano.getMisionesCompletadasCount();
-                } else if (p.progresoTipo == 1) {
-                    maxProgreso = 30; actualProgreso = mc.player != null ? mc.player.experienceLevel : 0;
-                } else if (p.progresoTipo == 2) {
-                    if (mc.level != null) {
-                        long tSecs = mc.level.getGameTime() / 20; 
-                        textoMostrar = (tSecs / 3600) + "h " + ((tSecs % 3600) / 60) + "m";
+            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+            
+            if (p.progresoTipo == 0) {
+                maxProgreso = 0;
+                for (java.util.List<Config.MisionData> lista : Config.misionesCargadas.values()) maxProgreso += lista.size();
+                if (maxProgreso == 0) maxProgreso = 1; 
+                actualProgreso = questgrupo.questmod.events.ClickAldeano.getMisionesCompletadasCount();
+                
+            } else if (p.progresoTipo == 1 || p.progresoTipo == 3) {
+                int[] stats = obtenerLogrosYBiomasCached(mc);
+                if (p.progresoTipo == 1) {
+                    actualProgreso = stats[0];
+                    maxProgreso = stats[1];
+                } else {
+                    actualProgreso = stats[2];
+                    maxProgreso = stats[3];
+                }
+                
+            } else if (p.progresoTipo == 2) {
+                if (mc.player != null) {
+                    if (mc.level != null && mc.level.getGameTime() % 1200 == 0) {
+                        mc.player.connection.send(new net.minecraft.network.protocol.game.ServerboundClientCommandPacket(net.minecraft.network.protocol.game.ServerboundClientCommandPacket.Action.REQUEST_STATS));
                     }
-                } else if (p.progresoTipo == 3) {
-                    maxProgreso = 53; actualProgreso = 12; 
+                    
+                    int playTimeTicks = mc.player.getStats().getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.PLAY_TIME));
+                    
+                    long tSecs = playTimeTicks > 0 ? (playTimeTicks / 20) : (mc.level != null ? mc.level.getGameTime() / 20 : 0);
+                    
+                    long horas = tSecs / 3600;
+                    long minutos = (tSecs % 3600) / 60;
+                    textoMostrar = String.format("%02dh %02dm", horas, minutos);
+                } else {
+                    textoMostrar = "00h 00m";
                 }
             }
 
@@ -1118,5 +1132,64 @@ public static void crearBotonPagina(int numPagina) {
                 g.fill(x + inset + 1, y + dy, x + w - 1 - inset, y + dy + 1, color);
             }
         }
+    }
+
+    private static java.lang.reflect.Field advancementsProgressField = null;
+    private static long ultimoChequeoLogros = 0;
+    private static int[] cacheLogros = new int[]{0, 114, 0, 53};
+    private static final java.util.Set<String> biomasDescubiertos = new java.util.HashSet<>();
+
+    private static int[] obtenerLogrosYBiomasCached(net.minecraft.client.Minecraft mc) {
+        if (mc.player == null || mc.level == null) return new int[]{0, 114, biomasDescubiertos.size(), 53}; 
+        
+        net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> currentBiome = mc.level.getBiome(mc.player.blockPosition());
+        currentBiome.unwrapKey().ifPresent(key -> biomasDescubiertos.add(key.location().toString()));
+        
+        int maxBiomas = mc.level.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.BIOME).keySet().size();
+        if (maxBiomas == 0) maxBiomas = 53;
+        int biomasVisitados = biomasDescubiertos.size();
+
+        long ahora = System.currentTimeMillis();
+        if (ahora - ultimoChequeoLogros < 2000) { 
+            cacheLogros[2] = biomasVisitados;
+            cacheLogros[3] = maxBiomas;
+            return cacheLogros;
+        }
+        ultimoChequeoLogros = ahora;
+        
+        int logrosCompletados = 0, logrosTotalesDescubiertos = 0;
+        net.minecraft.client.multiplayer.ClientAdvancements mgr = mc.player.connection.getAdvancements();
+        
+        try {
+            if (advancementsProgressField == null) {
+                for (java.lang.reflect.Field f : mgr.getClass().getDeclaredFields()) {
+                    if (java.util.Map.class.isAssignableFrom(f.getType())) {
+                        f.setAccessible(true);
+                        advancementsProgressField = f;
+                        break; 
+                    }
+                }
+            }
+            if (advancementsProgressField != null) {
+                java.util.Map<?, ?> map = (java.util.Map<?, ?>) advancementsProgressField.get(mgr);
+                if (map != null) {
+                    for (java.util.Map.Entry<?, ?> entry : map.entrySet()) {
+                        if (entry.getKey() instanceof net.minecraft.advancements.Advancement adv && 
+                            entry.getValue() instanceof net.minecraft.advancements.AdvancementProgress prog) {
+                            
+                            if (!adv.getId().getPath().startsWith("recipes/") && adv.getDisplay() != null) {
+                                logrosTotalesDescubiertos++;
+                                if (prog.isDone()) logrosCompletados++;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {}
+        
+        int maxLogros = Math.max(114, logrosTotalesDescubiertos);
+        
+        cacheLogros = new int[]{logrosCompletados, maxLogros, biomasVisitados, maxBiomas};
+        return cacheLogros;
     }
 }
