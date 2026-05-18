@@ -206,6 +206,8 @@ this.inputColor.setResponder(s -> {
                 TopBar.inicializarBotonesSlot(this.width, 5, this::addRenderableWidget, pSel);
             } else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) {
                 TopBar.inicializarBotonesImagen(this.width, 5, this::addRenderableWidget, pSel);
+            } else if (pSel.tipo.equals("PROGRESO")) { // <--- ¡LO MOVIMOS ARRIBA PARA QUE NO SE CONFUNDA!
+                TopBar.inicializarBotonesProgreso(this.width, 0, this::addRenderableWidget, pSel);
             } else if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty() && !pSel.tipo.equals("INVENTORY_GRID")) {
                 TopBar.inicializarBotonesMision(this.width, 5, this::addRenderableWidget, pSel);
             }
@@ -555,6 +557,9 @@ this.inputColor.setResponder(s -> {
                     else if (FigurasEdit.editandoColorIndex == 2) colorX += 19 * 4;
                     else if (FigurasEdit.editandoColorIndex == 3) colorX = barStartX + 10 + 91 + 10 + (50 - 34)/2;
                     else if (FigurasEdit.editandoColorIndex == 4) colorX = barStartX + 10 + 91 + 10 + (50 - 34)/2 + 19;
+                } else if (pSel != null && pSel.tipo.equals("PROGRESO")) {
+                    // Ajustamos dinámicamente la posición del popup según el tipo de progreso seleccionado
+                    colorX = barStartX + (pSel.progresoTipo == 2 ? 110 : 180);
                 } else if (pSel != null) {
                     if (FigurasEdit.editandoColorIndex == 1) colorX += 20;
                 }

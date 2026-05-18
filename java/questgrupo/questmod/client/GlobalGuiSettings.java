@@ -92,6 +92,12 @@ public class GlobalGuiSettings {
         public String recursoPath = ""; // Guarda el nombre de la imagen o el ID del ítem
         public float opacidad = 1.0f; // 1.0 = 100% visible, 0.0 = invisible
 
+        // --- NUEVAS VARIABLES PARA EL WIDGET DE PROGRESO ---
+        public int progresoTipo = 0; // 0: Misiones Generales, 1: Logros, 2: Tiempo Jugado, 3: Misiones Completadas
+        public int progresoEstilo = 0; // 0: Barra, 1: Porcentaje, 2: Fracción (X/Y)
+        public int colorBarraLleno = 0xFF00AA00; // Verde por defecto
+        public int colorBarraFondo = 0xFF555555; // Gris oscuro por defecto
+
         public PanelConfig(int x, int y, int ancho, int alto) {
             this.x = x;
             this.y = y;

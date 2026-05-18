@@ -206,6 +206,94 @@ public static void crearBotonPagina(int numPagina) {
             return; 
         }
 
+        // ─── RENDERING DEL WIDGET DE PROGRESO ───
+        if ("PROGRESO".equals(p.tipo)) {
+            // 1. DIBUJAR FONDO GENERAL DEL RECUADRO (Si tiene opacidad/color)
+            if (p.colorARGB != 0) {
+                g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
+            }
+            
+            String textoMostrar = "";
+            boolean dibujarBarra = false;
+            float porcentajeLlenado = 0.0f;
+            
+            int maxProgreso = 1;
+            int actualProgreso = 0;
+
+            if (GlobalGuiSettings.editorActivo) {
+                maxProgreso = 100;
+                actualProgreso = 65; // 65% simulado en el editor
+                if (p.progresoTipo == 2) textoMostrar = "02h 45m";
+            } else {
+                net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+                if (p.progresoTipo == 0) {
+                    maxProgreso = 0;
+                    for (java.util.List<Config.MisionData> lista : Config.misionesCargadas.values()) {
+                        maxProgreso += lista.size();
+                    }
+                    if (maxProgreso == 0) maxProgreso = 1; 
+                    actualProgreso = questgrupo.questmod.events.ClickAldeano.getMisionesCompletadasCount();
+                } else if (p.progresoTipo == 1) {
+                    maxProgreso = 30; 
+                    actualProgreso = mc.player != null ? mc.player.experienceLevel : 0;
+                } else if (p.progresoTipo == 2) {
+                    if (mc.level != null) {
+                        long totalSecs = mc.level.getGameTime() / 20; 
+                        long hours = totalSecs / 3600;
+                        long minutes = (totalSecs % 3600) / 60;
+                        textoMostrar = hours + "h " + minutes + "m";
+                    }
+                } else if (p.progresoTipo == 3) {
+                    maxProgreso = 53; 
+                    actualProgreso = 12; // Muestra de biomas
+                }
+            }
+
+            if (p.progresoTipo != 2) { 
+                porcentajeLlenado = Math.min(1.0f, (float) actualProgreso / maxProgreso);
+                if (p.progresoEstilo == 0) {
+                    dibujarBarra = true;
+                } else if (p.progresoEstilo == 1) {
+                    textoMostrar = (int)(porcentajeLlenado * 100) + "%";
+                } else if (p.progresoEstilo == 2) {
+                    textoMostrar = actualProgreso + " / " + maxProgreso;
+                }
+            }
+
+            if (dibujarBarra) {
+                // 2. DIBUJAR LA BARRA DE PROGRESO (Ocupa el área limpia exacta)
+                int anchoLleno = (int) (p.ancho * porcentajeLlenado);
+                if (porcentajeLlenado >= 1.0f) {
+                    anchoLleno = p.ancho;
+                }
+                if (anchoLleno > 0) {
+                    g.fill(p.x, p.y, p.x + anchoLleno, p.y + p.alto, p.colorBarraLleno); 
+                }
+            } else if (!textoMostrar.isEmpty()) {
+                // Dibujar Texto centrado con escala de botones + y -
+                net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
+                float scale = p.escalaTexto; 
+                float tX = p.x + (p.ancho - (font.width(textoMostrar) * scale)) / 2 + p.offsetXTexto;
+                float tY = p.y + (p.alto - (font.lineHeight * scale)) / 2 + p.offsetYTexto;
+
+                g.pose().pushPose();
+                g.pose().translate(tX, tY, 0);
+                g.pose().scale(scale, scale, 1.0f);
+                
+                net.minecraft.network.chat.Style estilo = net.minecraft.network.chat.Style.EMPTY
+                    .withBold(p.negrita).withItalic(p.cursiva).withUnderlined(p.subrayado).withStrikethrough(p.tachado);
+                
+                g.drawString(font, net.minecraft.network.chat.Component.literal(textoMostrar).setStyle(estilo), 0, 0, p.colorTexto, p.sombra);
+                g.pose().popPose();
+            }
+
+            // 3. DIBUJAR BORDE EXTERIOR (1 píxel expandido por fuera para contener todo perfectamente)
+            g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, p.colorBorde);
+
+            if (seleccionado) g.renderOutline(p.x - 2, p.y - 2, p.ancho + 4, p.alto + 4, 0xFFFFFF00);
+            return;
+        } 
+
         // ─── RENDERING DEL WIDGET DE ESTADÍSTICAS RPG ───
         if (p.tipo != null && p.tipo.startsWith("ESTADISTICA_")) {
             // Fondo general opcional del recuadro

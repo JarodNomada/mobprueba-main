@@ -37,6 +37,7 @@ public class TopBar {
     public static final int BTN_OBJ_ICON_FILL = 62, BTN_OBJ_ICON_BORDER = 63;
     public static final int BTN_OBJ_CHECK_FILL = 64, BTN_OBJ_CHECK_BORDER_IN = 65, BTN_OBJ_CHECK_BORDER_OUT = 66;
     public static final int BTN_SLOT_BG = 70, BTN_SLOT_DARK = 71, BTN_SLOT_LIGHT = 72;
+    public static final int BTN_PROG_FILL = 80, BTN_PROG_BG = 81; // NUEVOS COLORES PROGRESO
 
     // --- ESTADO DEL SELECTOR DE COLOR MODAL ---
     public static boolean colorPickerVisible = false;
@@ -127,6 +128,8 @@ public class TopBar {
                 case BTN_SLOT_BG: return pSel.colorSlotBg;
                 case BTN_SLOT_DARK: return pSel.colorSlotDark;
                 case BTN_SLOT_LIGHT: return pSel.colorSlotLight;
+                case BTN_PROG_FILL: return pSel.colorBarraLleno;
+                case BTN_PROG_BG: return pSel.colorBarraFondo;
             }
         } else if (tSel != null) {
             if (id == BTN_TEXT_COLOR) return tSel.colorARGB;
@@ -197,6 +200,8 @@ public class TopBar {
                 case BTN_SLOT_BG: panelEnEdicion.colorSlotBg = finalColor; break;
                 case BTN_SLOT_DARK: panelEnEdicion.colorSlotDark = finalColor; break;
                 case BTN_SLOT_LIGHT: panelEnEdicion.colorSlotLight = finalColor; break;
+                case BTN_PROG_FILL: panelEnEdicion.colorBarraLleno = finalColor; break;
+                case BTN_PROG_BG: panelEnEdicion.colorBarraFondo = finalColor; break;
             }
         } else if (textoEnEdicion != null && currentEditingID == BTN_TEXT_COLOR) {
             textoEnEdicion.colorARGB = finalColor;
@@ -365,7 +370,9 @@ public class TopBar {
                 return 160; 
             } else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) {
                 return 200; // Barra mediana para la opacidad
-            } else {
+            } else if (pSel.tipo.equals("PROGRESO")) {
+            return pSel.progresoTipo == 2 ? 240 : 305;
+        } else {
                 int w = 6 + 20 + (pSel.tipo.equals("LINEA") || pSel.tipo.equals("TRIANGULO") ? 0 : 20);
                 if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
                     w += 46 * 2; 
@@ -589,6 +596,40 @@ public class TopBar {
             int knobX = sliderImageX + (int)(pSel.opacidad * (sW - 8));
             g.fill(knobX, sY - 2, knobX + 8, sY + 8, 0xFF555555); 
             g.renderOutline(knobX, sY - 2, 8, 10, 0xFF000000);
+        } else if (pSel.tipo.equals("PROGRESO")) {
+            int curX = barStartX + 6;
+            
+            if (pSel.progresoTipo != 2) {
+                curX += 84; 
+                drawVerticalSeparator(g, curX, y + 4, 40);
+                curX += 6;
+                
+                if (pSel.progresoEstilo == 0) { // Estilo Barra
+                    drawSectionTitle(g, font, "Color Barra", curX, y + 2, 60);
+                    drawColorSwatch(g, pSel.colorBarraLleno, curX + 20, y + 16); // Solo el color que llena
+                    curX += 65;
+                } else { // Estilo Texto (% o Fracción)
+                    drawSectionTitle(g, font, "Color Texto", curX, y + 2, 60);
+                    drawColorSwatch(g, pSel.colorTexto, curX + 20, y + 16);
+                    curX += 65;
+                }
+            } else {
+                // Tiempo Jugado
+                drawSectionTitle(g, font, "Color Texto", curX, y + 2, 60);
+                drawColorSwatch(g, pSel.colorTexto, curX + 20, y + 16);
+                curX += 65;
+            }
+
+            // Separador para el Recuadro General (Fondo y Borde fijo)
+            drawVerticalSeparator(g, curX, y + 4, 40);
+            curX += 6;
+            
+            drawSectionTitle(g, font, "Fondo / Borde", curX, y + 2, 80);
+            drawColorSwatch(g, pSel.colorARGB, curX + 15, y + 16);    // Fondo del recuadro
+            drawColorSwatch(g, pSel.colorBorde, curX + 45, y + 16);   // Borde perimetral fijo
+            
+            int escalaX = barStartX + calculateBarWidth(false, true, null, pSel) - 55;
+            drawSectionTitle(g, font, "Escala", escalaX, y + 2, 44);
         } else {
             int currentX = barStartX + 6;
             int boxY = y + 16; 
@@ -693,6 +734,32 @@ public class TopBar {
             if (mx >= curX + 40 && mx <= curX + 56 && my >= y+16 && my <= y+32) return BTN_SLOT_LIGHT;
         } else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) {
             return -1; // Ignoramos el clic de color porque las imágenes solo tienen botones +/-
+} else if (pSel.tipo.equals("PROGRESO")) {
+            int curX = barStartX + 6;
+            if (pSel.progresoTipo != 2) {
+                curX += 90;
+                if (my >= y + 16 && my <= y + 32) {
+                    if (pSel.progresoEstilo == 0) {
+                        if (mx >= curX + 20 && mx <= curX + 36) return BTN_PROG_FILL;
+                        curX += 65;
+                    } else {
+                        if (mx >= curX + 20 && mx <= curX + 36) return BTN_TEXT_COLOR;
+                        curX += 65;
+                    }
+                } else {
+                    curX += 65;
+                }
+            } else {
+                if (my >= y + 16 && my <= y + 32 && mx >= curX + 20 && mx <= curX + 36) return BTN_TEXT_COLOR;
+                curX += 65;
+            }
+            
+            curX += 6;
+            if (my >= y + 16 && my <= y + 32) {
+                if (mx >= curX + 15 && mx <= curX + 31) return BTN_FILL_COLOR;
+                if (mx >= curX + 45 && mx <= curX + 61) return BTN_BORDER_COLOR;
+            }
+            return -1;
         } else {
             int currentX = barStartX + 6;
             int boxY = y + 16;
@@ -848,5 +915,48 @@ public class TopBar {
             pSel.ancho += 5; 
             pSel.alto += 5; 
         }).bounds(curX + 20, btnY, 18, btnSize).build());
+    }
+
+    public static void inicializarBotonesProgreso(int guiWidth, int y, Consumer<Button> adder, GlobalGuiSettings.PanelConfig pSel) {
+        if (pSel == null || !pSel.tipo.equals("PROGRESO")) return;
+
+        int barX = LeftSidebar.getSidebarWidth();
+        int expectedBarW = calculateBarWidth(false, true, null, pSel);
+        int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
+        int curX = barStartX + 6;
+        int btnY = y + 14;
+
+        // Botón de Estilo (solo si no es Tiempo Jugado)
+        if (pSel.progresoTipo != 2) {
+            adder.accept(Button.builder(Component.literal(getProgresoEstiloName(pSel.progresoEstilo)), b -> {
+                pSel.progresoEstilo = (pSel.progresoEstilo + 1) % 3;
+                b.setMessage(Component.literal(getProgresoEstiloName(pSel.progresoEstilo)));
+            }).bounds(curX, btnY, 80, 20).build());
+            curX += 86; // Mover espacio si existió el botón de estilo
+        }
+
+        // Botones de Escala (+ y -) independientes al final de la barra de progreso
+        int escalaX = barStartX + expectedBarW - 55; 
+        
+        adder.accept(Button.builder(Component.literal("-"), b -> {
+            if (pSel.progresoTipo == 2 || pSel.progresoEstilo != 0) {
+                pSel.escalaTexto = Math.max(0.5f, pSel.escalaTexto - 0.1f);
+            }
+        }).bounds(escalaX, btnY, 20, 20).build());
+
+        adder.accept(Button.builder(Component.literal("+"), b -> {
+            if (pSel.progresoTipo == 2 || pSel.progresoEstilo != 0) {
+                pSel.escalaTexto = Math.min(3.0f, pSel.escalaTexto + 0.1f);
+            }
+        }).bounds(escalaX + 24, btnY, 20, 20).build());
+    }
+
+    private static String getProgresoEstiloName(int estilo) {
+        switch(estilo) {
+            case 0: return "Estilo: Barra";
+            case 1: return "Estilo: %";
+            case 2: return "Estilo: X/Y";
+            default: return "Estilo: ---";
+        }
     }
 }

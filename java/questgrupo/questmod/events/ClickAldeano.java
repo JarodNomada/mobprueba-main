@@ -30,6 +30,7 @@ public class ClickAldeano {
 
     public static boolean esMisionAceptada(String key) { return misionesAceptadas.contains(key); }
     public static boolean esMisionFinalizada(String key) { return misionesFinalizadas.contains(key); }
+    public static int getMisionesCompletadasCount() { return misionesFinalizadas.size(); }
     public static Set<String> getMisionesAceptadasCopia() { return new HashSet<>(misionesAceptadas); }
     
     public static void recibirMisionesSync(Set<String> missionsFromServer) {
