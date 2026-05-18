@@ -208,89 +208,100 @@ public static void crearBotonPagina(int numPagina) {
 
         // ─── RENDERING DEL WIDGET DE PROGRESO ───
         if ("PROGRESO".equals(p.tipo)) {
-            // 1. DIBUJAR FONDO GENERAL DEL RECUADRO (Si tiene opacidad/color)
-            if (p.colorARGB != 0) {
-                g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
-            }
-            
+            int r = p.redondezBorde;
+
+            // 1. DIBUJAR BORDE (Capa Exterior Sólida)
+            fillRoundedRect(g, p.x, p.y, p.ancho, p.alto, r, p.colorBorde);
+
+            // 2. DIBUJAR FONDO (Capa Interior Sólida)
+            int innerX = p.x + 1;
+            int innerY = p.y + 1;
+            int innerW = p.ancho - 2;
+            int innerH = p.alto - 2;
+            int innerR = Math.max(0, r - 1);
+            fillRoundedRect(g, innerX, innerY, innerW, innerH, innerR, p.colorARGB);
+
             String textoMostrar = "";
             boolean dibujarBarra = false;
             float porcentajeLlenado = 0.0f;
-            
-            int maxProgreso = 1;
-            int actualProgreso = 0;
+            int maxProgreso = 1, actualProgreso = 0;
 
             if (GlobalGuiSettings.editorActivo) {
-                maxProgreso = 100;
-                actualProgreso = 65; // 65% simulado en el editor
+                maxProgreso = 100; actualProgreso = 65;
                 if (p.progresoTipo == 2) textoMostrar = "02h 45m";
             } else {
                 net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
                 if (p.progresoTipo == 0) {
                     maxProgreso = 0;
-                    for (java.util.List<Config.MisionData> lista : Config.misionesCargadas.values()) {
-                        maxProgreso += lista.size();
-                    }
-                    if (maxProgreso == 0) maxProgreso = 1; 
+                    for (java.util.List<Config.MisionData> lista : Config.misionesCargadas.values()) maxProgreso += lista.size();
+                    if (maxProgreso == 0) maxProgreso = 1;
                     actualProgreso = questgrupo.questmod.events.ClickAldeano.getMisionesCompletadasCount();
                 } else if (p.progresoTipo == 1) {
-                    maxProgreso = 30; 
-                    actualProgreso = mc.player != null ? mc.player.experienceLevel : 0;
+                    maxProgreso = 30; actualProgreso = mc.player != null ? mc.player.experienceLevel : 0;
                 } else if (p.progresoTipo == 2) {
                     if (mc.level != null) {
-                        long totalSecs = mc.level.getGameTime() / 20; 
-                        long hours = totalSecs / 3600;
-                        long minutes = (totalSecs % 3600) / 60;
-                        textoMostrar = hours + "h " + minutes + "m";
+                        long tSecs = mc.level.getGameTime() / 20;
+                        textoMostrar = (tSecs / 3600) + "h " + ((tSecs % 3600) / 60) + "m";
                     }
                 } else if (p.progresoTipo == 3) {
-                    maxProgreso = 53; 
-                    actualProgreso = 12; // Muestra de biomas
+                    maxProgreso = 53; actualProgreso = 12;
                 }
             }
 
-            if (p.progresoTipo != 2) { 
+            if (p.progresoTipo != 2) {
                 porcentajeLlenado = Math.min(1.0f, (float) actualProgreso / maxProgreso);
-                if (p.progresoEstilo == 0) {
-                    dibujarBarra = true;
-                } else if (p.progresoEstilo == 1) {
-                    textoMostrar = (int)(porcentajeLlenado * 100) + "%";
-                } else if (p.progresoEstilo == 2) {
-                    textoMostrar = actualProgreso + " / " + maxProgreso;
-                }
+                if (p.progresoEstilo == 0) dibujarBarra = true;
+                else if (p.progresoEstilo == 1) textoMostrar = (int)(porcentajeLlenado * 100) + "%";
+                else if (p.progresoEstilo == 2) textoMostrar = actualProgreso + " / " + maxProgreso;
             }
 
+            // 3. DIBUJAR LA BARRA DE PROGRESO
             if (dibujarBarra) {
-                // 2. DIBUJAR LA BARRA DE PROGRESO (Ocupa el área limpia exacta)
-                int anchoLleno = (int) (p.ancho * porcentajeLlenado);
-                if (porcentajeLlenado >= 1.0f) {
-                    anchoLleno = p.ancho;
-                }
+                int anchoLleno = (int) (innerW * porcentajeLlenado);
+                if (porcentajeLlenado >= 1.0f) anchoLleno = innerW;
+
                 if (anchoLleno > 0) {
-                    g.fill(p.x, p.y, p.x + anchoLleno, p.y + p.alto, p.colorBarraLleno); 
+                    for (int dy = 0; dy < innerH; dy++) {
+                        int inset = getCornerInset(dy, innerH, innerR);
+                        int rowStartX = innerX + inset;
+                        int rowEndX = innerX + innerW - inset;
+                        if (rowEndX <= rowStartX) continue;
+
+                        int fillEnd = Math.min(innerX + anchoLleno, rowEndX);
+                        if (fillEnd > rowStartX) {
+                            g.fill(rowStartX, innerY + dy, fillEnd, innerY + dy + 1, p.colorBarraLleno);
+                        }
+                    }
+                }
+
+                // 4. DIBUJAR HITOS (Transparentes cada 15%)
+                if (p.disenoBarra == 1) {
+                    int hitColor = (p.colorBorde & 0x00FFFFFF) | 0x44000000;
+                    for (int i = 1; i <= 6; i++) {
+                        int hitX = innerX + (innerW * (i * 15) / 100);
+                        if (hitX >= innerX && hitX < innerX + innerW) {
+                            for (int dy = 0; dy < innerH; dy++) {
+                                int inset = getCornerInset(dy, innerH, innerR);
+                                if (hitX >= innerX + inset && hitX < innerX + innerW - inset) {
+                                    g.fill(hitX, innerY + dy, hitX + 1, innerY + dy + 1, hitColor);
+                                }
+                            }
+                        }
+                    }
                 }
             } else if (!textoMostrar.isEmpty()) {
-                // Dibujar Texto centrado con escala de botones + y -
                 net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
-                float scale = p.escalaTexto; 
+                float scale = p.escalaTexto;
                 float tX = p.x + (p.ancho - (font.width(textoMostrar) * scale)) / 2 + p.offsetXTexto;
                 float tY = p.y + (p.alto - (font.lineHeight * scale)) / 2 + p.offsetYTexto;
 
-                g.pose().pushPose();
-                g.pose().translate(tX, tY, 0);
-                g.pose().scale(scale, scale, 1.0f);
-                
-                net.minecraft.network.chat.Style estilo = net.minecraft.network.chat.Style.EMPTY
-                    .withBold(p.negrita).withItalic(p.cursiva).withUnderlined(p.subrayado).withStrikethrough(p.tachado);
-                
+                g.pose().pushPose(); g.pose().translate(tX, tY, 0); g.pose().scale(scale, scale, 1.0f);
+                net.minecraft.network.chat.Style estilo = net.minecraft.network.chat.Style.EMPTY.withBold(p.negrita).withItalic(p.cursiva).withUnderlined(p.subrayado).withStrikethrough(p.tachado);
                 g.drawString(font, net.minecraft.network.chat.Component.literal(textoMostrar).setStyle(estilo), 0, 0, p.colorTexto, p.sombra);
                 g.pose().popPose();
             }
 
-            // 3. DIBUJAR BORDE EXTERIOR (1 píxel expandido por fuera para contener todo perfectamente)
-            g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, p.colorBorde);
-
-            if (seleccionado) g.renderOutline(p.x - 2, p.y - 2, p.ancho + 4, p.alto + 4, 0xFFFFFF00);
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFFFFFF00);
             return;
         } 
 
@@ -1069,6 +1080,24 @@ public static void crearBotonPagina(int numPagina) {
             String s = String.valueOf(c);
             g.drawString(font, s, (int)curX, (int)y, color, false);
             curX += font.width(s) + spacing;
+        }
+    }
+
+    private static int getCornerInset(int dy, int h, int r) {
+        if (r <= 0 || dy < 0 || dy >= h) return 0;
+        int distY = Math.min(dy, h - 1 - dy);
+        int[][] insets = {
+            {0}, {1}, {2, 1}, {3, 1, 0}, {4, 2, 1, 0}, {5, 2, 1, 1, 0}
+        };
+        if (r < insets.length && distY < insets[r].length) return insets[r][distY];
+        return 0;
+    }
+
+    private static void fillRoundedRect(GuiGraphics g, int x, int y, int w, int h, int r, int color) {
+        if (color == 0 || (color & 0xFF000000) == 0 || w <= 0 || h <= 0) return;
+        for (int dy = 0; dy < h; dy++) {
+            int inset = getCornerInset(dy, h, r);
+            g.fill(x + inset, y + dy, x + w - inset, y + dy + 1, color);
         }
     }
 }

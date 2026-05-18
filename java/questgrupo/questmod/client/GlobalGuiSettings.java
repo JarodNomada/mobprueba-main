@@ -97,6 +97,8 @@ public class GlobalGuiSettings {
         public int progresoEstilo = 0; // 0: Barra, 1: Porcentaje, 2: Fracción (X/Y)
         public int colorBarraLleno = 0xFF00AA00; // Verde por defecto
         public int colorBarraFondo = 0xFF555555; // Gris oscuro por defecto
+        public int disenoBarra = 0; // 0: Plana, 1: Segmentada, 2: Hitos, 3: Extremos
+        public int redondezBorde = 1; // De 1 a 5 píxeles de curvatura
 
         public PanelConfig(int x, int y, int ancho, int alto) {
             this.x = x;
