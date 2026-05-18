@@ -167,11 +167,12 @@ public class LeftSidebar {
                     drawVanillaButton(g, font, PANEL_X + 10, panelY + 20 + (i * 20), 110, 18, slots[i], false);
                 }
             } else if (showStatsMenu) {
-                drawVanillaPanel(g, PANEL_X, panelY, 130, 125);
+                drawVanillaPanel(g, PANEL_X, panelY, 140, 225);
                 g.drawString(font, "Estad\u00edstica", PANEL_X + 10, panelY + 6, 0xFF404040, false);
-                String[] stats = {"Salud", "Da\u00f1o", "Defensa", "Velocidad", "Volver"};
+                
+                String[] stats = {"Salud", "Da\u00f1o", "Defensa", "Velocidad", "Enemigos", "Bloques", "Distancia", "Muertes", "Da\u00f1o Rec.", "Volver"};
                 for (int i = 0; i < stats.length; i++) {
-                    drawVanillaButton(g, font, PANEL_X + 10, panelY + 20 + (i * 20), 110, 18, stats[i], false);
+                    drawVanillaButton(g, font, PANEL_X + 10, panelY + 20 + (i * 20), 120, 18, stats[i], false);
                 }
             } else if (showProgresoMenu) {
                 drawVanillaPanel(g, PANEL_X, panelY, 130, 105);
@@ -308,12 +309,17 @@ public class LeftSidebar {
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 100, 110, 18)) { crearWidget("SLOT_ESCUDO", "Slot Escudo", centerX - 10, centerY - 10, 20, 20); selectedModule = -1; showInventoryMenu = false; return true; }
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 120, 110, 18)) { showInventoryMenu = false; return true; } // Volver
                 } else if (showStatsMenu) {
-                    panelWidth = 130; panelHeight = 125;
-                    if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 110, 18)) { crearWidget("ESTADISTICA_SALUD", "Salud", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
-                    if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 110, 18)) { crearWidget("ESTADISTICA_DANO", "Da\u00f1o", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
-                    if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 110, 18)) { crearWidget("ESTADISTICA_DEFENSA", "Defensa", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
-                    if (isHovered(mx, my, PANEL_X + 10, panelY + 80, 110, 18)) { crearWidget("ESTADISTICA_VELOCIDAD", "Velocidad", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
-                    if (isHovered(mx, my, PANEL_X + 10, panelY + 100, 110, 18)) { showStatsMenu = false; return true; }
+                    panelWidth = 140; panelHeight = 225;
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 120, 18)) { crearWidget("ESTADISTICA_SALUD", "Salud", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 120, 18)) { crearWidget("ESTADISTICA_DANO", "Da\u00f1o", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 120, 18)) { crearWidget("ESTADISTICA_DEFENSA", "Defensa", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 80, 120, 18)) { crearWidget("ESTADISTICA_VELOCIDAD", "Velocidad", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 100, 120, 18)) { crearWidget("ESTADISTICA_KILLS", "Enemigos", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 120, 120, 18)) { crearWidget("ESTADISTICA_MINADOS", "Bloques", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 140, 120, 18)) { crearWidget("ESTADISTICA_DISTANCIA", "Distancia", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 160, 120, 18)) { crearWidget("ESTADISTICA_MUERTES", "Muertes", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 180, 120, 18)) { crearWidget("ESTADISTICA_DANO_RECIBIDO", "Da\u00f1o Rec.", centerX - 20, centerY - 10, 60, 20); selectedModule = -1; showStatsMenu = false; return true; }
+                    if (isHovered(mx, my, PANEL_X + 10, panelY + 200, 120, 18)) { showStatsMenu = false; return true; }
                 } else if (showProgresoMenu) {
                     panelWidth = 130; panelHeight = 105;
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 110, 18)) { crearWidget("PROGRESO", "Misiones", centerX - 50, centerY - 10, 100, 20); GlobalGuiSettings.panelSeleccionado.progresoTipo = 0; selectedModule = -1; showProgresoMenu = false; return true; }

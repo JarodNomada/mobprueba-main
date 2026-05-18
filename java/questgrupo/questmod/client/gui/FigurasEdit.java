@@ -248,8 +248,10 @@ public static void crearBotonPagina(int numPagina) {
                 
             } else if (p.progresoTipo == 2) {
                 if (mc.player != null) {
-                    if (mc.level != null && mc.level.getGameTime() % 1200 == 0) {
+                    long ahora = System.currentTimeMillis();
+                    if (ahora - ultimaPeticionStats > 5000) {
                         mc.player.connection.send(new net.minecraft.network.protocol.game.ServerboundClientCommandPacket(net.minecraft.network.protocol.game.ServerboundClientCommandPacket.Action.REQUEST_STATS));
+                        ultimaPeticionStats = ahora;
                     }
                     
                     int playTimeTicks = mc.player.getStats().getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.PLAY_TIME));
@@ -328,6 +330,7 @@ public static void crearBotonPagina(int numPagina) {
             
             String textoMostrar = "";
             net.minecraft.world.entity.player.Player player = net.minecraft.client.Minecraft.getInstance().player;
+            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
             
             if (player != null) {
                 if (p.tipo.equals("ESTADISTICA_SALUD")) {
@@ -336,39 +339,52 @@ public static void crearBotonPagina(int numPagina) {
                     textoMostrar = hp + " / " + maxHp;
                 } else if (p.tipo.equals("ESTADISTICA_DANO")) {
                     double dmg = player.getAttributeBaseValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE);
-                    
                     net.minecraft.world.item.ItemStack arma = player.getMainHandItem();
                     if (!arma.isEmpty()) {
                         com.google.common.collect.Multimap<net.minecraft.world.entity.ai.attributes.Attribute, net.minecraft.world.entity.ai.attributes.AttributeModifier> modificadores = arma.getAttributeModifiers(net.minecraft.world.entity.EquipmentSlot.MAINHAND);
-                        for (net.minecraft.world.entity.ai.attributes.AttributeModifier mod : modificadores.get(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE)) {
-                            dmg += mod.getAmount();
-                        }
-                        
+                        for (net.minecraft.world.entity.ai.attributes.AttributeModifier mod : modificadores.get(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE)) dmg += mod.getAmount();
                         dmg += net.minecraft.world.item.enchantment.EnchantmentHelper.getDamageBonus(arma, net.minecraft.world.entity.MobType.UNDEFINED);
                     }
-                    
-                    if (player.hasEffect(net.minecraft.world.effect.MobEffects.DAMAGE_BOOST)) {
-                        dmg += 3.0 * (player.getEffect(net.minecraft.world.effect.MobEffects.DAMAGE_BOOST).getAmplifier() + 1);
-                    }
-                    if (player.hasEffect(net.minecraft.world.effect.MobEffects.WEAKNESS)) {
-                        dmg -= 4.0 * (player.getEffect(net.minecraft.world.effect.MobEffects.WEAKNESS).getAmplifier() + 1);
-                    }
-
+                    if (player.hasEffect(net.minecraft.world.effect.MobEffects.DAMAGE_BOOST)) dmg += 3.0 * (player.getEffect(net.minecraft.world.effect.MobEffects.DAMAGE_BOOST).getAmplifier() + 1);
+                    if (player.hasEffect(net.minecraft.world.effect.MobEffects.WEAKNESS)) dmg -= 4.0 * (player.getEffect(net.minecraft.world.effect.MobEffects.WEAKNESS).getAmplifier() + 1);
                     textoMostrar = String.valueOf((int) Math.max(0, dmg));
                 } else if (p.tipo.equals("ESTADISTICA_DEFENSA")) {
                     int armor = player.getArmorValue();
                     textoMostrar = String.valueOf(armor);
                 } else if (p.tipo.equals("ESTADISTICA_VELOCIDAD")) {
-                    double baseSpeed = 0.10000000149011612; // Valor base interno en Minecraft
+                    double baseSpeed = 0.10000000149011612; 
                     double currentSpeed = player.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED);
                     int percent = (int) Math.round((currentSpeed / baseSpeed) * 100);
                     textoMostrar = percent + "%";
+                } else {
+                    int[] extras = obtenerStatsExtrasCached(mc);
+                    if (p.tipo.equals("ESTADISTICA_KILLS")) {
+                        textoMostrar = String.valueOf(extras[0]);
+                    } else if (p.tipo.equals("ESTADISTICA_MINADOS")) {
+                        textoMostrar = String.valueOf(extras[1]);
+                    } else if (p.tipo.equals("ESTADISTICA_DISTANCIA")) {
+                        int metros = extras[2] / 100;
+                        if (metros >= 1000) {
+                            textoMostrar = String.format("%.1fkm", metros / 1000.0f).replace(".0", "");
+                        } else {
+                            textoMostrar = metros + "m";
+                        }
+                    } else if (p.tipo.equals("ESTADISTICA_MUERTES")) {
+                        textoMostrar = String.valueOf(extras[3]);
+                    } else if (p.tipo.equals("ESTADISTICA_DANO_RECIBIDO")) {
+                        textoMostrar = String.valueOf(extras[4] / 10); 
+                    }
                 }
             } else if (GlobalGuiSettings.editorActivo) {
                 if (p.tipo.equals("ESTADISTICA_SALUD")) textoMostrar = "20 / 20";
                 else if (p.tipo.equals("ESTADISTICA_DANO")) textoMostrar = "5";
                 else if (p.tipo.equals("ESTADISTICA_DEFENSA")) textoMostrar = "8";
                 else if (p.tipo.equals("ESTADISTICA_VELOCIDAD")) textoMostrar = "100%";
+                else if (p.tipo.equals("ESTADISTICA_KILLS")) textoMostrar = "1250";
+                else if (p.tipo.equals("ESTADISTICA_MINADOS")) textoMostrar = "8420";
+                else if (p.tipo.equals("ESTADISTICA_DISTANCIA")) textoMostrar = "2.5km";
+                else if (p.tipo.equals("ESTADISTICA_MUERTES")) textoMostrar = "12";
+                else if (p.tipo.equals("ESTADISTICA_DANO_RECIBIDO")) textoMostrar = "350";
             }
 
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
@@ -1132,6 +1148,52 @@ public static void crearBotonPagina(int numPagina) {
                 g.fill(x + inset + 1, y + dy, x + w - 1 - inset, y + dy + 1, color);
             }
         }
+    }
+
+    private static long ultimoChequeoStatsExtras = 0;
+    private static long ultimaPeticionStats = 0;
+    private static int[] cacheStatsExtras = new int[]{-1, -1, -1, -1, -1};
+
+    private static int[] obtenerStatsExtrasCached(net.minecraft.client.Minecraft mc) {
+        if (mc.player == null) return new int[]{0, 0, 0, 0, 0}; 
+        
+        long ahora = System.currentTimeMillis();
+        
+        if (ahora - ultimaPeticionStats > 5000) {
+            mc.player.connection.send(new net.minecraft.network.protocol.game.ServerboundClientCommandPacket(net.minecraft.network.protocol.game.ServerboundClientCommandPacket.Action.REQUEST_STATS));
+            ultimaPeticionStats = ahora;
+        }
+
+        if (cacheStatsExtras[0] != -1 && ahora - ultimoChequeoStatsExtras < 250) { 
+            return cacheStatsExtras;
+        }
+        ultimoChequeoStatsExtras = ahora;
+        
+        net.minecraft.stats.StatsCounter stats = mc.player.getStats();
+        
+        int kills = stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.MOB_KILLS));
+        int muertes = stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.DEATHS));
+        int dano = stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.DAMAGE_TAKEN));
+        
+        int dist = 0;
+        dist += stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.WALK_ONE_CM));
+        dist += stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.SPRINT_ONE_CM));
+        dist += stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.SWIM_ONE_CM));
+        dist += stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.CROUCH_ONE_CM));
+        dist += stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.FLY_ONE_CM));
+        dist += stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.AVIATE_ONE_CM));
+        dist += stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.MINECART_ONE_CM));
+        dist += stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.BOAT_ONE_CM));
+        dist += stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.HORSE_ONE_CM));
+        dist += stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.PIG_ONE_CM));
+
+        int minados = 0;
+        for (net.minecraft.world.level.block.Block block : net.minecraftforge.registries.ForgeRegistries.BLOCKS) {
+            minados += stats.getValue(net.minecraft.stats.Stats.BLOCK_MINED.get(block));
+        }
+
+        cacheStatsExtras = new int[]{kills, minados, dist, muertes, dano};
+        return cacheStatsExtras;
     }
 
     private static java.lang.reflect.Field advancementsProgressField = null;
