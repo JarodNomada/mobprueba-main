@@ -47,111 +47,173 @@ public class RightBar {
 
         Font font = Minecraft.getInstance().font;
 
-        g.fill(x0, yBase, x1, yBase + PANEL_H, 0xFF5A5A5A);
+        // --- FONDO PRINCIPAL VANILLA ---
+        g.fill(x0, yBase, x1, yBase + PANEL_H, 0xFFC6C6C6);
+        
+        // Bordes del panel principal (Relieve)
+        g.fill(x0, yBase, x1, yBase + 1, 0xFFFFFFFF); // Arriba
+        g.fill(x0, yBase, x0 + 1, yBase + PANEL_H, 0xFFFFFFFF); // Izquierda
+        g.fill(x0, yBase + PANEL_H - 1, x1, yBase + PANEL_H, 0xFF555555); // Abajo
+        g.fill(x1 - 1, yBase, x1, yBase + PANEL_H, 0xFF555555); // Derecha
+        g.renderOutline(x0 - 1, yBase - 1, (x1 - x0) + 2, PANEL_H + 2, 0xFF000000); // Contorno negro
 
         int hY0 = yBase;
         int hY1 = yBase + HEADER_H;
-        g.fill(x0, hY0, x1, hY1, 0xFF3D3D3D);
-        g.drawString(font, "CAPAS " + GlobalGuiSettings.paginaActual, x0 + 7, hY0 + (HEADER_H - 8) / 2, 0xFFFFFFFF, false);
+        
+        // Texto CABECERA (Negro sin sombra)
+        g.drawString(font, "CAPAS " + GlobalGuiSettings.paginaActual, x0 + 7, hY0 + (HEADER_H - font.lineHeight) / 2 + 1, 0xFF202020, false);
 
+        // Botón + (Estilo Vanilla)
         int plusX = x1 - 19;
-        int plusY = hY0 + 2;
-        renderButton(g, plusX, plusY, 16, 18, 0xFF3A3A3A, 0xFF2A2A2A);
-        g.drawString(font, "+", plusX + 4, plusY + 5, 0xFFFFFFFF, false);
+        int plusY = hY0 + (HEADER_H - 16) / 2;
+        dibujarBotonVanilla(g, plusX, plusY, 16, 16);
+        g.drawString(font, "+", plusX + 5, plusY + 4, 0xFF202020, false);
 
+        // --- CAJA DE LA LISTA DE CAPAS (Borde Negro Simple) ---
         int listX0 = x0 + 3;
         int listX1 = x1 - 3;
         int listY0 = hY1;
         int listY1 = listY0 + LIST_H;
 
-        g.fill(listX0, listY0, listX1, listY1, 0xFF4A4A4A);
+        g.fill(listX0, listY0, listX1, listY1, 0xFFC6C6C6); // Fondo plano original
 
         java.util.List<GlobalGuiSettings.Capa> capas = capasDePageActual();
         int maxScroll = Math.max(0, capas.size() - MAX_VISIBLE);
         scrollOffset  = Math.max(0, Math.min(scrollOffset, maxScroll));
 
-        // Primero dibujamos todas las capas excepto la que se está arrastrando
         for (int slot = 0; slot < MAX_VISIBLE; slot++) {
             int idx   = slot + scrollOffset;
             int itemY = listY0 + slot * ITEM_H;
 
             if (idx >= capas.size()) continue;
-
             GlobalGuiSettings.Capa capa = capas.get(idx);
             
-            // Live Drag & Drop estilo Photoshop: dibujar hueco si es la capa arrastrada
             if (capaArrastrada != null && capa == capaArrastrada) {
-                // Dibujar un hueco oscurecido para indicar de dónde sacamos la capa
-                g.fill(listX0 + 1, itemY, listX1 - 1, itemY + ITEM_H, 0xFF353535);
-                g.fill(listX0, itemY + ITEM_H - 1, listX1, itemY + ITEM_H, 0xFF000000);
-                continue; // Saltamos el dibujo normal de esta capa
+                g.fill(listX0 + 1, itemY, listX1 - 1, itemY + ITEM_H, 0xFF888888);
+                continue;
             }
 
             boolean sel = (capa.panel != null && capa.panel == GlobalGuiSettings.panelSeleccionado)
                         || (capa.texto != null && capa.texto == GlobalGuiSettings.textoSeleccionado)
                         || (capa.dibujo != null && capa.dibujo == GlobalGuiSettings.dibujoSeleccionado);
 
-            int bgColor = sel ? 0xFF6E6E6E : 0xFF5A5A5A;
+            if (sel) {
+                g.fill(listX0 + 1, itemY, listX1 - 1, itemY + ITEM_H, 0xFFAAAAAA);
+            }
+            
+            // Separador horizontal interno entre capas
+            g.fill(listX0 + 1, itemY + ITEM_H - 1, listX1 - 1, itemY + ITEM_H, 0xFF888888);
 
-            g.fill(listX0 + 1, itemY, listX1 - 1, itemY + ITEM_H, bgColor);
+            // Línea separadora vertical del ojo
+            g.fill(listX0 + ITEM_H, itemY, listX0 + ITEM_H + 1, itemY + ITEM_H, 0xFF888888);
 
-            g.fill(listX0, itemY + ITEM_H - 1, listX1, itemY + ITEM_H, 0xFF000000);
-
-            // --- NUEVO: Celda cuadrada para el Ojo ---
-            // 1. Dibujamos la línea negra vertical (el ancho de la celda es igual al alto: ITEM_H)
-            g.fill(listX0 + ITEM_H, itemY, listX0 + ITEM_H + 1, itemY + ITEM_H, 0xFF000000);
-
-            // 2. Centramos el ojo matemáticamente en su nuevo cuadrado (El ojo mide 10x5 px)
             int eyeX = listX0 + (ITEM_H - 10) / 2;
             int eyeY = itemY + (ITEM_H - 5) / 2;
             dibujarOjo(g, eyeX, eyeY, capa.visible);
 
-            // 3. Ajustamos el Thumbnail para que empiece después de la línea negra
             int tx = listX0 + ITEM_H + 6;
             int ty = itemY + (ITEM_H - THUMB_SIZE) / 2;
             dibujarThumbnail(g, tx, ty);
 
-            // 4. Ajustamos la posición del Nombre (Con soporte visual para renombrado)
             String nombre = (capa.nombre != null) ? capa.nombre : "Capa";
-            int textColor = capa.visible ? 0xFFDDDDDD : 0xFF888888;
+            int textColor = capa.visible ? 0xFF202020 : 0xFF777777;
 
             if (capa == capaEditandoNombre) {
-                textColor = 0xFFFFCC00; // Color amarillo para indicar que estás editando
-                nombre = nombre + "_";  // Cursor dinámico de escritura
+                textColor = 0xFF0055FF;
+                nombre = nombre + "_";
             } else {
                 if (nombre.length() > 9) nombre = nombre.substring(0, 7) + ".."; 
             }
 
             int textX = tx + THUMB_SIZE + 5;
-            int textY = itemY + (ITEM_H - (int)(8 * TEXT_SCALE)) / 2;
+            int textY = itemY + (ITEM_H - (int)(font.lineHeight * TEXT_SCALE)) / 2;
             dibujarTextoEscalado(g, font, nombre, textX, textY, textColor);
 
             dibujarHamburguesa(g, listX1 - 11, itemY + (ITEM_H - 7) / 2);
         }
-
-        // Dibujamos el borde negro del contenedor de la lista DESPUÉS de las capas
+        
+        // ¡LA MAGIA ESTÁ AQUÍ! Dibujamos el contorno negro AL FINAL de todo el proceso
+        // Así nos aseguramos de que el borde tapa los bordes de selección, y no al revés.
         g.renderOutline(listX0, listY0, listX1 - listX0, listY1 - listY0, 0xFF000000);
 
-         int botY = listY1;
-        g.fill(x0, botY, x1, yBase + PANEL_H, 0xFF3D3D3D);
+        int botY = listY1;
         renderBotonesInferiores(g, font, x0, x1, botY);
-
-        g.renderOutline(x0, yBase, x1 - x0, PANEL_H, 0xFFCCCCCC);
-        g.renderOutline(x0 - 1, yBase - 1, (x1 - x0) + 2, PANEL_H + 2, 0xFF000000);
         
-        // ── DIBUJO DE LA CAPA FANTASMA (SEMI-TRANSPARENTE) ──
+        // Render de la capa flotante arrastrada
         if (capaArrastrada != null) {
             int ghostY = (int) mouseDragY - (ITEM_H / 2);
-            // Colores con canal Alpha (0x99) para la transparencia
-            g.fill(listX0 + 1, ghostY, listX1 - 1, ghostY + ITEM_H, 0x996E6E6E); 
-            g.fill(listX0, ghostY + ITEM_H - 1, listX1, ghostY + ITEM_H, 0x99000000);
-
-            // Textos y miniaturas con transparencia
+            g.fill(listX0 + 1, ghostY, listX1 - 1, ghostY + ITEM_H, 0x99AAAAAA); 
             String nombre = (capaArrastrada.nombre != null) ? capaArrastrada.nombre : "Capa";
             if (nombre.length() > 9) nombre = nombre.substring(0, 7) + ".."; 
-            dibujarTextoEscalado(g, font, nombre, listX0 + ITEM_H + 6 + THUMB_SIZE + 5, ghostY + (ITEM_H - (int)(8 * TEXT_SCALE)) / 2, 0xCCFFFFFF);
+            dibujarTextoEscalado(g, font, nombre, listX0 + ITEM_H + 6 + THUMB_SIZE + 5, ghostY + (ITEM_H - (int)(font.lineHeight * TEXT_SCALE)) / 2, 0xCC202020);
         }
     }
+
+    private static void renderBotonesInferiores(GuiGraphics g, Font font, int x0, int x1, int botY) {
+        int panelW = x1 - x0;
+        int btnW = 24, btnH = 22, gap = (panelW - 2 - 4 * btnW) / 5;
+        int by = botY + (BOTTOM_H - btnH) / 2;
+        
+        for (int b = 0; b < 4; b++) {
+            dibujarBotonVanilla(g, x0 + 1 + gap + b * (btnW + gap), by, btnW, btnH);
+        }
+        
+        int b0 = x0 + 1 + gap;
+        int c = 0xFF202020; // Negro Vanilla
+        
+        // Ajustamos meticulosamente los píxeles para que centren perfecto en botones de 24x22
+        dibujarIconoDuplicar(g, b0 + 6,              by + 5, c);
+        dibujarFlechaArriba( g, b0 + (btnW+gap) + 8, by + 5, c);
+        dibujarFlechaAbajo(  g, b0 + 2*(btnW+gap)+8, by + 5, c);
+        dibujarPapelera(     g, b0 + 3*(btnW+gap)+7, by + 5, c);
+    }
+
+    private static void dibujarBotonVanilla(GuiGraphics g, int x, int y, int w, int h) {
+        g.fill(x, y, x + w, y + h, 0xFF000000); // Borde
+        g.fill(x + 1, y + 1, x + w - 1, y + h - 1, 0xFFC6C6C6); // Fondo
+        g.fill(x + 1, y + 1, x + w - 1, y + 2, 0xFFFFFFFF); // Brillo Arriba
+        g.fill(x + 1, y + 1, x + 2, y + h - 1, 0xFFFFFFFF); // Brillo Izq
+        g.fill(x + 1, y + h - 2, x + w - 1, y + h - 1, 0xFF555555); // Sombra Abajo
+        g.fill(x + w - 2, y + 1, x + w - 1, y + h - 1, 0xFF555555); // Sombra Der
+        g.fill(x + 1, y + h - 2, x + 2, y + h - 1, 0xFFC6C6C6); // Esquina Inf Izq Fix
+        g.fill(x + w - 2, y + 1, x + w - 1, y + 2, 0xFFC6C6C6); // Esquina Sup Der Fix
+    }
+
+    // --- ICONOS IDÉNTICOS A LA IMAGEN ---
+
+    private static void dibujarIconoDuplicar(GuiGraphics g, int x, int y, int color) {
+        g.renderOutline(x, y, 8, 8, color); // Cuadro Atrás
+        g.fill(x + 3, y + 3, x + 11, y + 11, 0xFFC6C6C6); // Limpiamos el cruce
+        g.renderOutline(x + 3, y + 3, 8, 8, color); // Cuadro Adelante
+    }
+
+    private static void dibujarFlechaArriba(GuiGraphics g, int x, int y, int color) {
+        g.fill(x + 3, y, x + 5, y + 1, color);
+        g.fill(x + 2, y + 1, x + 6, y + 2, color);
+        g.fill(x + 1, y + 2, x + 7, y + 3, color);
+        g.fill(x, y + 3, x + 8, y + 4, color);
+        g.fill(x + 3, y + 4, x + 5, y + 11, color);
+    }
+
+    private static void dibujarFlechaAbajo(GuiGraphics g, int x, int y, int color) {
+        g.fill(x + 3, y, x + 5, y + 7, color);
+        g.fill(x, y + 7, x + 8, y + 8, color);
+        g.fill(x + 1, y + 8, x + 7, y + 9, color);
+        g.fill(x + 2, y + 9, x + 6, y + 10, color);
+        g.fill(x + 3, y + 10, x + 5, y + 11, color);
+    }
+
+    private static void dibujarPapelera(GuiGraphics g, int x, int y, int color) {
+        g.fill(x + 3, y, x + 7, y + 1, color); // Asa
+        g.fill(x, y + 1, x + 10, y + 2, color); // Tapa
+        g.fill(x + 1, y + 2, x + 2, y + 10, color); // Borde izq
+        g.fill(x + 8, y + 2, x + 9, y + 10, color); // Borde der
+        g.fill(x + 1, y + 10, x + 9, y + 11, color); // Fondo
+        g.fill(x + 3, y + 3, x + 4, y + 9, color); // Raya 1
+        g.fill(x + 6, y + 3, x + 7, y + 9, color); // Raya 2
+    }
+
+    // --- AUXILIARES VISUALES ---
 
     private static void dibujarTextoEscalado(GuiGraphics g, Font font, String text, int x, int y, int color) {
         g.pose().pushPose();
@@ -160,6 +222,30 @@ public class RightBar {
         g.drawString(font, text, 0, 0, color, false);
         g.pose().popPose();
     }
+
+    private static void dibujarThumbnail(GuiGraphics g, int x, int y) {
+        for (int r = 0; r < THUMB_SIZE; r += 4)
+            for (int c = 0; c < THUMB_SIZE; c += 4)
+                g.fill(x+c, y+r, x+c+4, y+r+4, ((r/4+c/4)%2==0) ? 0xFFE0E0E0 : 0xFFC6C6C6);
+        g.renderOutline(x, y, THUMB_SIZE, THUMB_SIZE, 0xFF888888);
+    }
+
+    private static void dibujarOjo(GuiGraphics g, int x, int y, boolean v) {
+        int col = v ? 0xFF000000 : 0xFF888888;
+        g.fill(x+2,y,  x+8,y+1,col); g.fill(x+1,y+1,x+9,y+2,col);
+        g.fill(x,y+2,  x+10,y+3,col); g.fill(x+1,y+3,x+9,y+4,col);
+        g.fill(x+2,y+4,x+8,y+5,col);
+        g.fill(x+2,y+1,x+8,y+4, v ? 0xFFFFFFFF : 0xFFCCCCCC);
+        if (v) g.fill(x+4,y+1,x+6,y+4,0xFF0055FF);
+    }
+
+    private static void dibujarHamburguesa(GuiGraphics g, int x, int y) {
+        g.fill(x,y,   x+9,y+1,0xFF444444);
+        g.fill(x,y+3, x+9,y+4,0xFF444444);
+        g.fill(x,y+6, x+9,y+7,0xFF444444);
+    }
+
+    // --- LÓGICA DE RATÓN Y CLICS ---
 
     public static boolean handleScroll(double mx, double my, double delta, int screenWidth, int screenHeight) {
         if (!isVisible || !GlobalGuiSettings.editorActivo) return false;
@@ -186,7 +272,7 @@ public class RightBar {
 
         int plusX = x1 - 19;
         if (my >= yBase + 2 && my <= yBase + 20 && mx >= plusX) {
-            accionNuevaCapa(); // Llamamos a la nueva función
+            accionNuevaCapa();
             return true;
         }
 
@@ -218,7 +304,6 @@ public class RightBar {
                 if (idx >= capas.size()) return true;
                 GlobalGuiSettings.Capa capa = capas.get(idx);
 
-                // El área del clic ahora abarca todo el cuadrado perfecto del ojo
                 if (mx >= x0 + 3 && mx <= x0 + 3 + ITEM_H) {
                     capa.visible = !capa.visible;
                     if (capa.panel != null) capa.panel.visible = capa.visible;
@@ -226,33 +311,26 @@ public class RightBar {
                     return true;
                 }
                 if (mx >= x1 - 16) {
-                    capaEditandoNombre = null; // Limpiar si clicamos la hamburguesa
+                    capaEditandoNombre = null;
                     return true; 
                 }
                 
-                // --- DOBLE CLIC PARA RENAME ---
                 long now = System.currentTimeMillis();
                 if (capa == lastClickedCapa && (now - lastClickTime) < 500) {
-                    // DOBLE CLIC -> Iniciar edición de nombre (solo si NO es texto)
                     if (capa.texto == null) {
                         capaEditandoNombre = capa;
                         return true;
                     }
                 }
                 
-                // Si fue un clic simple, cancelamos el modo de renombrar capa
                 capaEditandoNombre = null;
-                
                 lastClickTime = now;
                 lastClickedCapa = capa;
-                // --- FIN DOBLE CLIC ---
 
-                // Seleccionamos el objeto en la pantalla
                 GlobalGuiSettings.panelSeleccionado = capa.panel;
                 GlobalGuiSettings.textoSeleccionado = capa.texto;
-                GlobalGuiSettings.dibujoSeleccionado = capa.dibujo; // Agregado
+                GlobalGuiSettings.dibujoSeleccionado = capa.dibujo; 
                 
-                // ¡AQUÍ ESTABA EL ERROR! Iniciamos el arrastre
                 capaArrastrada = capa;
                 mouseDragY = my;
                 
@@ -266,81 +344,11 @@ public class RightBar {
         java.util.List<GlobalGuiSettings.Capa> lista = new java.util.ArrayList<>();
         for (int i = GlobalGuiSettings.CAPAS_UI.size() - 1; i >= 0; i--) {
             GlobalGuiSettings.Capa c = GlobalGuiSettings.CAPAS_UI.get(i);
-            // Solo añadimos si pertenece a la página actual (filtramos la página 0 de la DownBar)
             if (c.pagina == GlobalGuiSettings.paginaActual) lista.add(c);
         }
         return lista;
     }
 
-    private static void renderButton(GuiGraphics g, int x, int y, int w, int h, int bg, int bord) {
-        g.fill(x, y, x + w, y + h, bg);
-        g.fill(x, y, x + w, y + 1, 0xFF707070);
-        g.fill(x, y, x + 1, y + h, 0xFF707070);
-        g.fill(x, y + h - 1, x + w, y + h, bord);
-        g.fill(x + w - 1, y, x + w, y + h, bord);
-    }
-
-    private static void dibujarThumbnail(GuiGraphics g, int x, int y) {
-        for (int r = 0; r < THUMB_SIZE; r += 4)
-            for (int c = 0; c < THUMB_SIZE; c += 4)
-                g.fill(x+c, y+r, x+c+4, y+r+4, ((r/4+c/4)%2==0) ? 0xFFCCCCCC : 0xFFAAAAAA);
-        g.renderOutline(x, y, THUMB_SIZE, THUMB_SIZE, 0xFF2A2A2A);
-    }
-
-    private static void dibujarOjo(GuiGraphics g, int x, int y, boolean v) {
-        int col = v ? 0xFFCCCCCC : 0xFF666666;
-        g.fill(x+2,y,  x+8,y+1,col); g.fill(x+1,y+1,x+9,y+2,col);
-        g.fill(x,y+2,  x+10,y+3,col); g.fill(x+1,y+3,x+9,y+4,col);
-        g.fill(x+2,y+4,x+8,y+5,col);
-        g.fill(x+2,y+1,x+8,y+4, v ? 0xFF5A5A5A : 0xFF4A4A4A);
-        if (v) g.fill(x+4,y+1,x+6,y+4,0xFF8ECFFF);
-    }
-
-    private static void dibujarHamburguesa(GuiGraphics g, int x, int y) {
-        g.fill(x,y,   x+9,y+1,0xFFAAAAAA);
-        g.fill(x,y+3, x+9,y+4,0xFFAAAAAA);
-        g.fill(x,y+6, x+9,y+7,0xFFAAAAAA);
-    }
-
-    private static void renderBotonesInferiores(GuiGraphics g, Font font, int x0, int x1, int botY) {
-        int panelW = x1 - x0;
-        int btnW = 24, btnH = 16, gap = (panelW - 2 - 4 * btnW) / 5;
-        int by = botY + (BOTTOM_H - btnH) / 2;
-        for (int b = 0; b < 4; b++)
-            renderButton(g, x0 + 1 + gap + b * (btnW + gap), by, btnW, btnH, 0xFF4A4A4A, 0xFF2A2A2A);
-        int b0 = x0 + 1 + gap;
-        dibujarIconoDuplicar(g, b0 + 4,              by + 2);
-        dibujarFlechaArriba( g, b0 + (btnW+gap) + 7, by + 2);
-        dibujarFlechaAbajo(  g, b0 + 2*(btnW+gap)+7, by + 2);
-        dibujarPapelera(     g, b0 + 3*(btnW+gap)+5, by + 1);
-    }
-
-    private static void dibujarIconoDuplicar(GuiGraphics g, int x, int y) {
-        g.renderOutline(x+3,y,   9,9,0xFFCCCCCC);
-        g.fill(x,y+3,x+9,y+12,0xFF4A4A4A);
-        g.renderOutline(x,y+3,   9,9,0xFFCCCCCC);
-    }
-    private static void dibujarFlechaArriba(GuiGraphics g, int x, int y) {
-        int c=0xFFCCCCCC;
-        g.fill(x+3,y,x+4,y+1,c); g.fill(x+2,y+1,x+5,y+2,c);
-        g.fill(x+1,y+2,x+6,y+3,c); g.fill(x,y+3,x+7,y+4,c);
-        g.fill(x+3,y+4,x+4,y+11,c);
-    }
-    private static void dibujarFlechaAbajo(GuiGraphics g, int x, int y) {
-        int c=0xFFCCCCCC;
-        g.fill(x+3,y,x+4,y+7,c); g.fill(x,y+7,x+7,y+8,c);
-        g.fill(x+1,y+8,x+6,y+9,c); g.fill(x+2,y+9,x+5,y+10,c);
-        g.fill(x+3,y+10,x+4,y+11,c);
-    }
-    private static void dibujarPapelera(GuiGraphics g, int x, int y) {
-        int c=0xFFCCCCCC;
-        g.fill(x+1,y,x+9,y+1,c); g.fill(x+3,y-2,x+7,y,c);
-        g.fill(x,y+1,x+10,y+2,c); g.fill(x,y+2,x+1,y+12,c);
-        g.fill(x+9,y+2,x+10,y+12,c); g.fill(x,y+11,x+10,y+12,c);
-        g.fill(x+3,y+3,x+4,y+10,c); g.fill(x+5,y+3,x+6,y+10,c); g.fill(x+7,y+3,x+8,y+10,c);
-    }
-
-    // ── MÉTODOS AUXILIARES PARA LOS BOTONES ──
     private static int obtenerIndiceSeleccionado() {
         for (int i = 0; i < GlobalGuiSettings.CAPAS_UI.size(); i++) {
             GlobalGuiSettings.Capa c = GlobalGuiSettings.CAPAS_UI.get(i);
@@ -369,7 +377,6 @@ public class RightBar {
         GlobalGuiSettings.DIBUJOS.addAll(nuevosDibujos);
     }
 
-    // ── ACCIONES DE LOS BOTONES ──
     private static void accionDuplicar() {
         if (GlobalGuiSettings.panelSeleccionado != null) {
             GlobalGuiSettings.PanelConfig p = GlobalGuiSettings.panelSeleccionado;
@@ -425,7 +432,6 @@ public class RightBar {
         GlobalGuiSettings.sincronizarCapas();
     }
 
-    // Métodos para Live Drag & Drop estilo Photoshop
     public static boolean handleMouseDragged(double mx, double my, int button, int screenWidth, int screenHeight) {
         if (!isVisible || capaArrastrada == null) return false;
         mouseDragY = my;
@@ -437,7 +443,6 @@ public class RightBar {
         if (slotActual >= 0 && slotActual < capas.size()) {
             GlobalGuiSettings.Capa capaDestino = capas.get(slotActual);
             
-            // Reorganización en VIVO (Z-Index instantáneo)
             if (capaDestino != capaArrastrada) {
                 int indexOrigen = GlobalGuiSettings.CAPAS_UI.indexOf(capaArrastrada);
                 int indexDestino = GlobalGuiSettings.CAPAS_UI.indexOf(capaDestino);
@@ -448,14 +453,13 @@ public class RightBar {
                 }
             }
         }
-        return true; // Bloquea el arrastre de otras cosas mientras ordenas capas
+        return true; 
     }
 
     public static boolean handleMouseReleased(double mx, double my, int button) {
         if (capaArrastrada != null) {
-            capaArrastrada = null; // Soltamos la capa fantasma
+            capaArrastrada = null; 
             
-            // GUARDADO MAESTRO: Sincronizar el nuevo orden con las listas de dibujado
             java.util.List<GlobalGuiSettings.PanelConfig> nuevosPaneles = new java.util.ArrayList<>();
             java.util.List<GlobalGuiSettings.TextConfig> nuevosTextos = new java.util.ArrayList<>();
             java.util.List<GlobalGuiSettings.GrupoDibujo> nuevosDibujos = new java.util.ArrayList<>();
@@ -491,7 +495,7 @@ public class RightBar {
                 GlobalGuiSettings.panelSeleccionado = null;
                 GlobalGuiSettings.textoSeleccionado = null;
                 GlobalGuiSettings.dibujoSeleccionado = nuevoDibujo;
-                capaEditandoNombre = c; // Permite escribir nombre de inmediato
+                capaEditandoNombre = c; 
                 break;
             }
         }
