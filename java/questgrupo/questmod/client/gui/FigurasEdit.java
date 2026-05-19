@@ -591,12 +591,12 @@ public static void crearBotonPagina(int numPagina) {
             
             float eIcon = p.escalaIcono > 0.1f ? p.escalaIcono : 1.0f;
             float eText = p.escalaTexto > 0.1f ? p.escalaTexto : 1.0f;
-            
             float eDesc = p.escalaDesc > 0.1f ? p.escalaDesc : (eText * 0.85f);
             float eItem = p.escalaItem > 0.1f ? p.escalaItem : 1.0f;
             
-            int baseRowH = 46;
-            int rowH = (int)(baseRowH * Math.max(eIcon, Math.max(eText, eDesc))); 
+            // 1. ALTURA REDUCIDA A 36px PARA ELIMINAR EL EXCESO DE ESPACIO ARRIBA Y ABAJO
+            int baseRowH = 36;
+            int rowH = (int)(baseRowH * eIcon); 
             int curY = p.y + padding;
             
             long currentTime = System.currentTimeMillis();
@@ -656,7 +656,8 @@ public static void crearBotonPagina(int numPagina) {
                 int colorT = (p.colorTexto != 0) ? p.colorTexto : 0xFFFFFFFF;
                 int colorDesc = (p.colorSlotBg != 0) ? p.colorSlotBg : 0xFFAAAAAA;
 
-                int iconCellW = (int)(42 * eIcon);
+                // 2. HACEMOS QUE LA CAJA DEL ÍCONO SEA CUADRADA SIMÉTRICA (36x36)
+                int iconCellW = (int)(36 * eIcon);
                 int iconCellX = p.x + padding;
                 
                 drawRoundedBox(g, iconCellX, curY, iconCellW, rowH, r, cFondoIcono, cBordeIcono);
@@ -711,17 +712,20 @@ public static void crearBotonPagina(int numPagina) {
                         g.pose().popPose();
                     }
                     
+                    // 2. CENTRAR TEXTO DE PROGRESO DE FORMA INDEPENDIENTE
                     String dateTxt = info.progresoTxt;
                     int progressTextW = 0;
                     if (dateTxt != null && !dateTxt.isEmpty()) {
                         progressTextW = (int)(font.width(dateTxt) * eDesc); 
                         g.pose().pushPose();
-                        g.pose().translate(checkX - 6 - progressTextW, curY + (rowH / 2.0f) - (4 * eDesc), 0);
+                        float progY = curY + (rowH - (9 * eDesc)) / 2.0f; // Centro perfecto
+                        g.pose().translate(checkX - 6 - progressTextW, progY, 0);
                         g.pose().scale(eDesc, eDesc, 1.0f);
                         g.drawString(font, dateTxt, 0, 0, colorDesc, false);
                         g.pose().popPose();
                     }
                     
+                    // 3. TEXTOS PRINCIPALES CON 8PX DE DISTANCIA EXACTA
                     int maxTextW = (checkX - 6 - progressTextW) - (textCellX + 8);
                     if (maxTextW > 10) {
                         String safeTitulo = font.plainSubstrByWidth(info.titulo, (int)(maxTextW / eText));
@@ -730,14 +734,17 @@ public static void crearBotonPagina(int numPagina) {
                         String safeDesc = font.plainSubstrByWidth(info.descripcion, (int)(maxTextW / eDesc));
                         if (safeDesc.length() < info.descripcion.length()) safeDesc += "...";
 
+                        // Título: EXACTAMENTE 8 píxeles desde el borde superior
                         g.pose().pushPose();
-                        g.pose().translate(textCellX + 8, curY + 6 + ( (rowH/2.0f - 14) * eText ), 0);
+                        g.pose().translate(textCellX + 8, curY + 8, 0);
                         g.pose().scale(eText, eText, 1.0f);
                         g.drawString(font, safeTitulo, 0, 0, colorT, false);
                         g.pose().popPose();
                         
+                        // Descripción: EXACTAMENTE 8 píxeles desde el borde inferior
+                        float descY = curY + rowH - 8 - (9 * eDesc);
                         g.pose().pushPose();
-                        g.pose().translate(textCellX + 8, curY + (rowH / 2.0f) + (2 * eDesc), 0);
+                        g.pose().translate(textCellX + 8, descY, 0);
                         g.pose().scale(eDesc, eDesc, 1.0f); 
                         g.drawString(font, safeDesc, 0, 0, colorDesc, false); 
                         g.pose().popPose();
