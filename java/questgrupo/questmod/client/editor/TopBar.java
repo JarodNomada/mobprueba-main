@@ -366,7 +366,7 @@ public class TopBar {
             else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) return 280;
             else if (pSel.tipo.startsWith("SLOT")) return 160;
             else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) return 200;
-            else if (pSel.tipo.equals("LISTA_LOGROS")) return 285;
+            else if (pSel.tipo.equals("LISTA_LOGROS")) return 265;
             else if (pSel.tipo.equals("PROGRESO")) {
                 return 152;
             } else {
@@ -595,23 +595,22 @@ public class TopBar {
             int row1Y = y + 6;
             int row2Y = y + 26;
 
-            drawColorSwatch(g, pSel.colorARGB, curX, row1Y);
-            drawColorSwatch(g, pSel.colorBorde, curX, row2Y);
+            // Eliminados el Fondo y Borde Global (ya no existen)
             
-            drawColorSwatch(g, pSel.colorFondoCabecera, curX + 20, row1Y);
-            drawColorSwatch(g, pSel.colorBordeCabecera, curX + 20, row2Y);
+            drawColorSwatch(g, pSel.colorFondoCabecera, curX, row1Y);
+            drawColorSwatch(g, pSel.colorBordeCabecera, curX, row2Y);
 
-            drawColorSwatch(g, pSel.colorFondoBarra, curX + 40, row1Y);
-            drawColorSwatch(g, pSel.colorBarraLleno, curX + 40, row2Y);
+            drawColorSwatch(g, pSel.colorFondoBarra, curX + 20, row1Y);
+            drawColorSwatch(g, pSel.colorBarraLleno, curX + 20, row2Y);
 
-            drawColorSwatch(g, pSel.colorFondoMision, curX + 60, row1Y);
-            drawColorSwatch(g, pSel.colorBordeMision, curX + 60, row2Y);
+            drawColorSwatch(g, pSel.colorFondoMision, curX + 40, row1Y);
+            drawColorSwatch(g, pSel.colorBordeMision, curX + 40, row2Y);
 
-            drawColorSwatch(g, pSel.colorFondoCheck, curX + 80, row1Y);
-            drawColorSwatch(g, pSel.colorBordeCheckInterno, curX + 80, row2Y);
+            drawColorSwatch(g, pSel.colorFondoCheck, curX + 60, row1Y);
+            drawColorSwatch(g, pSel.colorBordeCheckInterno, curX + 60, row2Y);
 
-            drawColorSwatch(g, pSel.colorTexto, curX + 100, row1Y);
-            drawColorSwatch(g, pSel.colorSlotBg, curX + 100, row2Y);
+            drawColorSwatch(g, pSel.colorTexto, curX + 80, row1Y);
+            drawColorSwatch(g, pSel.colorSlotBg, curX + 80, row2Y);
 
             curX += 122;
             drawVerticalSeparator(g, curX, y + 4, 40);
@@ -767,20 +766,18 @@ public class TopBar {
             int row2Y = y + 26;
             
             if (my >= row1Y && my <= row1Y + 16) {
-                if (mx >= curX && mx <= curX + 16) return BTN_FILL_COLOR;
-                if (mx >= curX + 20 && mx <= curX + 36) return BTN_HEADER_FILL_COLOR;
-                if (mx >= curX + 40 && mx <= curX + 56) return 103; 
-                if (mx >= curX + 60 && mx <= curX + 76) return BTN_MISSION_FILL_COLOR;
-                if (mx >= curX + 80 && mx <= curX + 96) return 100;
-                if (mx >= curX + 100 && mx <= curX + 116) return BTN_TEXT_COLOR;
+                if (mx >= curX && mx <= curX + 16) return BTN_HEADER_FILL_COLOR;
+                if (mx >= curX + 20 && mx <= curX + 36) return 103; 
+                if (mx >= curX + 40 && mx <= curX + 56) return BTN_MISSION_FILL_COLOR;
+                if (mx >= curX + 60 && mx <= curX + 76) return 100;
+                if (mx >= curX + 80 && mx <= curX + 96) return BTN_TEXT_COLOR;
             }
             if (my >= row2Y && my <= row2Y + 16) {
-                if (mx >= curX && mx <= curX + 16) return BTN_BORDER_COLOR;
-                if (mx >= curX + 20 && mx <= curX + 36) return BTN_HEADER_BORDER_COLOR;
-                if (mx >= curX + 40 && mx <= curX + 56) return BTN_PROG_FILL; 
-                if (mx >= curX + 60 && mx <= curX + 76) return BTN_MISSION_BORDER_COLOR;
-                if (mx >= curX + 80 && mx <= curX + 96) return 101;
-                if (mx >= curX + 100 && mx <= curX + 116) return 102;
+                if (mx >= curX && mx <= curX + 16) return BTN_HEADER_BORDER_COLOR;
+                if (mx >= curX + 20 && mx <= curX + 36) return BTN_PROG_FILL; 
+                if (mx >= curX + 40 && mx <= curX + 56) return BTN_MISSION_BORDER_COLOR;
+                if (mx >= curX + 60 && mx <= curX + 76) return 101;
+                if (mx >= curX + 80 && mx <= curX + 96) return 102;
             }
         } else if (pSel.tipo.equals("PROGRESO")) {
             int curX = barStartX + 6;
@@ -958,7 +955,7 @@ public class TopBar {
         int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
         int btnSize = 18;
 
-        int curX = barStartX + 6 + 132; 
+        int curX = barStartX + 6 + 112; 
         int btnY1 = y + 5;
         int btnY2 = y + 25;
 
