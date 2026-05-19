@@ -132,6 +132,10 @@ public class TopBar {
                 case BTN_SLOT_LIGHT: return pSel.colorSlotLight;
                 case BTN_PROG_FILL: return pSel.colorBarraLleno;
                 case BTN_PROG_BG: return pSel.colorBarraFondo;
+                case 100: return pSel.colorFondoCheck;
+                case 101: return pSel.colorBordeCheckInterno;
+                case 102: return pSel.colorSlotBg;
+                case 103: return pSel.colorFondoBarra;
             }
         } else if (tSel != null) {
             if (id == BTN_TEXT_COLOR) return tSel.colorARGB;
@@ -204,6 +208,11 @@ public class TopBar {
                 case BTN_SLOT_LIGHT: panelEnEdicion.colorSlotLight = finalColor; break;
                 case BTN_PROG_FILL: panelEnEdicion.colorBarraLleno = finalColor; break;
                 case BTN_PROG_BG: panelEnEdicion.colorBarraFondo = finalColor; break;
+                
+                case 100: panelEnEdicion.colorFondoCheck = finalColor; break;
+                case 101: panelEnEdicion.colorBordeCheckInterno = finalColor; break;
+                case 102: panelEnEdicion.colorSlotBg = finalColor; break;
+                case 103: panelEnEdicion.colorFondoBarra = finalColor; break;
             }
         } else if (textoEnEdicion != null && currentEditingID == BTN_TEXT_COLOR) {
             textoEnEdicion.colorARGB = finalColor;
@@ -587,32 +596,25 @@ public class TopBar {
             int row2Y = y + 26;
 
             drawColorSwatch(g, pSel.colorARGB, curX, row1Y);
-            drawColorSwatch(g, pSel.colorBorde, curX + 20, row1Y);
-            drawColorSwatch(g, pSel.colorFondoIcono, curX, row2Y);
-            drawColorSwatch(g, pSel.colorBordeIcono, curX + 20, row2Y);
-
-            curX += 44;
-            drawVerticalSeparator(g, curX, y + 4, 40);
-            curX += 6;
-
-            drawColorSwatch(g, pSel.colorFondoRenglon, curX, row1Y);
-            drawColorSwatch(g, pSel.colorBordeRenglon, curX + 20, row1Y);
-            drawColorSwatch(g, pSel.colorFondoCheck, curX, row2Y);
-            drawColorSwatch(g, pSel.colorBordeCheckInterno, curX + 20, row2Y);
-
-            curX += 44;
-            drawVerticalSeparator(g, curX, y + 4, 40);
-            curX += 6;
-
-            drawColorSwatch(g, pSel.colorTexto, curX, row1Y);
-            drawColorSwatch(g, pSel.colorSlotBg, curX + 20, row1Y); 
+            drawColorSwatch(g, pSel.colorBorde, curX, row2Y);
             
-            curX += 44;
+            drawColorSwatch(g, pSel.colorFondoCabecera, curX + 20, row1Y);
+            drawColorSwatch(g, pSel.colorBordeCabecera, curX + 20, row2Y);
+
+            drawColorSwatch(g, pSel.colorFondoBarra, curX + 40, row1Y);
+            drawColorSwatch(g, pSel.colorBarraLleno, curX + 40, row2Y);
+
+            drawColorSwatch(g, pSel.colorFondoRenglon, curX + 60, row1Y);
+            drawColorSwatch(g, pSel.colorBordeRenglon, curX + 60, row2Y);
+
+            drawColorSwatch(g, pSel.colorFondoCheck, curX + 80, row1Y);
+            drawColorSwatch(g, pSel.colorBordeCheckInterno, curX + 80, row2Y);
+
+            drawColorSwatch(g, pSel.colorTexto, curX + 100, row1Y);
+            drawColorSwatch(g, pSel.colorSlotBg, curX + 100, row2Y);
+
+            curX += 122;
             drawVerticalSeparator(g, curX, y + 4, 40);
-            curX += 6;
-            
-            drawSectionTitle(g, font, "Tit/Desc", curX, y + 2, 44);
-            drawSectionTitle(g, font, "Caja/Item", curX + 50, y + 2, 44);
         } else if (pSel.tipo.equals("PROGRESO")) {
             int curX = barStartX + 6;
             int row1Y = y + 6;
@@ -766,17 +768,19 @@ public class TopBar {
             
             if (my >= row1Y && my <= row1Y + 16) {
                 if (mx >= curX && mx <= curX + 16) return BTN_FILL_COLOR;
-                if (mx >= curX + 20 && mx <= curX + 36) return BTN_BORDER_COLOR;
-                if (mx >= curX + 50 && mx <= curX + 66) return BTN_OBJ_ROW_FILL;
-                if (mx >= curX + 70 && mx <= curX + 86) return BTN_OBJ_ROW_BORDER;
+                if (mx >= curX + 20 && mx <= curX + 36) return BTN_HEADER_FILL_COLOR;
+                if (mx >= curX + 40 && mx <= curX + 56) return 103; 
+                if (mx >= curX + 60 && mx <= curX + 76) return BTN_MISSION_FILL_COLOR;
+                if (mx >= curX + 80 && mx <= curX + 96) return 100;
                 if (mx >= curX + 100 && mx <= curX + 116) return BTN_TEXT_COLOR;
-                if (mx >= curX + 120 && mx <= curX + 136) return BTN_SLOT_BG;
             }
             if (my >= row2Y && my <= row2Y + 16) {
-                if (mx >= curX && mx <= curX + 16) return BTN_OBJ_ICON_FILL;
-                if (mx >= curX + 20 && mx <= curX + 36) return BTN_OBJ_ICON_BORDER;
-                if (mx >= curX + 50 && mx <= curX + 66) return BTN_OBJ_CHECK_FILL;
-                if (mx >= curX + 70 && mx <= curX + 86) return BTN_OBJ_CHECK_BORDER_IN;
+                if (mx >= curX && mx <= curX + 16) return BTN_BORDER_COLOR;
+                if (mx >= curX + 20 && mx <= curX + 36) return BTN_HEADER_BORDER_COLOR;
+                if (mx >= curX + 40 && mx <= curX + 56) return BTN_PROG_FILL; 
+                if (mx >= curX + 60 && mx <= curX + 76) return BTN_MISSION_BORDER_COLOR;
+                if (mx >= curX + 80 && mx <= curX + 96) return 101;
+                if (mx >= curX + 100 && mx <= curX + 116) return 102;
             }
         } else if (pSel.tipo.equals("PROGRESO")) {
             int curX = barStartX + 6;
@@ -954,21 +958,32 @@ public class TopBar {
         int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
         int btnSize = 18;
 
-        int curX = barStartX + 6 + 150;
-        int btnY1 = y + 10;
-        int btnY2 = y + 28;
+        int curX = barStartX + 6 + 130; 
+        int btnY1 = y + 5;
+        int btnY2 = y + 25;
 
-        adder.accept(Button.builder(Component.literal("T-"), b -> { pSel.escalaTexto = Math.max(0.4f, pSel.escalaTexto - 0.1f); }).bounds(curX, btnY1, 20, btnSize).build());
-        adder.accept(Button.builder(Component.literal("T+"), b -> { pSel.escalaTexto = Math.min(3.0f, pSel.escalaTexto + 0.1f); }).bounds(curX + 22, btnY1, 20, btnSize).build());
+        adder.accept(Button.builder(Component.literal("T+"), b -> { pSel.escalaTexto = Math.min(3.0f, pSel.escalaTexto + 0.1f); }).bounds(curX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("T-"), b -> { pSel.escalaTexto = Math.max(0.4f, pSel.escalaTexto - 0.1f); }).bounds(curX, btnY2, btnSize, btnSize).build());
         
-        adder.accept(Button.builder(Component.literal("C-"), b -> { pSel.escalaIcono = Math.max(0.4f, pSel.escalaIcono - 0.1f); }).bounds(curX + 50, btnY1, 20, btnSize).build());
-        adder.accept(Button.builder(Component.literal("C+"), b -> { pSel.escalaIcono = Math.min(3.0f, pSel.escalaIcono + 0.1f); }).bounds(curX + 72, btnY1, 20, btnSize).build());
+        curX += 20;
+        adder.accept(Button.builder(Component.literal("D+"), b -> { pSel.escalaDesc = Math.min(3.0f, pSel.escalaDesc + 0.1f); }).bounds(curX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("D-"), b -> { pSel.escalaDesc = Math.max(0.4f, pSel.escalaDesc - 0.1f); }).bounds(curX, btnY2, btnSize, btnSize).build());
 
-        adder.accept(Button.builder(Component.literal("D-"), b -> { pSel.escalaDesc = Math.max(0.4f, pSel.escalaDesc - 0.1f); }).bounds(curX, btnY2, 20, btnSize).build());
-        adder.accept(Button.builder(Component.literal("D+"), b -> { pSel.escalaDesc = Math.min(3.0f, pSel.escalaDesc + 0.1f); }).bounds(curX + 22, btnY2, 20, btnSize).build());
-        
-        adder.accept(Button.builder(Component.literal("I-"), b -> { pSel.escalaItem = Math.max(0.4f, pSel.escalaItem - 0.1f); }).bounds(curX + 50, btnY2, 20, btnSize).build());
-        adder.accept(Button.builder(Component.literal("I+"), b -> { pSel.escalaItem = Math.min(3.0f, pSel.escalaItem + 0.1f); }).bounds(curX + 72, btnY2, 20, btnSize).build());
+        curX += 20;
+        adder.accept(Button.builder(Component.literal("C+"), b -> { pSel.escalaIcono = Math.min(3.0f, pSel.escalaIcono + 0.1f); }).bounds(curX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("C-"), b -> { pSel.escalaIcono = Math.max(0.4f, pSel.escalaIcono - 0.1f); }).bounds(curX, btnY2, btnSize, btnSize).build());
+
+        curX += 20;
+        adder.accept(Button.builder(Component.literal("M+"), b -> { pSel.escalaMarco = Math.min(3.0f, pSel.escalaMarco + 0.1f); }).bounds(curX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("M-"), b -> { pSel.escalaMarco = Math.max(0.4f, pSel.escalaMarco - 0.1f); }).bounds(curX, btnY2, btnSize, btnSize).build());
+
+        curX += 20;
+        adder.accept(Button.builder(Component.literal("I+"), b -> { pSel.escalaItem = Math.min(3.0f, pSel.escalaItem + 0.1f); }).bounds(curX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("I-"), b -> { pSel.escalaItem = Math.max(0.4f, pSel.escalaItem - 0.1f); }).bounds(curX, btnY2, btnSize, btnSize).build());
+
+        curX += 20;
+        adder.accept(Button.builder(Component.literal("K+"), b -> { pSel.escalaCheck = Math.min(3.0f, pSel.escalaCheck + 0.1f); }).bounds(curX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("K-"), b -> { pSel.escalaCheck = Math.max(0.4f, pSel.escalaCheck - 0.1f); }).bounds(curX, btnY2, btnSize, btnSize).build());
     }
 
     public static void inicializarBotonesProgreso(int guiWidth, int y, Consumer<Button> adder, GlobalGuiSettings.PanelConfig pSel) {

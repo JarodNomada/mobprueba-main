@@ -133,8 +133,12 @@ this.inputColor.setResponder(s -> {
                         else if (FigurasEdit.editandoColorIndex == 6) pSel.colorBordeCabecera = color;
                         else if (FigurasEdit.editandoColorIndex == 7) pSel.colorARGB = color;
                         else if (FigurasEdit.editandoColorIndex == 8) pSel.colorBorde = color;
-                        else if (FigurasEdit.editandoColorIndex == 9) pSel.colorTexto = color;
+                        else if (FigurasEdit.editandoColorIndex == 9) pSel.colorBordeCabecera = color;
                         else if (FigurasEdit.editandoColorIndex == 10) pSel.colorBarraLleno = color;
+                        else if (FigurasEdit.editandoColorIndex == 11) pSel.colorFondoCheck = color;
+                        else if (FigurasEdit.editandoColorIndex == 12) pSel.colorBordeCheckInterno = color;
+                        else if (FigurasEdit.editandoColorIndex == 13) pSel.colorSlotBg = color;
+                        else if (FigurasEdit.editandoColorIndex == 14) pSel.colorFondoBarra = color;
                     }
                     if (editandoColorHerramientas) {
                         GlobalGuiSettings.colorHerramientas = color;
@@ -168,8 +172,12 @@ this.inputColor.setResponder(s -> {
                 else if (FigurasEdit.editandoColorIndex == 6) pSel.colorBordeCabecera = colorOriginalGuardado;
                 else if (FigurasEdit.editandoColorIndex == 7) pSel.colorARGB = colorOriginalGuardado;
                 else if (FigurasEdit.editandoColorIndex == 8) pSel.colorBorde = colorOriginalGuardado;
-                else if (FigurasEdit.editandoColorIndex == 9) pSel.colorTexto = colorOriginalGuardado;
+                else if (FigurasEdit.editandoColorIndex == 9) pSel.colorBordeCabecera = colorOriginalGuardado;
                 else if (FigurasEdit.editandoColorIndex == 10) pSel.colorBarraLleno = colorOriginalGuardado;
+                else if (FigurasEdit.editandoColorIndex == 11) pSel.colorFondoCheck = colorOriginalGuardado;
+                else if (FigurasEdit.editandoColorIndex == 12) pSel.colorBordeCheckInterno = colorOriginalGuardado;
+                else if (FigurasEdit.editandoColorIndex == 13) pSel.colorSlotBg = colorOriginalGuardado;
+                else if (FigurasEdit.editandoColorIndex == 14) pSel.colorFondoBarra = colorOriginalGuardado;
             } else if (editandoColorHerramientas) {
                 GlobalGuiSettings.colorHerramientas = colorOriginalGuardado;
             }
@@ -488,6 +496,18 @@ this.inputColor.setResponder(s -> {
                     pSel.offsetYIcono += 2.0f;
                 }
                 break;
+            case 100:
+                FigurasEdit.editandoColorIndex = 11; LeftSidebar.selectedModule = -1; colorOriginalGuardado = pSel.colorFondoCheck;
+                inputColor.setValue(String.format("%08X", pSel.colorFondoCheck)); inputColor.visible = true; btnAceptarColor.visible = true; btnCancelarColor.visible = true; inputColor.setFocused(true); break;
+            case 101:
+                FigurasEdit.editandoColorIndex = 12; LeftSidebar.selectedModule = -1; colorOriginalGuardado = pSel.colorBordeCheckInterno;
+                inputColor.setValue(String.format("%08X", pSel.colorBordeCheckInterno)); inputColor.visible = true; btnAceptarColor.visible = true; btnCancelarColor.visible = true; inputColor.setFocused(true); break;
+            case 102:
+                FigurasEdit.editandoColorIndex = 13; LeftSidebar.selectedModule = -1; colorOriginalGuardado = pSel.colorSlotBg;
+                inputColor.setValue(String.format("%08X", pSel.colorSlotBg)); inputColor.visible = true; btnAceptarColor.visible = true; btnCancelarColor.visible = true; inputColor.setFocused(true); break;
+            case 103:
+                FigurasEdit.editandoColorIndex = 14; LeftSidebar.selectedModule = -1; colorOriginalGuardado = pSel.colorFondoBarra;
+                inputColor.setValue(String.format("%08X", pSel.colorFondoBarra)); inputColor.visible = true; btnAceptarColor.visible = true; btnCancelarColor.visible = true; inputColor.setFocused(true); break;
         }
     }
 

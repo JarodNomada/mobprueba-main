@@ -35,6 +35,7 @@ public class GlobalGuiSettings {
         public int colorBordeRenglon = 0xFF2A2A2A;
         public int colorFondoCheck = 0xFF111111;
         public int colorBordeCheckInterno = 0xFF2A2A2A;
+        public int colorFondoBarra = 0xFF222222;
         
         public String tipo = "CUADRADO";
         public int grosor = 2; // Para pincel y formas
@@ -44,6 +45,8 @@ public class GlobalGuiSettings {
         public float escalaIcono = 1.0f;
         public float escalaDesc = 0.85f;
         public float escalaItem = 1.0f;
+        public float escalaCheck = 1.0f;
+        public float escalaMarco = 1.0f;
         public float offsetXTexto = 0.0f;
         public float offsetYTexto = 0.0f;
         public float escalaTextoMision = 1.0f;

@@ -620,13 +620,18 @@ public static void crearBotonPagina(int numPagina) {
             
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
             
-            for (LogroInfo info : renderLogros) {
-                int cFondoIcono = (p.colorFondoIcono != 0) ? p.colorFondoIcono : 0xFF151515;
-                int cBordeIcono = (p.colorBordeIcono != 0) ? p.colorBordeIcono : 0xFF2A2A2A;
-                int cFondoTexto = (p.colorFondoRenglon != 0) ? p.colorFondoRenglon : 0xFF181818;
-                int cBordeTexto = (p.colorBordeRenglon != 0) ? p.colorBordeRenglon : 0xFF2A2A2A;
+for (LogroInfo info : renderLogros) {
+                int cFondoIcono = (p.colorFondoCabecera != 0) ? p.colorFondoCabecera : 0xFF151515;
+                int cBordeIcono = (p.colorBordeCabecera != 0) ? p.colorBordeCabecera : 0xFF2A2A2A;
+                
+                int cFondoTexto = (p.colorFondoMision != 0) ? p.colorFondoMision : 0xFF181818;
+                int cBordeTexto = (p.colorBordeMision != 0) ? p.colorBordeMision : 0xFF2A2A2A;
+                
                 int cFondoCheck = (p.colorFondoCheck != 0) ? p.colorFondoCheck : 0xFF111111;
                 int cBordeCheck = (p.colorBordeCheckInterno != 0) ? p.colorBordeCheckInterno : 0xFF2A2A2A;
+                
+                int cFondoMarco = (p.colorFondoBarra != 0) ? p.colorFondoBarra : 0xFF222222;
+                int cBordeMarco = (p.colorBarraLleno != 0) ? p.colorBarraLleno : 0xFF444444;
                 
                 int colorT = (p.colorTexto != 0) ? p.colorTexto : 0xFFFFFFFF;
                 int colorDesc = (p.colorSlotBg != 0) ? p.colorSlotBg : 0xFFAAAAAA;
@@ -637,9 +642,22 @@ public static void crearBotonPagina(int numPagina) {
                 g.fill(iconCellX, curY, iconCellX + iconCellW, curY + rowH, cFondoIcono);
                 g.renderOutline(iconCellX, curY, iconCellW, rowH, cBordeIcono);
                 
+                int innerBoxPadding = 3;
+                float eMarco = p.escalaMarco > 0.1f ? p.escalaMarco : 1.0f;
+                int baseInnerSize = iconCellW - 6;
+                int innerBoxSize = (int)(baseInnerSize * eMarco);
+                
+                if (innerBoxSize > 2) {
+                    int innerBoxX = iconCellX + (iconCellW - innerBoxSize) / 2;
+                    int innerBoxY = curY + (rowH - innerBoxSize) / 2;
+                    
+                    g.fill(innerBoxX, innerBoxY, innerBoxX + innerBoxSize, innerBoxY + innerBoxSize, cFondoMarco);
+                    g.renderOutline(innerBoxX, innerBoxY, innerBoxSize, innerBoxSize, cBordeMarco);
+                }
+                
                 if (info.icono != null) {
                     g.pose().pushPose();
-                    float scaleF = eIcon * 1.5f * eItem;
+                    float scaleF = eIcon * 1.5f * eItem; 
                     float offsetItemX = (iconCellW - (16 * scaleF)) / 2.0f;
                     float offsetItemY = (rowH - (16 * scaleF)) / 2.0f;
                     g.pose().translate(iconCellX + offsetItemX, curY + offsetItemY, 0);
@@ -655,7 +673,8 @@ public static void crearBotonPagina(int numPagina) {
                     g.fill(textCellX, curY, textCellX + textCellW, curY + rowH, cFondoTexto);
                     g.renderOutline(textCellX, curY, textCellW, rowH, cBordeTexto);
                     
-int checkSize = (int)(16 * eIcon);
+                    float eCheck = p.escalaCheck > 0.1f ? p.escalaCheck : 1.0f;
+                    int checkSize = (int)(16 * eIcon * eCheck); 
                     int checkX = textCellX + textCellW - padding - checkSize;
                     int checkY = curY + (rowH - checkSize) / 2;
                     
@@ -664,22 +683,15 @@ int checkSize = (int)(16 * eIcon);
                     
                     if (info.completado) {
                         g.pose().pushPose();
-                        g.pose().translate(checkX, checkY, 0);
-                        g.pose().scale(eIcon, eIcon, 1.0f);
-                        
-                        int shadow = 0xFF003808; 
-                        g.fill(5, 9, 7, 11, shadow);
-                        g.fill(7, 11, 10, 14, shadow);
-                        g.fill(10, 9, 12, 11, shadow);
-                        g.fill(12, 7, 14, 9, shadow);
-                        g.fill(14, 5, 16, 7, shadow);
+                        g.pose().translate(checkX, checkY, 0); 
+                        g.pose().scale(eIcon * eCheck, eIcon * eCheck, 1.0f);
 
                         int checkColor = 0xFF00B01B;
-                        g.fill(4, 8, 6, 10, checkColor);
-                        g.fill(6, 10, 9, 13, checkColor);
-                        g.fill(9, 8, 11, 10, checkColor);
-                        g.fill(11, 6, 13, 8, checkColor);
-                        g.fill(13, 4, 15, 6, checkColor);
+                        g.fill(3, 8, 5, 10, checkColor);  
+                        g.fill(5, 10, 8, 13, checkColor); 
+                        g.fill(8, 8, 10, 10, checkColor); 
+                        g.fill(10, 6, 12, 8, checkColor); 
+                        g.fill(12, 4, 14, 6, checkColor); 
                         
                         g.pose().popPose();
                     }
@@ -687,7 +699,7 @@ int checkSize = (int)(16 * eIcon);
                     String dateTxt = info.progresoTxt;
                     int progressTextW = 0;
                     if (dateTxt != null && !dateTxt.isEmpty()) {
-                        progressTextW = (int)(font.width(dateTxt) * eDesc);
+                        progressTextW = (int)(font.width(dateTxt) * eDesc); 
                         g.pose().pushPose();
                         g.pose().translate(checkX - 6 - progressTextW, curY + (rowH / 2.0f) - (4 * eDesc), 0);
                         g.pose().scale(eDesc, eDesc, 1.0f);
@@ -711,7 +723,7 @@ int checkSize = (int)(16 * eIcon);
                         
                         g.pose().pushPose();
                         g.pose().translate(textCellX + 8, curY + (rowH / 2.0f) + (2 * eDesc), 0);
-                        g.pose().scale(eDesc, eDesc, 1.0f);
+                        g.pose().scale(eDesc, eDesc, 1.0f); 
                         g.drawString(font, safeDesc, 0, 0, colorDesc, false); 
                         g.pose().popPose();
                     }
