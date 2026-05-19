@@ -362,7 +362,7 @@ public class TopBar {
             else if (pSel.tipo.equals("BOTON_PAGINA")) return 96;
             else if (pSel.tipo.startsWith("DESPLEGABLE")) {
                 int w = 6 + 80; if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) w += 46 * 3; w += 6; return w;
-            } else if (pSel.tipo.equals("MANIQUI")) return 94;
+            } else if (pSel.tipo.equals("MANIQUI") || pSel.tipo.equals("MISION_ICONO")) return 94;
             else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) return 280;
             else if (pSel.tipo.startsWith("SLOT")) return 160;
             else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) return 200;
@@ -532,7 +532,7 @@ public class TopBar {
                 drawSectionTitle(g, font, "I", currentX, y + 2, 38);
             }
 
-        } else if (pSel.tipo.equals("MANIQUI")) {
+        } else if (pSel.tipo.equals("MANIQUI") || pSel.tipo.equals("MISION_ICONO")) {
             int curX = barStartX + 6;
             int boxY = y + 16;
             drawColorSwatch(g, pSel.colorARGB, curX, boxY);
@@ -737,7 +737,7 @@ public class TopBar {
                 if (mx >= colorsX + 20 && mx <= colorsX + 36) return BTN_MISSION_FILL_COLOR;
                 if (mx >= colorsX + 40 && mx <= colorsX + 56) return BTN_MISSION_BORDER_COLOR;
             }
-        } else if (pSel.tipo.equals("MANIQUI")) {
+        } else if (pSel.tipo.equals("MANIQUI") || pSel.tipo.equals("MISION_ICONO")) {
             int curX = barStartX + 6;
             int boxY = y + 16;
             if (my >= boxY && my <= boxY + 16) {
@@ -881,7 +881,7 @@ public class TopBar {
     }
 
     public static void inicializarBotonesManiqui(int guiWidth, int y, java.util.function.Consumer<Button> adder, GlobalGuiSettings.PanelConfig pSel) {
-        if (pSel == null || !pSel.tipo.equals("MANIQUI")) return;
+        if (pSel == null || (!pSel.tipo.equals("MANIQUI") && !pSel.tipo.equals("MISION_ICONO"))) return;
         int barX = LeftSidebar.getSidebarWidth();
         int expectedBarW = calculateBarWidth(false, true, null, pSel);
         int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;

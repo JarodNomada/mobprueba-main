@@ -109,6 +109,7 @@ public static void crearBotonPagina(int numPagina) {
         int alto = 30;
         if (tipo.equals("MISION_DESCRIPCION")) alto = 60;
         if (tipo.equals("MISION_OBJETIVOS")) alto = 100;
+        if (tipo.equals("MISION_ICONO")) { ancho = 40; alto = 40; }
 
         GlobalGuiSettings.PanelConfig p = new GlobalGuiSettings.PanelConfig(x, y, ancho, alto);
         p.tipo = tipo;
@@ -160,7 +161,12 @@ public static void crearBotonPagina(int numPagina) {
         g.fill(p.x + marginX, cardY, p.x + marginX + cardWidth, cardY + cardHeight, p.colorFondoMision);
         g.renderOutline(p.x + marginX, cardY, cardWidth, cardHeight, p.colorBordeMision);
         float textX = p.x + marginX + 5;
-        if (p.iconoRL != null) {
+        
+        // BUSCAMOS LA MISIÓN ESPECÍFICA PARA OBTENER SU ÍCONO PERSONALIZADO
+        Config.MisionData mision = Config.getMisionPorNombre(text);
+        net.minecraft.resources.ResourceLocation iconoUsar = (mision != null && mision.iconoRL != null) ? mision.iconoRL : p.iconoRL;
+
+        if (iconoUsar != null) {
             float baseIconSize = 16;
             float scaledIconSize = baseIconSize * p.escalaIcono;
             float iconBaseX = p.x + marginX + 5;
@@ -169,10 +175,16 @@ public static void crearBotonPagina(int numPagina) {
             g.pose().pushPose();
             g.pose().translate(iconX, iconY, 0);
             g.pose().scale(p.escalaIcono, p.escalaIcono, 1.0f);
-            g.blit(p.iconoRL, 0, 0, 0, 0, (int)baseIconSize, (int)baseIconSize, (int)baseIconSize, (int)baseIconSize);
+            
+            // Habilitamos transparencia por si la textura tiene bordes invisibles (estilo Vanilla)
+            com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+            g.blit(iconoUsar, 0, 0, 0, 0, (int)baseIconSize, (int)baseIconSize, (int)baseIconSize, (int)baseIconSize);
+            com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+            
             g.pose().popPose();
             textX = iconBaseX + scaledIconSize + 5;
         }
+        
         g.pose().pushPose();
         g.pose().translate(textX + p.offsetXTextoMision, cardY + (cardHeight - font.lineHeight * p.escalaTextoMision) / 2, 0);
         g.pose().scale(p.escalaTextoMision, p.escalaTextoMision, 1.0f);
@@ -1002,6 +1014,36 @@ public static void crearBotonPagina(int numPagina) {
             } else {
                 g.drawCenteredString(font, "Lista de Objetivos", p.x + p.ancho/2, p.y + p.alto/2, 0xFF888888);
             }
+        } else if (p.tipo.equals("MISION_ICONO")) {
+            Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
+
+            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
+            g.renderOutline(p.x, p.y, p.ancho, p.alto, p.colorBorde);
+
+            if (data != null && data.iconoRL != null) {
+                g.pose().pushPose();
+                
+                float baseIconSize = 16.0f;
+                float scale = p.escalaIcono > 0 ? p.escalaIcono : 2.0f;
+                float scaledSize = baseIconSize * scale;
+                
+                float iconX = p.x + (p.ancho - scaledSize) / 2.0f + p.offsetXIcono;
+                float iconY = p.y + (p.alto - scaledSize) / 2.0f + p.offsetYIcono;
+                
+                g.pose().translate(iconX, iconY, 0);
+                g.pose().scale(scale, scale, 1.0f);
+                
+                com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+                g.blit(data.iconoRL, 0, 0, 0, 0, (int)baseIconSize, (int)baseIconSize, (int)baseIconSize, (int)baseIconSize);
+                com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+                
+                g.pose().popPose();
+            } else {
+                net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
+                g.drawCenteredString(font, "Icono", p.x + p.ancho/2, p.y + (p.alto - font.lineHeight)/2, 0xFF888888);
+            }
+            
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFFFFFF00);
         } else if (p.tipo.startsWith("DESPLEGABLE")) {
             int t = 1;
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;

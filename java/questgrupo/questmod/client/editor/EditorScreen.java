@@ -210,7 +210,7 @@ this.inputColor.setResponder(s -> {
         if (TopBar.isDrawingToolsVisible() && pSel != null) {
             if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
                 TopBar.inicializarBotonesWidget(this.width, 5, this::addRenderableWidget, pSel);
-            } else if (pSel.tipo.equals("MANIQUI")) {
+            } else if (pSel.tipo.equals("MANIQUI") || pSel.tipo.equals("MISION_ICONO")) {
                 TopBar.inicializarBotonesManiqui(this.width, 5, this::addRenderableWidget, pSel);
             } else if (pSel.tipo.startsWith("SLOT")) {
                 TopBar.inicializarBotonesSlot(this.width, 5, this::addRenderableWidget, pSel);
@@ -561,7 +561,7 @@ this.inputColor.setResponder(s -> {
         g.pose().translate(0, 0, 300); // Elevamos todo el UI 300 niveles en Z para aplastar el lienzo
 
         LeftSidebar.render(g, this.width, this.height);
-        RightBar.render(g, this.width, this.height);
+        RightBar.render(g, this.width, this.height, mx, my);
 
         TopBar.setCurrentPanel(pSel);
         TopBar.render(g, this.width, 5, tSel, pSel);
@@ -944,9 +944,12 @@ this.inputColor.setResponder(s -> {
                     } else if (mostrarModalTexturas) {
                         int idx = paginaTexturas * 10 + i;
                         if (idx < texturasFiltradas.size()) {
+                            String texturaID = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(texturasFiltradas.get(idx).getItem()).toString();
+                            
                             LeftSidebar.crearWidget("TEXTURA_JUEGO", "", this.width/2 - 16, this.height/2 - 16, 32, 32);
                             GlobalGuiSettings.PanelConfig newP = GlobalGuiSettings.PANELES.get(GlobalGuiSettings.PANELES.size()-1);
-                            newP.recursoPath = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(texturasFiltradas.get(idx).getItem()).toString();
+                            newP.recursoPath = texturaID;
+                            
                             mostrarModalTexturas = false; return true;
                         }
                     }

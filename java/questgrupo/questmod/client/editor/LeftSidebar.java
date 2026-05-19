@@ -6,6 +6,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import questgrupo.questmod.client.GlobalGuiSettings;
 import questgrupo.questmod.client.gui.FigurasEdit;
 import questgrupo.questmod.client.gui.TextoEdit;
+import questgrupo.questmod.Config;
 
 public class LeftSidebar {
     public static boolean sidebarVisible = true;
@@ -143,10 +144,10 @@ public class LeftSidebar {
                 }
             }
         } else if (selectedModule == 2) {
-            drawVanillaPanel(g, PANEL_X, panelY, 140, 145);
+            drawVanillaPanel(g, PANEL_X, panelY, 140, 165);
             g.drawString(font, "Nav. Misiones", PANEL_X + 10, panelY + 6, 0xFF404040, false);
 
-            String[] func = {"Contenedor Maestro", "Solo Principales", "Solo Secundarias", "Titulo Mision", "Descripcion", "Objetivos"};
+            String[] func = {"Contenedor Maestro", "Solo Principales", "Solo Secundarias", "Titulo Mision", "Descripcion", "Objetivos", "Icono Mision"};
             for (int i = 0; i < func.length; i++) {
                 drawVanillaButton(g, font, PANEL_X + 10, panelY + 20 + (i * 20), 120, 18, func[i], false);
             }
@@ -286,13 +287,14 @@ public class LeftSidebar {
                     if (isHovered(mx, my, PANEL_X + 10, panelY + 80, 100, 18)) { selectedTool = 3; showBrushThickness = true; showShapesMenu = false; return true; }
                 }
             } else if (selectedModule == 2) {
-                panelWidth = 140; panelHeight = 145;
+                panelWidth = 140; panelHeight = 165;
                 if (isHovered(mx, my, PANEL_X + 10, panelY + 20, 120, 18)) { FigurasEdit.crearDesplegable(centerX - 80, centerY - 100, 2); selectedModule = -1; return true; }
                 if (isHovered(mx, my, PANEL_X + 10, panelY + 40, 120, 18)) { FigurasEdit.crearDesplegable(centerX - 80, centerY - 100, 0); selectedModule = -1; return true; }
                 if (isHovered(mx, my, PANEL_X + 10, panelY + 60, 120, 18)) { FigurasEdit.crearDesplegable(centerX - 80, centerY - 100, 1); selectedModule = -1; return true; }
                 if (isHovered(mx, my, PANEL_X + 10, panelY + 80, 120, 18)) { FigurasEdit.crearPiezaMision("MISION_TITULO", centerX - 75, centerY - 15); selectedModule = -1; return true; }
                 if (isHovered(mx, my, PANEL_X + 10, panelY + 100, 120, 18)) { FigurasEdit.crearPiezaMision("MISION_DESCRIPCION", centerX - 75, centerY - 30); selectedModule = -1; return true; }
                 if (isHovered(mx, my, PANEL_X + 10, panelY + 120, 120, 18)) { FigurasEdit.crearPiezaMision("MISION_OBJETIVOS", centerX - 75, centerY - 50); selectedModule = -1; return true; }
+                if (isHovered(mx, my, PANEL_X + 10, panelY + 140, 120, 18)) { FigurasEdit.crearPiezaMision("MISION_ICONO", centerX - 20, centerY - 20); selectedModule = -1; return true; }
             } 
             // --- NUEVOS CLICS DE LOS WIDGETS RPG ---
             else if (selectedModule == 3) {

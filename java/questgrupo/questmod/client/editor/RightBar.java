@@ -23,11 +23,9 @@ public class RightBar {
 
     private static int scrollOffset = 0;
      
-    // Variables para Live Drag & Drop estilo Photoshop
     public static GlobalGuiSettings.Capa capaArrastrada = null;
     public static double mouseDragY = 0;
     
-    // Variables para renombrado de capas
     private static long lastClickTime = 0;
     private static GlobalGuiSettings.Capa lastClickedCapa = null;
     public static GlobalGuiSettings.Capa capaEditandoNombre = null;
@@ -38,7 +36,7 @@ public class RightBar {
         return isVisible && GlobalGuiSettings.editorActivo ? WIDTH + MARGIN_RIGHT : 0;
     }
 
-    public static void render(GuiGraphics g, int screenWidth, int screenHeight) {
+    public static void render(GuiGraphics g, int screenWidth, int screenHeight, int mouseX, int mouseY) {
         if (!isVisible || !GlobalGuiSettings.editorActivo) return;
 
         int x0    = screenWidth - WIDTH - MARGIN_RIGHT;
@@ -47,35 +45,31 @@ public class RightBar {
 
         Font font = Minecraft.getInstance().font;
 
-        // --- FONDO PRINCIPAL VANILLA ---
         g.fill(x0, yBase, x1, yBase + PANEL_H, 0xFFC6C6C6);
         
-        // Bordes del panel principal (Relieve)
-        g.fill(x0, yBase, x1, yBase + 1, 0xFFFFFFFF); // Arriba
-        g.fill(x0, yBase, x0 + 1, yBase + PANEL_H, 0xFFFFFFFF); // Izquierda
-        g.fill(x0, yBase + PANEL_H - 1, x1, yBase + PANEL_H, 0xFF555555); // Abajo
-        g.fill(x1 - 1, yBase, x1, yBase + PANEL_H, 0xFF555555); // Derecha
-        g.renderOutline(x0 - 1, yBase - 1, (x1 - x0) + 2, PANEL_H + 2, 0xFF000000); // Contorno negro
+        g.fill(x0, yBase, x1, yBase + 1, 0xFFFFFFFF); 
+        g.fill(x0, yBase, x0 + 1, yBase + PANEL_H, 0xFFFFFFFF); 
+        g.fill(x0, yBase + PANEL_H - 1, x1, yBase + PANEL_H, 0xFF555555); 
+        g.fill(x1 - 1, yBase, x1, yBase + PANEL_H, 0xFF555555); 
+        g.renderOutline(x0 - 1, yBase - 1, (x1 - x0) + 2, PANEL_H + 2, 0xFF000000); 
 
         int hY0 = yBase;
         int hY1 = yBase + HEADER_H;
         
-        // Texto CABECERA (Negro sin sombra)
         g.drawString(font, "CAPAS " + GlobalGuiSettings.paginaActual, x0 + 7, hY0 + (HEADER_H - font.lineHeight) / 2 + 1, 0xFF202020, false);
 
-        // Botón + (Estilo Vanilla)
         int plusX = x1 - 19;
         int plusY = hY0 + (HEADER_H - 16) / 2;
-        dibujarBotonVanilla(g, plusX, plusY, 16, 16);
+        boolean hoverPlus = mouseX >= plusX && mouseX <= plusX + 16 && mouseY >= plusY && mouseY <= plusY + 16;
+        dibujarBotonVanilla(g, plusX, plusY, 16, 16, hoverPlus);
         g.drawString(font, "+", plusX + 5, plusY + 4, 0xFF202020, false);
 
-        // --- CAJA DE LA LISTA DE CAPAS (Borde Negro Simple) ---
         int listX0 = x0 + 3;
         int listX1 = x1 - 3;
         int listY0 = hY1;
         int listY1 = listY0 + LIST_H;
 
-        g.fill(listX0, listY0, listX1, listY1, 0xFFC6C6C6); // Fondo plano original
+        g.fill(listX0, listY0, listX1, listY1, 0xFFC6C6C6); 
 
         java.util.List<GlobalGuiSettings.Capa> capas = capasDePageActual();
         int maxScroll = Math.max(0, capas.size() - MAX_VISIBLE);
@@ -101,10 +95,7 @@ public class RightBar {
                 g.fill(listX0 + 1, itemY, listX1 - 1, itemY + ITEM_H, 0xFFAAAAAA);
             }
             
-            // Separador horizontal interno entre capas
             g.fill(listX0 + 1, itemY + ITEM_H - 1, listX1 - 1, itemY + ITEM_H, 0xFF888888);
-
-            // Línea separadora vertical del ojo
             g.fill(listX0 + ITEM_H, itemY, listX0 + ITEM_H + 1, itemY + ITEM_H, 0xFF888888);
 
             int eyeX = listX0 + (ITEM_H - 10) / 2;
@@ -132,14 +123,11 @@ public class RightBar {
             dibujarHamburguesa(g, listX1 - 11, itemY + (ITEM_H - 7) / 2);
         }
         
-        // ¡LA MAGIA ESTÁ AQUÍ! Dibujamos el contorno negro AL FINAL de todo el proceso
-        // Así nos aseguramos de que el borde tapa los bordes de selección, y no al revés.
         g.renderOutline(listX0, listY0, listX1 - listX0, listY1 - listY0, 0xFF000000);
 
         int botY = listY1;
-        renderBotonesInferiores(g, font, x0, x1, botY);
+        renderBotonesInferiores(g, font, x0, x1, botY, mouseX, mouseY);
         
-        // Render de la capa flotante arrastrada
         if (capaArrastrada != null) {
             int ghostY = (int) mouseDragY - (ITEM_H / 2);
             g.fill(listX0 + 1, ghostY, listX1 - 1, ghostY + ITEM_H, 0x99AAAAAA); 
@@ -149,42 +137,45 @@ public class RightBar {
         }
     }
 
-    private static void renderBotonesInferiores(GuiGraphics g, Font font, int x0, int x1, int botY) {
+    private static void renderBotonesInferiores(GuiGraphics g, Font font, int x0, int x1, int botY, int mx, int my) {
         int panelW = x1 - x0;
         int btnW = 24, btnH = 22, gap = (panelW - 2 - 4 * btnW) / 5;
         int by = botY + (BOTTOM_H - btnH) / 2;
         
         for (int b = 0; b < 4; b++) {
-            dibujarBotonVanilla(g, x0 + 1 + gap + b * (btnW + gap), by, btnW, btnH);
+            int bx = x0 + 1 + gap + b * (btnW + gap);
+            boolean hover = mx >= bx && mx <= bx + btnW && my >= by && my <= by + btnH;
+            dibujarBotonVanilla(g, bx, by, btnW, btnH, hover);
         }
         
         int b0 = x0 + 1 + gap;
-        int c = 0xFF202020; // Negro Vanilla
+        int c = 0xFF202020; 
         
-        // Ajustamos meticulosamente los píxeles para que centren perfecto en botones de 24x22
         dibujarIconoDuplicar(g, b0 + 6,              by + 5, c);
         dibujarFlechaArriba( g, b0 + (btnW+gap) + 8, by + 5, c);
         dibujarFlechaAbajo(  g, b0 + 2*(btnW+gap)+8, by + 5, c);
         dibujarPapelera(     g, b0 + 3*(btnW+gap)+7, by + 5, c);
     }
 
-    private static void dibujarBotonVanilla(GuiGraphics g, int x, int y, int w, int h) {
-        g.fill(x, y, x + w, y + h, 0xFF000000); // Borde
-        g.fill(x + 1, y + 1, x + w - 1, y + h - 1, 0xFFC6C6C6); // Fondo
-        g.fill(x + 1, y + 1, x + w - 1, y + 2, 0xFFFFFFFF); // Brillo Arriba
-        g.fill(x + 1, y + 1, x + 2, y + h - 1, 0xFFFFFFFF); // Brillo Izq
-        g.fill(x + 1, y + h - 2, x + w - 1, y + h - 1, 0xFF555555); // Sombra Abajo
-        g.fill(x + w - 2, y + 1, x + w - 1, y + h - 1, 0xFF555555); // Sombra Der
-        g.fill(x + 1, y + h - 2, x + 2, y + h - 1, 0xFFC6C6C6); // Esquina Inf Izq Fix
-        g.fill(x + w - 2, y + 1, x + w - 1, y + 2, 0xFFC6C6C6); // Esquina Sup Der Fix
+    private static void dibujarBotonVanilla(GuiGraphics g, int x, int y, int w, int h, boolean hovered) {
+        g.fill(x, y, x + w, y + h, 0xFF000000); 
+        
+        int bg = hovered ? 0xFFE8E8E8 : 0xFFC6C6C6; 
+        
+        g.fill(x + 1, y + 1, x + w - 1, y + h - 1, bg); 
+        g.fill(x + 1, y + 1, x + w - 1, y + 2, 0xFFFFFFFF); 
+        g.fill(x + 1, y + 1, x + 2, y + h - 1, 0xFFFFFFFF); 
+        g.fill(x + 1, y + h - 2, x + w - 1, y + h - 1, 0xFF555555); 
+        g.fill(x + w - 2, y + 1, x + w - 1, y + h - 1, 0xFF555555); 
+        
+        g.fill(x + 1, y + h - 2, x + 2, y + h - 1, bg); 
+        g.fill(x + w - 2, y + 1, x + w - 1, y + 2, bg); 
     }
 
-    // --- ICONOS IDÉNTICOS A LA IMAGEN ---
-
     private static void dibujarIconoDuplicar(GuiGraphics g, int x, int y, int color) {
-        g.renderOutline(x, y, 8, 8, color); // Cuadro Atrás
-        g.fill(x + 3, y + 3, x + 11, y + 11, 0xFFC6C6C6); // Limpiamos el cruce
-        g.renderOutline(x + 3, y + 3, 8, 8, color); // Cuadro Adelante
+        g.renderOutline(x, y, 8, 8, color); 
+        g.fill(x + 3, y + 3, x + 11, y + 11, 0xFFC6C6C6); 
+        g.renderOutline(x + 3, y + 3, 8, 8, color); 
     }
 
     private static void dibujarFlechaArriba(GuiGraphics g, int x, int y, int color) {
@@ -204,16 +195,14 @@ public class RightBar {
     }
 
     private static void dibujarPapelera(GuiGraphics g, int x, int y, int color) {
-        g.fill(x + 3, y, x + 7, y + 1, color); // Asa
-        g.fill(x, y + 1, x + 10, y + 2, color); // Tapa
-        g.fill(x + 1, y + 2, x + 2, y + 10, color); // Borde izq
-        g.fill(x + 8, y + 2, x + 9, y + 10, color); // Borde der
-        g.fill(x + 1, y + 10, x + 9, y + 11, color); // Fondo
-        g.fill(x + 3, y + 3, x + 4, y + 9, color); // Raya 1
-        g.fill(x + 6, y + 3, x + 7, y + 9, color); // Raya 2
+        g.fill(x + 3, y, x + 7, y + 1, color); 
+        g.fill(x, y + 1, x + 10, y + 2, color); 
+        g.fill(x + 1, y + 2, x + 2, y + 10, color); 
+        g.fill(x + 8, y + 2, x + 9, y + 10, color); 
+        g.fill(x + 1, y + 10, x + 9, y + 11, color); 
+        g.fill(x + 3, y + 3, x + 4, y + 9, color); 
+        g.fill(x + 6, y + 3, x + 7, y + 9, color); 
     }
-
-    // --- AUXILIARES VISUALES ---
 
     private static void dibujarTextoEscalado(GuiGraphics g, Font font, String text, int x, int y, int color) {
         g.pose().pushPose();
@@ -233,47 +222,42 @@ public class RightBar {
     private static void dibujarOjo(GuiGraphics g, int x, int y, boolean v) {
         if (v) {
             int oy = y - 1; 
-            int c = 0xFF000000;      // Borde negro puro
-            int w = 0xFFFFFFFF;      // Blanco del ojo
-            int p = 0xFF1A1A1A;      // Centro de la pupila (casi negro)
-            int gColor = 0xFF555555; // Gris para suavizar las esquinas de la pupila
+            int c = 0xFF000000;      
+            int w = 0xFFFFFFFF;      
+            int p = 0xFF1A1A1A;      
+            int gColor = 0xFF555555; 
 
-            // 1. Fondo Blanco (Pixel-perfect según tu imagen)
             g.fill(x + 4, oy + 1, x + 7, oy + 2, w);
             g.fill(x + 2, oy + 2, x + 9, oy + 3, w);
             g.fill(x + 1, oy + 3, x + 10, oy + 4, w);
             g.fill(x + 2, oy + 4, x + 9, oy + 5, w);
             g.fill(x + 4, oy + 5, x + 7, oy + 6, w);
 
-            // 2. Pupila central detallada
-            g.fill(x + 5, oy + 2, x + 6, oy + 5, p); // Línea vertical de la cruz
-            g.fill(x + 4, oy + 3, x + 7, oy + 4, p); // Línea horizontal de la cruz
+            g.fill(x + 5, oy + 2, x + 6, oy + 5, p); 
+            g.fill(x + 4, oy + 3, x + 7, oy + 4, p); 
             
-            // Esquinas grises de la pupila (El detalle clave de tu imagen)
             g.fill(x + 4, oy + 2, x + 5, oy + 3, gColor);
             g.fill(x + 6, oy + 2, x + 7, oy + 3, gColor);
             g.fill(x + 4, oy + 4, x + 5, oy + 5, gColor);
             g.fill(x + 6, oy + 4, x + 7, oy + 5, gColor);
 
-            // 3. Contorno Negro exterior
-            g.fill(x + 4, oy,     x + 7, oy + 1, c); // Arriba
-            g.fill(x + 4, oy + 6, x + 7, oy + 7, c); // Abajo
+            g.fill(x + 4, oy,     x + 7, oy + 1, c); 
+            g.fill(x + 4, oy + 6, x + 7, oy + 7, c); 
             
-            g.fill(x + 2, oy + 1, x + 4, oy + 2, c); // Diagonal sup-izq
-            g.fill(x + 7, oy + 1, x + 9, oy + 2, c); // Diagonal sup-der
-            g.fill(x + 2, oy + 5, x + 4, oy + 6, c); // Diagonal inf-izq
-            g.fill(x + 7, oy + 5, x + 9, oy + 6, c); // Diagonal inf-der
+            g.fill(x + 2, oy + 1, x + 4, oy + 2, c); 
+            g.fill(x + 7, oy + 1, x + 9, oy + 2, c); 
+            g.fill(x + 2, oy + 5, x + 4, oy + 6, c); 
+            g.fill(x + 7, oy + 5, x + 9, oy + 6, c); 
             
-            g.fill(x + 1, oy + 2, x + 2, oy + 3, c); // Lateral sup-izq
-            g.fill(x + 9, oy + 2, x + 10,oy + 3, c); // Lateral sup-der
-            g.fill(x + 1, oy + 4, x + 2, oy + 5, c); // Lateral inf-izq
-            g.fill(x + 9, oy + 4, x + 10,oy + 5, c); // Lateral inf-der
+            g.fill(x + 1, oy + 2, x + 2, oy + 3, c); 
+            g.fill(x + 9, oy + 2, x + 10,oy + 3, c); 
+            g.fill(x + 1, oy + 4, x + 2, oy + 5, c); 
+            g.fill(x + 9, oy + 4, x + 10,oy + 5, c); 
             
-            g.fill(x,     oy + 3, x + 1, oy + 4, c); // Punta extrema izq
-            g.fill(x + 10,oy + 3, x + 11,oy + 4, c); // Punta extrema der
+            g.fill(x,     oy + 3, x + 1, oy + 4, c); 
+            g.fill(x + 10,oy + 3, x + 11,oy + 4, c); 
             
         } else {
-            // Cuadrado vacío (Outline) estilo Photoshop cuando la capa está oculta
             g.renderOutline(x + 2, y, 7, 7, 0xFF666666); 
         }
     }
@@ -283,8 +267,6 @@ public class RightBar {
         g.fill(x,y+3, x+9,y+4,0xFF444444);
         g.fill(x,y+6, x+9,y+7,0xFF444444);
     }
-
-    // --- LÓGICA DE RATÓN Y CLICS ---
 
     public static boolean handleScroll(double mx, double my, double delta, int screenWidth, int screenHeight) {
         if (!isVisible || !GlobalGuiSettings.editorActivo) return false;
