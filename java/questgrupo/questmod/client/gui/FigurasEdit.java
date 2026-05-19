@@ -17,6 +17,9 @@ public class FigurasEdit {
     private static long ultimoClicPanel = 0;
     private static GlobalGuiSettings.PanelConfig ultimoPanelClickeado = null;
 
+    private static java.util.List<LogroInfo> cacheLogrosLista = null;
+    private static long ultimoTiempoCache = 0;
+
     public static boolean esDobleClic(GlobalGuiSettings.PanelConfig p) {
         long ahora = System.currentTimeMillis();
         boolean esDoble = (p == ultimoPanelClickeado && (ahora - ultimoClicPanel) < 250);
@@ -575,12 +578,11 @@ public static void crearBotonPagina(int numPagina) {
         }
 
         if ("LISTA_LOGROS".equals(p.tipo)) {
-            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
-            
-            g.fill(p.x, p.y, p.x + p.ancho, p.y + 1, p.colorBorde);
-            g.fill(p.x, p.y + p.alto - 1, p.x + p.ancho, p.y + p.alto, p.colorBorde);
-            g.fill(p.x, p.y, p.x + 1, p.y + p.alto, p.colorBorde);
-            g.fill(p.x + p.ancho - 1, p.y, p.x + p.ancho, p.y + p.alto, p.colorBorde);
+            int r = p.redondezBorde;
+            if (r < 0) r = 0;
+            if (r > 5) r = 5;
+
+            drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, r, p.colorARGB, p.colorBorde);
             
             int padding = 4;
             g.enableScissor(p.x + 1, p.y + 1, p.x + p.ancho - 1, p.y + p.alto - 1);
@@ -589,6 +591,7 @@ public static void crearBotonPagina(int numPagina) {
             
             float eIcon = p.escalaIcono > 0.1f ? p.escalaIcono : 1.0f;
             float eText = p.escalaTexto > 0.1f ? p.escalaTexto : 1.0f;
+            
             float eDesc = p.escalaDesc > 0.1f ? p.escalaDesc : (eText * 0.85f);
             float eItem = p.escalaItem > 0.1f ? p.escalaItem : 1.0f;
             
@@ -596,33 +599,53 @@ public static void crearBotonPagina(int numPagina) {
             int rowH = (int)(baseRowH * Math.max(eIcon, Math.max(eText, eDesc))); 
             int curY = p.y + padding;
             
-            java.util.List<LogroInfo> logros = obtenerListaLogrosCached(net.minecraft.client.Minecraft.getInstance());
-            java.util.List<LogroInfo> renderLogros = new java.util.ArrayList<>(logros);
-            
-            if (renderLogros.isEmpty() && GlobalGuiSettings.editorActivo) {
-                for(int i=0; i<6; i++) {
-                    LogroInfo dummy = new LogroInfo();
-                    dummy.titulo = "Logro Ejemplar " + (i+1);
-                    dummy.descripcion = "Completa esta tarea para avanzar.";
-                    dummy.icono = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_SWORD);
-                    dummy.completado = i % 2 == 0;
-                    dummy.progresoTxt = dummy.completado ? "Completado" : "4/10";
-                    if (i == 3) dummy.progresoTxt = "";
-                    renderLogros.add(dummy);
+            long currentTime = System.currentTimeMillis();
+            if (cacheLogrosLista == null || currentTime - ultimoTiempoCache > 5000) {
+                java.util.List<LogroInfo> logTemp = obtenerListaLogrosCached(net.minecraft.client.Minecraft.getInstance());
+                cacheLogrosLista = new java.util.ArrayList<>(logTemp);
+                
+                if (cacheLogrosLista.isEmpty() && GlobalGuiSettings.editorActivo) {
+                    for(int i=0; i<6; i++) {
+                        LogroInfo dummy = new LogroInfo();
+                        dummy.titulo = "Logro Ejemplar " + (i+1);
+                        dummy.descripcion = "Completa esta tarea para avanzar.";
+                        dummy.icono = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_SWORD);
+                        dummy.completado = i % 2 == 0;
+                        dummy.progresoTxt = dummy.completado ? "" : "4/10";
+                        if (i == 3) dummy.progresoTxt = "";
+                        cacheLogrosLista.add(dummy);
+                    }
                 }
+                
+                cacheLogrosLista.sort((a, b) -> {
+                    if (a.completado && !b.completado) return -1;
+                    if (!a.completado && b.completado) return 1;
+                    return a.titulo.compareToIgnoreCase(b.titulo);
+                });
+                
+                ultimoTiempoCache = currentTime;
             }
             
-            renderLogros.sort((a, b) -> {
-                if (a.completado && !b.completado) return -1;
-                if (!a.completado && b.completado) return 1;
-                return a.titulo.compareToIgnoreCase(b.titulo);
-            });
+            java.util.List<LogroInfo> renderLogros = cacheLogrosLista;
             
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
             
-for (LogroInfo info : renderLogros) {
+            for (LogroInfo info : renderLogros) {
+                // --- 1. CULLING (OPTIMIZACIÓN ANTI-LAG EXTREMA) ---
+                // Si el logro actual está fuera del área visible del scroll (arriba o abajo),
+                // saltamos su dibujado para ahorrar cientos de Draw Calls a la tarjeta gráfica.
+                int actualY = curY - p.scrollY;
+                if (actualY + rowH < p.y || actualY > p.y + p.alto) {
+                    curY += rowH + 1;
+                    continue; 
+                }
+                // --------------------------------------------------
+
                 int cFondoIcono = (p.colorFondoCabecera != 0) ? p.colorFondoCabecera : 0xFF151515;
                 int cBordeIcono = (p.colorBordeCabecera != 0) ? p.colorBordeCabecera : 0xFF2A2A2A;
+                
+                int cFondoMarco = (p.colorFondoBarra != 0) ? p.colorFondoBarra : 0xFF222222;
+                int cBordeMarco = (p.colorBarraLleno != 0) ? p.colorBarraLleno : 0xFF444444; 
                 
                 int cFondoTexto = (p.colorFondoMision != 0) ? p.colorFondoMision : 0xFF181818;
                 int cBordeTexto = (p.colorBordeMision != 0) ? p.colorBordeMision : 0xFF2A2A2A;
@@ -630,29 +653,22 @@ for (LogroInfo info : renderLogros) {
                 int cFondoCheck = (p.colorFondoCheck != 0) ? p.colorFondoCheck : 0xFF111111;
                 int cBordeCheck = (p.colorBordeCheckInterno != 0) ? p.colorBordeCheckInterno : 0xFF2A2A2A;
                 
-                int cFondoMarco = (p.colorFondoBarra != 0) ? p.colorFondoBarra : 0xFF222222;
-                int cBordeMarco = (p.colorBarraLleno != 0) ? p.colorBarraLleno : 0xFF444444;
-                
                 int colorT = (p.colorTexto != 0) ? p.colorTexto : 0xFFFFFFFF;
                 int colorDesc = (p.colorSlotBg != 0) ? p.colorSlotBg : 0xFFAAAAAA;
 
                 int iconCellW = (int)(42 * eIcon);
                 int iconCellX = p.x + padding;
                 
-                g.fill(iconCellX, curY, iconCellX + iconCellW, curY + rowH, cFondoIcono);
-                g.renderOutline(iconCellX, curY, iconCellW, rowH, cBordeIcono);
+                drawRoundedBox(g, iconCellX, curY, iconCellW, rowH, r, cFondoIcono, cBordeIcono);
                 
-                int innerBoxPadding = 3;
                 float eMarco = p.escalaMarco > 0.1f ? p.escalaMarco : 1.0f;
-                int baseInnerSize = iconCellW - 6;
+                int baseInnerSize = iconCellW - 6; 
                 int innerBoxSize = (int)(baseInnerSize * eMarco);
                 
                 if (innerBoxSize > 2) {
                     int innerBoxX = iconCellX + (iconCellW - innerBoxSize) / 2;
                     int innerBoxY = curY + (rowH - innerBoxSize) / 2;
-                    
-                    g.fill(innerBoxX, innerBoxY, innerBoxX + innerBoxSize, innerBoxY + innerBoxSize, cFondoMarco);
-                    g.renderOutline(innerBoxX, innerBoxY, innerBoxSize, innerBoxSize, cBordeMarco);
+                    drawRoundedBox(g, innerBoxX, innerBoxY, innerBoxSize, innerBoxSize, r, cFondoMarco, cBordeMarco);
                 }
                 
                 if (info.icono != null) {
@@ -670,16 +686,15 @@ for (LogroInfo info : renderLogros) {
                 int textCellW = p.ancho - (padding * 2) - iconCellW - 1;
                 
                 if (textCellW > 10) {
-                    g.fill(textCellX, curY, textCellX + textCellW, curY + rowH, cFondoTexto);
-                    g.renderOutline(textCellX, curY, textCellW, rowH, cBordeTexto);
+                    drawRoundedBox(g, textCellX, curY, textCellW, rowH, r, cFondoTexto, cBordeTexto);
                     
                     float eCheck = p.escalaCheck > 0.1f ? p.escalaCheck : 1.0f;
                     int checkSize = (int)(16 * eIcon * eCheck); 
                     int checkX = textCellX + textCellW - padding - checkSize;
                     int checkY = curY + (rowH - checkSize) / 2;
                     
-                    g.fill(checkX, checkY, checkX + checkSize, checkY + checkSize, cFondoCheck);
-                    g.renderOutline(checkX, checkY, checkSize, checkSize, info.completado ? 0xFF00B01B : cBordeCheck);
+                    int cBCh = info.completado ? 0xFF00B01B : cBordeCheck;
+                    drawRoundedBox(g, checkX, checkY, checkSize, checkSize, r, cFondoCheck, cBCh);
                     
                     if (info.completado) {
                         g.pose().pushPose();
@@ -1295,28 +1310,63 @@ for (LogroInfo info : renderLogros) {
     }
 
     private static void drawRoundedOutline(GuiGraphics g, int x, int y, int w, int h, int r, int color) {
-        if (color == 0 || (color & 0xFF000000) == 0 || w <= 0 || h <= 0) return;
-        for (int dy = 0; dy < h; dy++) {
-            int inset = getCornerInset(dy, h, r);
-            
-            g.fill(x + inset, y + dy, x + inset + 1, y + dy + 1, color);
-            g.fill(x + w - 1 - inset, y + dy, x + w - inset, y + dy + 1, color);
-            
-            if (dy > 0) {
-                int prevInset = getCornerInset(dy - 1, h, r);
-                if (prevInset > inset) {
-                    g.fill(x + inset + 1, y + dy, x + prevInset + 1, y + dy + 1, color);
-                    g.fill(x + w - 1 - prevInset, y + dy, x + w - 1 - inset, y + dy + 1, color);
-                } else if (prevInset < inset) {
-                    g.fill(x + prevInset + 1, y + dy - 1, x + inset + 1, y + dy, color);
-                    g.fill(x + w - 1 - inset, y + dy - 1, x + w - 1 - prevInset, y + dy, color);
-                }
-            }
-            
-            if (dy == 0 || dy == h - 1) {
-                g.fill(x + inset + 1, y + dy, x + w - 1 - inset, y + dy + 1, color);
+        if (color == 0 || (color & 0xFF000000) == 0) return;
+        if (r <= 0) {
+            g.renderOutline(x, y, w, h, color);
+            return;
+        }
+        
+        g.fill(x, y + r, x + 1, y + h - r, color); 
+        g.fill(x + w - 1, y + r, x + w, y + h - r, color); 
+        g.fill(x + r, y, x + w - r, y + 1, color); 
+        g.fill(x + r, y + h - 1, x + w - r, y + h, color); 
+        
+        for (int dy = 0; dy < r; dy++) {
+            int currentInset = getCornerInset(dy, h, r);
+            int prevInset = (dy == 0) ? r : getCornerInset(dy - 1, h, r);
+            int endInset = Math.max(currentInset + 1, prevInset);
+            if (currentInset < endInset) { // Evita Draw Calls fantasmas de ancho 0
+                g.fill(x + currentInset, y + dy, x + endInset, y + dy + 1, color); 
+                g.fill(x + w - endInset, y + dy, x + w - currentInset, y + dy + 1, color); 
             }
         }
+        
+        for (int dy = h - r; dy < h; dy++) {
+            int ry = h - 1 - dy; 
+            int currentInset = getCornerInset(ry, h, r);
+            int prevInset = (ry == 0) ? r : getCornerInset(ry - 1, h, r);
+            int endInset = Math.max(currentInset + 1, prevInset);
+            if (currentInset < endInset) {
+                g.fill(x + currentInset, y + dy, x + endInset, y + dy + 1, color); 
+                g.fill(x + w - endInset, y + dy, x + w - currentInset, y + dy + 1, color); 
+            }
+        }
+    }
+
+    private static void drawRoundedBox(GuiGraphics g, int x, int y, int w, int h, int r, int fillColor, int borderColor) {
+        if (fillColor != 0 && (fillColor & 0xFF000000) != 0) {
+            int innerX = x + 1;
+            int innerY = y + 1;
+            int innerW = w - 2;
+            int innerH = h - 2;
+            int innerR = Math.max(0, r - 1);
+            
+            if (innerR <= 0) {
+                g.fill(innerX, innerY, innerX + innerW, innerY + innerH, fillColor);
+            } else {
+                g.fill(innerX, innerY + innerR, innerX + innerW, innerY + innerH - innerR, fillColor);
+                for (int dy = 0; dy < innerR; dy++) {
+                    int inset = getCornerInset(dy, innerH, innerR);
+                    g.fill(innerX + inset, innerY + dy, innerX + innerW - inset, innerY + dy + 1, fillColor);
+                }
+                for (int dy = innerH - innerR; dy < innerH; dy++) {
+                    int ry = innerH - 1 - dy;
+                    int inset = getCornerInset(ry, innerH, innerR);
+                    g.fill(innerX + inset, innerY + dy, innerX + innerW - inset, innerY + dy + 1, fillColor);
+                }
+            }
+        }
+        drawRoundedOutline(g, x, y, w, h, r, borderColor);
     }
 
     private static long ultimoChequeoStatsExtras = 0;
@@ -1490,10 +1540,12 @@ for (LogroInfo info : renderLogros) {
                                 for(String c : prog.getCompletedCriteria()) count++;
                                 int total = adv.getCriteria().size();
                                 
-                                if (total > 1) {
+                                if (info.completado) {
+                                    info.progresoTxt = ""; // Sin texto, el Check verde ya habla por sí solo
+                                } else if (total > 1) {
                                     info.progresoTxt = count + "/" + total;
                                 } else {
-                                    info.progresoTxt = info.completado ? "Completado" : "";
+                                    info.progresoTxt = "";
                                 }
                                 mapa.put(info.id, info);
                             }

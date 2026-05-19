@@ -366,7 +366,7 @@ public class TopBar {
             else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) return 280;
             else if (pSel.tipo.startsWith("SLOT")) return 160;
             else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) return 200;
-            else if (pSel.tipo.equals("LISTA_LOGROS")) return 270;
+            else if (pSel.tipo.equals("LISTA_LOGROS")) return 285;
             else if (pSel.tipo.equals("PROGRESO")) {
                 return 152;
             } else {
@@ -604,8 +604,8 @@ public class TopBar {
             drawColorSwatch(g, pSel.colorFondoBarra, curX + 40, row1Y);
             drawColorSwatch(g, pSel.colorBarraLleno, curX + 40, row2Y);
 
-            drawColorSwatch(g, pSel.colorFondoRenglon, curX + 60, row1Y);
-            drawColorSwatch(g, pSel.colorBordeRenglon, curX + 60, row2Y);
+            drawColorSwatch(g, pSel.colorFondoMision, curX + 60, row1Y);
+            drawColorSwatch(g, pSel.colorBordeMision, curX + 60, row2Y);
 
             drawColorSwatch(g, pSel.colorFondoCheck, curX + 80, row1Y);
             drawColorSwatch(g, pSel.colorBordeCheckInterno, curX + 80, row2Y);
@@ -958,7 +958,7 @@ public class TopBar {
         int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
         int btnSize = 18;
 
-        int curX = barStartX + 6 + 130; 
+        int curX = barStartX + 6 + 132; 
         int btnY1 = y + 5;
         int btnY2 = y + 25;
 
@@ -984,6 +984,10 @@ public class TopBar {
         curX += 20;
         adder.accept(Button.builder(Component.literal("K+"), b -> { pSel.escalaCheck = Math.min(3.0f, pSel.escalaCheck + 0.1f); }).bounds(curX, btnY1, btnSize, btnSize).build());
         adder.accept(Button.builder(Component.literal("K-"), b -> { pSel.escalaCheck = Math.max(0.4f, pSel.escalaCheck - 0.1f); }).bounds(curX, btnY2, btnSize, btnSize).build());
+
+        curX += 20;
+        adder.accept(Button.builder(Component.literal("B+"), b -> { pSel.redondezBorde = Math.min(5, pSel.redondezBorde + 1); }).bounds(curX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("B-"), b -> { pSel.redondezBorde = Math.max(0, pSel.redondezBorde - 1); }).bounds(curX, btnY2, btnSize, btnSize).build());
     }
 
     public static void inicializarBotonesProgreso(int guiWidth, int y, Consumer<Button> adder, GlobalGuiSettings.PanelConfig pSel) {

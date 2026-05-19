@@ -47,6 +47,8 @@ public class GlobalGuiSettings {
         public float escalaItem = 1.0f;
         public float escalaCheck = 1.0f;
         public float escalaMarco = 1.0f;
+        public int grosorBorde = 1;
+        public int redondezBorde = 1;
         public float offsetXTexto = 0.0f;
         public float offsetYTexto = 0.0f;
         public float escalaTextoMision = 1.0f;
@@ -108,7 +110,7 @@ public class GlobalGuiSettings {
         public int colorBarraLleno = 0xFF00AA00; // Verde por defecto
         public int colorBarraFondo = 0xFF555555; // Gris oscuro por defecto
         public int disenoBarra = 0; // 0: Plana, 1: Segmentada, 2: Hitos, 3: Extremos
-        public int redondezBorde = 1; // De 1 a 5 píxeles de curvatura
+
 
         public PanelConfig(int x, int y, int ancho, int alto) {
             this.x = x;
