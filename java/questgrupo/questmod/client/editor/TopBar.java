@@ -970,8 +970,21 @@ public class TopBar {
         adder.accept(Button.builder(Component.literal("D-"), b -> { pSel.escalaDesc = Math.max(0.4f, pSel.escalaDesc - 0.1f); }).bounds(curX, btnY2, btnSize, btnSize).build());
 
         curX += 20;
-        adder.accept(Button.builder(Component.literal("C+"), b -> { pSel.escalaIcono = Math.min(3.0f, pSel.escalaIcono + 0.1f); }).bounds(curX, btnY1, btnSize, btnSize).build());
-        adder.accept(Button.builder(Component.literal("C-"), b -> { pSel.escalaIcono = Math.max(0.4f, pSel.escalaIcono - 0.1f); }).bounds(curX, btnY2, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("C+"), b -> { 
+            int oldStep = (int)(36 * (pSel.escalaIcono > 0.1f ? pSel.escalaIcono : 1.0f)) + 1;
+            int idx = Math.round(pSel.scrollY / (float)oldStep); // Guarda en qué logro estás
+            pSel.escalaIcono = Math.min(3.0f, pSel.escalaIcono + 0.1f); 
+            int newStep = (int)(36 * pSel.escalaIcono) + 1;
+            pSel.scrollY = idx * newStep; // Mueve el scroll para que encaje perfecto
+        }).bounds(curX, btnY1, btnSize, btnSize).build());
+        
+        adder.accept(Button.builder(Component.literal("C-"), b -> { 
+            int oldStep = (int)(36 * (pSel.escalaIcono > 0.1f ? pSel.escalaIcono : 1.0f)) + 1;
+            int idx = Math.round(pSel.scrollY / (float)oldStep);
+            pSel.escalaIcono = Math.max(0.4f, pSel.escalaIcono - 0.1f); 
+            int newStep = (int)(36 * pSel.escalaIcono) + 1;
+            pSel.scrollY = idx * newStep; 
+        }).bounds(curX, btnY2, btnSize, btnSize).build());
 
         curX += 20;
         adder.accept(Button.builder(Component.literal("M+"), b -> { pSel.escalaMarco = Math.min(3.0f, pSel.escalaMarco + 0.1f); }).bounds(curX, btnY1, btnSize, btnSize).build());

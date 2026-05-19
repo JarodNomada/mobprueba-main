@@ -1319,17 +1319,14 @@ this.inputColor.setResponder(s -> {
                 return true;
             }
             
-            // Lógica de Scroll para LA LISTA DE LOGROS (Paginación Exacta / Snapping)
+            // Lógica de Scroll para LA LISTA DE LOGROS (Snapping Dinámico y Global)
             if (p.tipo.equals("LISTA_LOGROS") && questgrupo.questmod.client.gui.FigurasEdit.mouseSobreFigura(mx, my, p)) {
-                // Calculamos la altura exacta de tu recuadro compacto (36 base) + 1px de separación
                 float eIcon = p.escalaIcono > 0.1f ? p.escalaIcono : 1.0f;
+                // El salto vuelve a ser dinámico, adaptándose a la escala global
                 int step = (int)(36 * eIcon) + 1; 
                 
-                // Hacemos quehte matemáticamente exactamente esa distancia (1 por 1)
                 p.scrollY -= Math.signum(scrollDelta) * step;
-                
-                // Alineador automático: Por si antes quedó en un valor intermedio, esto lo sella al marco
-                p.scrollY = Math.round(p.scrollY / step) * step;
+                p.scrollY = Math.round(p.scrollY / (float)step) * step;
                 
                 if (p.scrollY < 0) p.scrollY = 0;
                 return true;

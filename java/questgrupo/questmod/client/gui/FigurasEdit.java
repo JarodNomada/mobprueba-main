@@ -598,9 +598,8 @@ public static void crearBotonPagina(int numPagina) {
             float eDesc = p.escalaDesc > 0.1f ? p.escalaDesc : (eText * 0.85f);
             float eItem = p.escalaItem > 0.1f ? p.escalaItem : 1.0f;
             
-            int baseRowH = 36;
-            int rowH = (int)(baseRowH * eIcon); 
-            // Inician exactamente en el borde superior del panel delimitador
+            // 1. ALTURA DINÁMICA (C+ y C- vuelven a escalar toda la tarjeta globalmente)
+            int rowH = (int)(36 * eIcon); 
             int curY = p.y;
             
             long currentTime = System.currentTimeMillis();
@@ -660,35 +659,38 @@ public static void crearBotonPagina(int numPagina) {
                 int colorT = (p.colorTexto != 0) ? p.colorTexto : 0xFFFFFFFF;
                 int colorDesc = (p.colorSlotBg != 0) ? p.colorSlotBg : 0xFFAAAAAA;
 
-                // 2. HACEMOS QUE LA CAJA DEL ÍCONO SEA CUADRADA SIMÉTRICA (36x36)
-                int iconCellW = (int)(36 * eIcon);
-                int iconCellX = p.x + padding;
+                // 2. CAJA DEL ÍCONO INDEPENDIENTE (Solo esta caja reacciona a C+ y C-)
+                int iconBoxSize = (int)(36 * eIcon);
+                int iconCellX = p.x;
+                // Se centra verticalmente de forma automática dentro de la tarjeta de 36px
+                int iconCellY = curY + (rowH - iconBoxSize) / 2; 
                 
-                drawRoundedBox(g, iconCellX, curY, iconCellW, rowH, r, cFondoIcono, cBordeIcono);
+                drawRoundedBox(g, iconCellX, iconCellY, iconBoxSize, iconBoxSize, r, cFondoIcono, cBordeIcono);
                 
                 float eMarco = p.escalaMarco > 0.1f ? p.escalaMarco : 1.0f;
-                int baseInnerSize = iconCellW - 6; 
+                int baseInnerSize = iconBoxSize - 6; 
                 int innerBoxSize = (int)(baseInnerSize * eMarco);
                 
                 if (innerBoxSize > 2) {
-                    int innerBoxX = iconCellX + (iconCellW - innerBoxSize) / 2;
-                    int innerBoxY = curY + (rowH - innerBoxSize) / 2;
+                    int innerBoxX = iconCellX + (iconBoxSize - innerBoxSize) / 2;
+                    int innerBoxY = iconCellY + (iconBoxSize - innerBoxSize) / 2;
                     drawRoundedBox(g, innerBoxX, innerBoxY, innerBoxSize, innerBoxSize, r, cFondoMarco, cBordeMarco);
                 }
                 
                 if (info.icono != null) {
                     g.pose().pushPose();
                     float scaleF = eIcon * 1.5f * eItem; 
-                    float offsetItemX = (iconCellW - (16 * scaleF)) / 2.0f;
-                    float offsetItemY = (rowH - (16 * scaleF)) / 2.0f;
-                    g.pose().translate(iconCellX + offsetItemX, curY + offsetItemY, 0);
+                    float offsetItemX = (iconBoxSize - (16 * scaleF)) / 2.0f;
+                    float offsetItemY = (iconBoxSize - (16 * scaleF)) / 2.0f;
+                    g.pose().translate(iconCellX + offsetItemX, iconCellY + offsetItemY, 0);
                     g.pose().scale(scaleF, scaleF, 1.0f);
                     g.renderFakeItem(info.icono, 0, 0);
                     g.pose().popPose();
                 }
                 
-                int textCellX = iconCellX + iconCellW + 1;
-                int textCellW = p.ancho - (padding * 2) - iconCellW - 1;
+                // 3. CAJA DE TEXTO PRINCIPAL (Fija y protegida de la escala del ícono)
+                int textCellX = iconCellX + iconBoxSize + 1;
+                int textCellW = p.ancho - iconBoxSize - 1;
                 
                 if (textCellW > 10) {
                     drawRoundedBox(g, textCellX, curY, textCellW, rowH, r, cFondoTexto, cBordeTexto);
@@ -736,7 +738,7 @@ public static void crearBotonPagina(int numPagina) {
                         g.pose().popPose();
                     }
                     
-                    // 3. TEXTOS PRINCIPALES (Ahora tienen más espacio a la derecha)
+                    // 3. TEXTOS PRINCIPALES (Centrado Vertical Matemático Anti-Desorganización)
                     int maxTextW = (checkX - 8) - (textCellX + 8);
                     if (maxTextW > 10) {
                         String safeTitulo = font.plainSubstrByWidth(info.titulo, (int)(maxTextW / eText));
@@ -745,17 +747,23 @@ public static void crearBotonPagina(int numPagina) {
                         String safeDesc = font.plainSubstrByWidth(info.descripcion, (int)(maxTextW / eDesc));
                         if (safeDesc.length() < info.descripcion.length()) safeDesc += "...";
 
-                        // Título a 8 píxeles exactos de arriba
+                        // Matemática que centra el texto sin importar qué tan grande o pequeño sea el recuadro global
+                        float titleH = 9 * eText;
+                        float descH = 9 * eDesc;
+                        float gap = 2 * eDesc; // Espacio entre título y descripción
+                        float totalTextH = titleH + gap + descH;
+                        
+                        // Centramos todo el bloque de texto justo a la mitad de la altura de la tarjeta (rowH)
+                        float startY = curY + (rowH - totalTextH) / 2.0f;
+
                         g.pose().pushPose();
-                        g.pose().translate(textCellX + 8, curY + 8, 0);
+                        g.pose().translate(textCellX + 8, startY, 0);
                         g.pose().scale(eText, eText, 1.0f);
                         g.drawString(font, safeTitulo, 0, 0, colorT, false);
                         g.pose().popPose();
                         
-                        // Descripción a 8 píxeles exactos de abajo
-                        float descY = curY + rowH - 8 - (9 * eDesc);
                         g.pose().pushPose();
-                        g.pose().translate(textCellX + 8, descY, 0);
+                        g.pose().translate(textCellX + 8, startY + titleH + gap, 0);
                         g.pose().scale(eDesc, eDesc, 1.0f); 
                         g.drawString(font, safeDesc, 0, 0, colorDesc, false); 
                         g.pose().popPose();
