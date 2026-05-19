@@ -582,10 +582,14 @@ public static void crearBotonPagina(int numPagina) {
             if (r < 0) r = 0;
             if (r > 5) r = 5;
 
-            drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, r, p.colorARGB, p.colorBorde);
+            // --- ELIMINADO EL DIBUJADO DEL FONDO Y BORDE PRINCIPAL ---
+            // Ahora los logros son "Tarjetas Flotantes"
             
-            int padding = 4;
-            g.enableScissor(p.x + 1, p.y + 1, p.x + p.ancho - 1, p.y + p.alto - 1);
+            // Usamos todo el ancho de la caja (sin restarle márgenes de padding)
+            int padding = 0; 
+            
+            // El scissor ahora cubre exactamente el área delimitadora del panel
+            g.enableScissor(p.x, p.y, p.x + p.ancho, p.y + p.alto);
             g.pose().pushPose();
             g.pose().translate(0, -p.scrollY, 0);
             
@@ -594,10 +598,10 @@ public static void crearBotonPagina(int numPagina) {
             float eDesc = p.escalaDesc > 0.1f ? p.escalaDesc : (eText * 0.85f);
             float eItem = p.escalaItem > 0.1f ? p.escalaItem : 1.0f;
             
-            // 1. ALTURA REDUCIDA A 36px PARA ELIMINAR EL EXCESO DE ESPACIO ARRIBA Y ABAJO
             int baseRowH = 36;
             int rowH = (int)(baseRowH * eIcon); 
-            int curY = p.y + padding;
+            // Inician exactamente en el borde superior del panel delimitador
+            int curY = p.y;
             
             long currentTime = System.currentTimeMillis();
             if (cacheLogrosLista == null || currentTime - ultimoTiempoCache > 5000) {
@@ -691,8 +695,16 @@ public static void crearBotonPagina(int numPagina) {
                     
                     float eCheck = p.escalaCheck > 0.1f ? p.escalaCheck : 1.0f;
                     int checkSize = (int)(16 * eIcon * eCheck); 
-                    int checkX = textCellX + textCellW - padding - checkSize;
-                    int checkY = curY + (rowH - checkSize) / 2;
+                    
+                    // 1. REPOSICIONAMIENTO DEL CHECK (12 píxeles más a la izquierda)
+                    int checkMarginRight = 12;
+                    int checkX = textCellX + textCellW - checkMarginRight - checkSize;
+                    
+                    String dateTxt = info.progresoTxt;
+                    boolean hasProgreso = (dateTxt != null && !dateTxt.isEmpty());
+                    
+                    // Si hay progreso, subimos el check unos píxeles para que junto al texto queden centrados
+                    int checkY = curY + (rowH - checkSize) / 2 - (hasProgreso ? (int)(4 * eDesc) : 0);
                     
                     int cBCh = info.completado ? 0xFF00B01B : cBordeCheck;
                     drawRoundedBox(g, checkX, checkY, checkSize, checkSize, r, cFondoCheck, cBCh);
@@ -712,21 +724,20 @@ public static void crearBotonPagina(int numPagina) {
                         g.pose().popPose();
                     }
                     
-                    // 2. CENTRAR TEXTO DE PROGRESO DE FORMA INDEPENDIENTE
-                    String dateTxt = info.progresoTxt;
-                    int progressTextW = 0;
-                    if (dateTxt != null && !dateTxt.isEmpty()) {
-                        progressTextW = (int)(font.width(dateTxt) * eDesc); 
+                    // 2. TEXTO DE PROGRESO DEBAJO DEL CHECK (Centrado perfectamente)
+                    if (hasProgreso) {
+                        float progressTextW = font.width(dateTxt) * eDesc; 
                         g.pose().pushPose();
-                        float progY = curY + (rowH - (9 * eDesc)) / 2.0f; // Centro perfecto
-                        g.pose().translate(checkX - 6 - progressTextW, progY, 0);
+                        float progX = checkX + (checkSize - progressTextW) / 2.0f; 
+                        float progY = checkY + checkSize + (2 * eDesc); 
+                        g.pose().translate(progX, progY, 0);
                         g.pose().scale(eDesc, eDesc, 1.0f);
                         g.drawString(font, dateTxt, 0, 0, colorDesc, false);
                         g.pose().popPose();
                     }
                     
-                    // 3. TEXTOS PRINCIPALES CON 8PX DE DISTANCIA EXACTA
-                    int maxTextW = (checkX - 6 - progressTextW) - (textCellX + 8);
+                    // 3. TEXTOS PRINCIPALES (Ahora tienen más espacio a la derecha)
+                    int maxTextW = (checkX - 8) - (textCellX + 8);
                     if (maxTextW > 10) {
                         String safeTitulo = font.plainSubstrByWidth(info.titulo, (int)(maxTextW / eText));
                         if (safeTitulo.length() < info.titulo.length()) safeTitulo += "...";
@@ -734,14 +745,14 @@ public static void crearBotonPagina(int numPagina) {
                         String safeDesc = font.plainSubstrByWidth(info.descripcion, (int)(maxTextW / eDesc));
                         if (safeDesc.length() < info.descripcion.length()) safeDesc += "...";
 
-                        // Título: EXACTAMENTE 8 píxeles desde el borde superior
+                        // Título a 8 píxeles exactos de arriba
                         g.pose().pushPose();
                         g.pose().translate(textCellX + 8, curY + 8, 0);
                         g.pose().scale(eText, eText, 1.0f);
                         g.drawString(font, safeTitulo, 0, 0, colorT, false);
                         g.pose().popPose();
                         
-                        // Descripción: EXACTAMENTE 8 píxeles desde el borde inferior
+                        // Descripción a 8 píxeles exactos de abajo
                         float descY = curY + rowH - 8 - (9 * eDesc);
                         g.pose().pushPose();
                         g.pose().translate(textCellX + 8, descY, 0);
@@ -1247,12 +1258,6 @@ public static void crearBotonPagina(int numPagina) {
             }
         }
 
-        if (seleccionado) {
-            g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF55FFFF);
-            if (p.tipo.equals("CUADRADO") || p.tipo.equals("RECTANGULO") || p.tipo.startsWith("DESPLEGABLE")) {
-                g.fill(p.x + p.ancho - 5, p.y + p.alto - 5, p.x + p.ancho, p.y + p.alto, 0xFFFFFFFF);
-            }
-        }
     }
 
     public static boolean mouseSobreFigura(double mx, double my, GlobalGuiSettings.PanelConfig p) {

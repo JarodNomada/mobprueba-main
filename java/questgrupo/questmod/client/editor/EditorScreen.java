@@ -1319,9 +1319,18 @@ this.inputColor.setResponder(s -> {
                 return true;
             }
             
-            // Lógica de Scroll para LA LISTA DE LOGROS
+            // Lógica de Scroll para LA LISTA DE LOGROS (Paginación Exacta / Snapping)
             if (p.tipo.equals("LISTA_LOGROS") && questgrupo.questmod.client.gui.FigurasEdit.mouseSobreFigura(mx, my, p)) {
-                p.scrollY -= scrollDelta * 25;
+                // Calculamos la altura exacta de tu recuadro compacto (36 base) + 1px de separación
+                float eIcon = p.escalaIcono > 0.1f ? p.escalaIcono : 1.0f;
+                int step = (int)(36 * eIcon) + 1; 
+                
+                // Hacemos quehte matemáticamente exactamente esa distancia (1 por 1)
+                p.scrollY -= Math.signum(scrollDelta) * step;
+                
+                // Alineador automático: Por si antes quedó en un valor intermedio, esto lo sella al marco
+                p.scrollY = Math.round(p.scrollY / step) * step;
+                
                 if (p.scrollY < 0) p.scrollY = 0;
                 return true;
             }
