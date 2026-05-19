@@ -894,7 +894,7 @@ public static void crearBotonPagina(int numPagina) {
                 g.renderOutline(5, oY + 2, 18, 18, p.colorBordeIcono);
                 if (obj.itemReal != null) g.renderFakeItem(new net.minecraft.world.item.ItemStack(obj.itemReal), 6, oY + 3);
 
-                String txtObj = obj.itemReal.getDescription().getString();
+                String txtObj = (obj.texto != null && !obj.texto.isEmpty()) ? obj.texto : obj.itemReal.getDescription().getString();
                 g.drawString(font, txtObj, 28, oY + 7, p.colorObj, true);
 
                 int boxSize = 11;
@@ -990,6 +990,9 @@ public static void crearBotonPagina(int numPagina) {
                     g.fill(5, oY + 2, 23, oY + 20, p.colorFondoIcono);
                     g.renderOutline(5, oY + 2, 18, 18, p.colorBordeIcono);
                     if (obj.itemReal != null) g.renderFakeItem(new net.minecraft.world.item.ItemStack(obj.itemReal), 6, oY + 3);
+
+                    String txtObj = (obj.texto != null && !obj.texto.isEmpty()) ? obj.texto : obj.itemReal.getDescription().getString();
+                    g.drawString(font, txtObj, 28, oY + 7, p.colorTexto, true);
 
                     int boxSize = 11;
                     int boxX = p.ancho - 10 - 18;

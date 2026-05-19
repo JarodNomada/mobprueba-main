@@ -58,6 +58,7 @@ public class Config {
     public static class Objetivo {
         public String item;
         public int cantidad;
+        public String texto;
         public transient Item itemReal;
     }
 
@@ -242,8 +243,8 @@ public class Config {
         a1.textura = "minecraft:textures/item/map.png";
         a1.esPrimaria = true;
 
-        Objetivo obj1 = new Objetivo(); obj1.item = "minecraft:paper"; obj1.cantidad = 10;
-        Objetivo obj2 = new Objetivo(); obj2.item = "minecraft:leather"; obj2.cantidad = 2;
+        Objetivo obj1 = new Objetivo(); obj1.item = "minecraft:paper"; obj1.cantidad = 10; obj1.texto = "Papel antiguo";
+        Objetivo obj2 = new Objetivo(); obj2.item = "minecraft:leather"; obj2.cantidad = 2; obj2.texto = "Cuero resistente";
         a1.objetivos = List.of(obj1, obj2);
 
         Recompensa rec1 = new Recompensa(); rec1.item = "minecraft:emerald"; rec1.cantidad = 2;
