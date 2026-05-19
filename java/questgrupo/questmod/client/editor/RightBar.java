@@ -231,12 +231,51 @@ public class RightBar {
     }
 
     private static void dibujarOjo(GuiGraphics g, int x, int y, boolean v) {
-        int col = v ? 0xFF000000 : 0xFF888888;
-        g.fill(x+2,y,  x+8,y+1,col); g.fill(x+1,y+1,x+9,y+2,col);
-        g.fill(x,y+2,  x+10,y+3,col); g.fill(x+1,y+3,x+9,y+4,col);
-        g.fill(x+2,y+4,x+8,y+5,col);
-        g.fill(x+2,y+1,x+8,y+4, v ? 0xFFFFFFFF : 0xFFCCCCCC);
-        if (v) g.fill(x+4,y+1,x+6,y+4,0xFF0055FF);
+        if (v) {
+            int oy = y - 1; 
+            int c = 0xFF000000;      // Borde negro puro
+            int w = 0xFFFFFFFF;      // Blanco del ojo
+            int p = 0xFF1A1A1A;      // Centro de la pupila (casi negro)
+            int gColor = 0xFF555555; // Gris para suavizar las esquinas de la pupila
+
+            // 1. Fondo Blanco (Pixel-perfect según tu imagen)
+            g.fill(x + 4, oy + 1, x + 7, oy + 2, w);
+            g.fill(x + 2, oy + 2, x + 9, oy + 3, w);
+            g.fill(x + 1, oy + 3, x + 10, oy + 4, w);
+            g.fill(x + 2, oy + 4, x + 9, oy + 5, w);
+            g.fill(x + 4, oy + 5, x + 7, oy + 6, w);
+
+            // 2. Pupila central detallada
+            g.fill(x + 5, oy + 2, x + 6, oy + 5, p); // Línea vertical de la cruz
+            g.fill(x + 4, oy + 3, x + 7, oy + 4, p); // Línea horizontal de la cruz
+            
+            // Esquinas grises de la pupila (El detalle clave de tu imagen)
+            g.fill(x + 4, oy + 2, x + 5, oy + 3, gColor);
+            g.fill(x + 6, oy + 2, x + 7, oy + 3, gColor);
+            g.fill(x + 4, oy + 4, x + 5, oy + 5, gColor);
+            g.fill(x + 6, oy + 4, x + 7, oy + 5, gColor);
+
+            // 3. Contorno Negro exterior
+            g.fill(x + 4, oy,     x + 7, oy + 1, c); // Arriba
+            g.fill(x + 4, oy + 6, x + 7, oy + 7, c); // Abajo
+            
+            g.fill(x + 2, oy + 1, x + 4, oy + 2, c); // Diagonal sup-izq
+            g.fill(x + 7, oy + 1, x + 9, oy + 2, c); // Diagonal sup-der
+            g.fill(x + 2, oy + 5, x + 4, oy + 6, c); // Diagonal inf-izq
+            g.fill(x + 7, oy + 5, x + 9, oy + 6, c); // Diagonal inf-der
+            
+            g.fill(x + 1, oy + 2, x + 2, oy + 3, c); // Lateral sup-izq
+            g.fill(x + 9, oy + 2, x + 10,oy + 3, c); // Lateral sup-der
+            g.fill(x + 1, oy + 4, x + 2, oy + 5, c); // Lateral inf-izq
+            g.fill(x + 9, oy + 4, x + 10,oy + 5, c); // Lateral inf-der
+            
+            g.fill(x,     oy + 3, x + 1, oy + 4, c); // Punta extrema izq
+            g.fill(x + 10,oy + 3, x + 11,oy + 4, c); // Punta extrema der
+            
+        } else {
+            // Cuadrado vacío (Outline) estilo Photoshop cuando la capa está oculta
+            g.renderOutline(x + 2, y, 7, 7, 0xFF666666); 
+        }
     }
 
     private static void dibujarHamburguesa(GuiGraphics g, int x, int y) {
