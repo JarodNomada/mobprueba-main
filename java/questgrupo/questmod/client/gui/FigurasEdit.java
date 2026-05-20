@@ -57,25 +57,6 @@ public class FigurasEdit {
         GlobalGuiSettings.PANELES.add(p);
     }
 
-    private static java.util.Map<String, Config.MisionData> cacheMisionesPorNombre = null;
-    private static long ultimoCacheMisiones = 0;
-    
-    private static java.util.Map<String, Config.MisionData> getMisionesCache() {
-        long ahora = System.currentTimeMillis();
-        if (cacheMisionesPorNombre == null || ahora - ultimoCacheMisiones > 5000) {
-            cacheMisionesPorNombre = new java.util.HashMap<>();
-            for (java.util.List<Config.MisionData> lista : Config.misionesCargadas.values()) {
-                for (Config.MisionData m : lista) {
-                    if (m.nombre != null) {
-                        cacheMisionesPorNombre.put(m.nombre, m);
-                    }
-                }
-            }
-            ultimoCacheMisiones = ahora;
-        }
-        return cacheMisionesPorNombre;
-    }
-
 public static void crearBotonPagina(int numPagina) {
         GlobalGuiSettings.PanelConfig p = new GlobalGuiSettings.PanelConfig(50, 50 + (numPagina * 30), 40, 40);
         p.tipo = "BOTON_PAGINA";
@@ -182,8 +163,8 @@ public static void crearBotonPagina(int numPagina) {
         g.renderOutline(p.x + marginX, cardY, cardWidth, cardHeight, p.colorBordeMision);
         float textX = p.x + marginX + 5;
         
-        // BUSCAMOS LA MISIÓN ESPECÍFICA PARA OBTENER SU ÍCONO PERSONALIZADO (USANDO CACHE)
-        Config.MisionData mision = getMisionesCache().get(text);
+        // BUSCAMOS LA MISIÓN ESPECÍFICA PARA OBTENER SU ÍCONO PERSONALIZADO
+        Config.MisionData mision = Config.getMisionPorNombre(text);
         net.minecraft.resources.ResourceLocation iconoUsar = (mision != null && mision.iconoRL != null) ? mision.iconoRL : p.iconoRL;
 
         if (iconoUsar != null) {
@@ -266,7 +247,8 @@ public static void crearBotonPagina(int numPagina) {
             net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
             
             if (p.progresoTipo == 0) {
-                maxProgreso = getMisionesCache().size();
+                maxProgreso = 0;
+                for (java.util.List<Config.MisionData> lista : Config.misionesCargadas.values()) maxProgreso += lista.size();
                 if (maxProgreso == 0) maxProgreso = 1; 
                 actualProgreso = questgrupo.questmod.events.ClickAldeano.getMisionesCompletadasCount();
                 
@@ -850,7 +832,13 @@ public static void crearBotonPagina(int numPagina) {
             }
         } else if (p.tipo.equals("DETALLE_MISION")) {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
-            Config.MisionData data = getMisionesCache().get(p.textoAsociado);
+            Config.MisionData data = null;
+
+            for (java.util.List<Config.MisionData> lista : Config.misionesCargadas.values()) {
+                for (Config.MisionData m : lista) {
+                    if (m.nombre != null && m.nombre.equals(p.textoAsociado)) { data = m; break; }
+                }
+            }
 
             g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
             g.renderOutline(p.x, p.y, p.ancho, p.alto, p.colorBorde);
@@ -947,7 +935,7 @@ public static void crearBotonPagina(int numPagina) {
             g.pose().popPose();
         } else if (p.tipo.equals("MISION_TITULO")) {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
-            Config.MisionData data = getMisionesCache().get(GlobalGuiSettings.misionSeleccionadaGlobal);
+            Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
             String texto = (data != null) ? data.nombre : "Titulo (Toca una mision)";
             if (p.mayusculas) texto = texto.toUpperCase();
 
@@ -967,7 +955,7 @@ public static void crearBotonPagina(int numPagina) {
             g.pose().popPose();
         } else if (p.tipo.equals("MISION_DESCRIPCION")) {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
-            Config.MisionData data = getMisionesCache().get(GlobalGuiSettings.misionSeleccionadaGlobal);
+            Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
             String texto = (data != null) ? data.descripcion : "Descripcion (Toca una mision)";
             if (p.mayusculas) texto = texto.toUpperCase();
 
@@ -984,7 +972,7 @@ public static void crearBotonPagina(int numPagina) {
             g.pose().popPose();
         } else if (p.tipo.equals("MISION_OBJETIVOS")) {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
-            Config.MisionData data = getMisionesCache().get(GlobalGuiSettings.misionSeleccionadaGlobal);
+            Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
 
             int r = p.redondezBorde;
             drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, r, p.colorARGB, p.colorBorde);
@@ -1068,7 +1056,7 @@ public static void crearBotonPagina(int numPagina) {
             }
             if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF00DECA);
         } else if (p.tipo.equals("MISION_ICONO")) {
-            Config.MisionData data = getMisionesCache().get(GlobalGuiSettings.misionSeleccionadaGlobal);
+            Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
 
             g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
             g.renderOutline(p.x, p.y, p.ancho, p.alto, p.colorBorde);
