@@ -450,7 +450,7 @@ public class TopBar {
         Font font = Minecraft.getInstance().font;
 
         if (pSel.tipo.equals("BOTON_PAGINA")) {
-            int rowY = y + 16;
+            int rowY = y + 4;
             int curX = barStartX + 4;
             drawColorSwatch(g, pSel.colorARGB, curX, rowY);
             drawColorSwatch(g, pSel.colorBorde, curX + 18, rowY);
@@ -460,7 +460,7 @@ public class TopBar {
             curX += 4;
             return;
 } else if (pSel.tipo.equals("DETALLE_MISION")) {
-            int rowY = y + 16;
+            int rowY = y + 4;
             int curX = barStartX + 4;
             int sectionWidth = 40;
             int sectionCWidth = 80;
@@ -488,8 +488,8 @@ public class TopBar {
             drawColorSwatch(g, pSel.colorBordeCheckExterno, curX + cSwatchOffset + 40, rowY);
         } else if (pSel.tipo.equals("MISION_OBJETIVOS")) {
             int curX = barStartX + 4;
-            int row1Y = y + 16;
-            int row2Y = y + 36;
+            int row1Y = y + 4;
+            int row2Y = y + 24;
             
             drawColorSwatch(g, pSel.colorARGB, curX, row1Y);
             drawColorSwatch(g, pSel.colorBorde, curX, row2Y);
@@ -510,8 +510,8 @@ public class TopBar {
         } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
             int colorsX = barStartX + 4;
 
-            int row1Y = y + 16;
-            int row2Y = y + 36;
+            int row1Y = y + 4;
+            int row2Y = y + 24;
 
             drawColorSwatch(g, pSel.colorFondoCabecera, colorsX, row1Y);
             drawColorSwatch(g, pSel.colorBordeCabecera, colorsX + 20, row1Y);
@@ -537,7 +537,7 @@ public class TopBar {
 
         } else if (pSel.tipo.equals("MANIQUI") || pSel.tipo.equals("MISION_ICONO")) {
             int curX = barStartX + 4;
-            int boxY = y + 16;
+            int boxY = y + 4;
             drawColorSwatch(g, pSel.colorARGB, curX, boxY);
             curX += 20;
             drawColorSwatch(g, pSel.colorBorde, curX, boxY);
@@ -546,7 +546,7 @@ public class TopBar {
             curX += 4;
         } else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
             int curX = barStartX + 4;
-            int boxY = y + 16;
+            int boxY = y + 4;
             drawColorSwatch(g, pSel.colorARGB, curX, boxY);
             curX += 20;
             drawVerticalSeparator(g, curX, y + 4, 40);
@@ -559,7 +559,7 @@ public class TopBar {
             curX += 6;
         } else if (pSel.tipo.startsWith("SLOT")) {
             int curX = barStartX + 4;
-            int boxY = y + 16;
+            int boxY = y + 4;
             drawColorSwatch(g, pSel.colorARGB, curX, boxY);
             curX += 20;
             drawVerticalSeparator(g, curX, y + 4, 40);
@@ -577,7 +577,7 @@ public class TopBar {
             curX += 6;
             
             sliderImageX = curX + 10;
-            int sY = y + 24;
+            int sY = y + 12;
             int sW = 120;
             g.fill(sliderImageX, sY, sliderImageX + sW, sY + 6, 0xFF888888); 
             g.renderOutline(sliderImageX - 1, sY - 1, sW + 2, 8, 0xFF000000);
@@ -586,8 +586,8 @@ public class TopBar {
             g.renderOutline(knobX, sY - 2, 8, 10, 0xFF000000);
         } else if (pSel.tipo.equals("LISTA_LOGROS")) {
             int curX = barStartX + 4;
-            int row1Y = y + 16;
-            int row2Y = y + 36;
+            int row1Y = y + 4;
+            int row2Y = y + 24;
 
             // Eliminados el Fondo y Borde Global (ya no existen)
             
@@ -610,8 +610,8 @@ public class TopBar {
             drawVerticalSeparator(g, curX, y + 4, 40);
         } else if (pSel.tipo.equals("PROGRESO")) {
             int curX = barStartX + 4;
-            int row1Y = y + 16;
-            int row2Y = y + 36;
+            int row1Y = y + 4;
+            int row2Y = y + 24;
             int swatchSize = 16;
             
             drawColorSwatch(g, pSel.colorARGB, curX, row1Y);
@@ -651,7 +651,7 @@ public class TopBar {
             return;
         } else {
             int currentX = barStartX + 4;
-            int boxY = y + 16; 
+            int boxY = y + 4; 
 
             drawColorSwatch(g, pSel.colorARGB, currentX, boxY);
             currentX += 20;
@@ -678,13 +678,13 @@ public class TopBar {
     }
 
     public static int getDrawingButtonAt(int mx, int my, int guiWidth, int y, GlobalGuiSettings.PanelConfig pSel) {
-        if (!drawingToolsVisible || pSel == null || my < y + 16 || my > y + 32) return -1;
+        if (!drawingToolsVisible || pSel == null || my < y + 4 || my > y + 20) return -1;
         int barX = LeftSidebar.getSidebarWidth();
         int expectedBarW = calculateBarWidth(false, true, null, pSel);
         int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
 
         if (pSel.tipo.equals("DETALLE_MISION")) {
-            int rowY = y + 16;
+            int rowY = y + 4;
             int curX = barStartX + 4;
             int sectionWidth = 40;
             int sectionCWidth = 80;
@@ -714,8 +714,8 @@ public class TopBar {
             if (mx >= curX + cSwatchOffset + 40 && mx <= curX + cSwatchOffset + 56) return BTN_OBJ_CHECK_BORDER_OUT;
         } else if (pSel.tipo.equals("MISION_OBJETIVOS")) {
             int curX = barStartX + 4;
-            int row1Y = y + 16;
-            int row2Y = y + 36;
+            int row1Y = y + 4;
+            int row2Y = y + 24;
             
             if (my >= row1Y && my <= row1Y + 16) {
                 if (mx >= curX && mx <= curX + 16) return BTN_FILL_COLOR;
@@ -732,8 +732,8 @@ public class TopBar {
             }
         } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
             int colorsX = barStartX + 4;
-            int row1Y = y + 16;
-            int row2Y = y + 36; 
+            int row1Y = y + 4;
+            int row2Y = y + 24; 
 
             if (my >= row1Y && my <= row1Y + 16) {
                 if (mx >= colorsX && mx <= colorsX + 16) return BTN_HEADER_FILL_COLOR;
@@ -748,31 +748,31 @@ public class TopBar {
             }
         } else if (pSel.tipo.equals("MANIQUI") || pSel.tipo.equals("MISION_ICONO")) {
             int curX = barStartX + 4;
-            int boxY = y + 16;
+            int boxY = y + 4;
             if (my >= boxY && my <= boxY + 16) {
                 if (mx >= curX && mx <= curX + 16) return BTN_FILL_COLOR;
                 if (mx >= curX + 20 && mx <= curX + 36) return BTN_BORDER_COLOR;
             }
         } else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
             int curX = barStartX + 4;
-            if (mx >= curX && mx <= curX + 16 && my >= y+16 && my <= y+32) return BTN_FILL_COLOR;
+            if (mx >= curX && mx <= curX + 16 && my >= y+4 && my <= y+20) return BTN_FILL_COLOR;
             curX += 26;
-            if (mx >= curX && mx <= curX + 16 && my >= y+16 && my <= y+32) return BTN_SLOT_BG;
-            if (mx >= curX + 20 && mx <= curX + 36 && my >= y+16 && my <= y+32) return BTN_SLOT_DARK;
-            if (mx >= curX + 40 && mx <= curX + 56 && my >= y+16 && my <= y+32) return BTN_SLOT_LIGHT;
+            if (mx >= curX && mx <= curX + 16 && my >= y+4 && my <= y+20) return BTN_SLOT_BG;
+            if (mx >= curX + 20 && mx <= curX + 36 && my >= y+4 && my <= y+20) return BTN_SLOT_DARK;
+            if (mx >= curX + 40 && mx <= curX + 56 && my >= y+4 && my <= y+20) return BTN_SLOT_LIGHT;
         } else if (pSel.tipo.startsWith("SLOT")) {
             int curX = barStartX + 4;
-            if (mx >= curX && mx <= curX + 16 && my >= y+16 && my <= y+32) return BTN_FILL_COLOR;
+            if (mx >= curX && mx <= curX + 16 && my >= y+4 && my <= y+20) return BTN_FILL_COLOR;
             curX += 26;
-            if (mx >= curX && mx <= curX + 16 && my >= y+16 && my <= y+32) return BTN_SLOT_BG;
-            if (mx >= curX + 20 && mx <= curX + 36 && my >= y+16 && my <= y+32) return BTN_SLOT_DARK;
-            if (mx >= curX + 40 && mx <= curX + 56 && my >= y+16 && my <= y+32) return BTN_SLOT_LIGHT;
+            if (mx >= curX && mx <= curX + 16 && my >= y+4 && my <= y+20) return BTN_SLOT_BG;
+            if (mx >= curX + 20 && mx <= curX + 36 && my >= y+4 && my <= y+20) return BTN_SLOT_DARK;
+            if (mx >= curX + 40 && mx <= curX + 56 && my >= y+4 && my <= y+20) return BTN_SLOT_LIGHT;
         } else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) {
             return -1; // Ignoramos el clic de color porque las imágenes solo tienen botones +/-
         } else if (pSel.tipo.equals("LISTA_LOGROS")) {
             int curX = barStartX + 4;
-            int row1Y = y + 16;
-            int row2Y = y + 36;
+            int row1Y = y + 4;
+            int row2Y = y + 24;
             
             if (my >= row1Y && my <= row1Y + 16) {
                 if (mx >= curX && mx <= curX + 16) return BTN_HEADER_FILL_COLOR;
@@ -790,8 +790,8 @@ public class TopBar {
             }
         } else if (pSel.tipo.equals("PROGRESO")) {
             int curX = barStartX + 4;
-            int row1Y = y + 16;
-            int row2Y = y + 36;
+            int row1Y = y + 4;
+            int row2Y = y + 24;
             int swatchSize = 16;
             
             if (mx >= curX && mx <= curX + swatchSize && my >= row1Y && my <= row1Y + swatchSize) return BTN_FILL_COLOR;
@@ -802,7 +802,7 @@ public class TopBar {
             return -1;
         } else {
             int currentX = barStartX + 4;
-            int boxY = y + 16;
+            int boxY = y + 4;
             if (my >= boxY && my <= boxY + 16) {
                 if (mx >= currentX && mx <= currentX + 16) return BTN_FILL_COLOR;
                 currentX += 20;
@@ -822,8 +822,8 @@ public class TopBar {
         int btnSize = 18;
 
         if (pSel.tipo.startsWith("DESPLEGABLE")) {
-            int btnY1 = y + 16;
-            int btnY2 = y + 36; 
+            int btnY1 = y + 4;
+            int btnY2 = y + 24; 
             int curX = barStartX + 4 + 80 + 4; 
 
             adder.accept(Button.builder(Component.literal("←"), b -> pSel.offsetXTexto -= 2.0f).bounds(curX, btnY1, btnSize, btnSize).build());
@@ -843,8 +843,8 @@ public class TopBar {
             adder.accept(Button.builder(Component.literal("-"), b -> pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f)).bounds(curX, btnY2, btnSize, btnSize).build());
             adder.accept(Button.builder(Component.literal("+"), b -> pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f)).bounds(curX + 20, btnY2, btnSize, btnSize).build());
         } else {
-            int btnY1 = y + 16;
-            int btnY2 = y + 34; 
+            int btnY1 = y + 4;
+            int btnY2 = y + 24; 
             int curX = barStartX + 4 + 20 + (pSel.tipo.equals("LINEA") || pSel.tipo.equals("TRIANGULO") ? 0 : 20) + 4;
 
             adder.accept(Button.builder(Component.literal("←"), b -> pSel.offsetXTexto -= 2.0f).bounds(curX, btnY1, btnSize, btnSize).build());
@@ -897,7 +897,7 @@ public class TopBar {
         int btnSize = 18;
 
         int curX = barStartX + 4 + 40 + 4; 
-        int btnY = y + 20; 
+        int btnY = y + 4; 
         
         adder.accept(Button.builder(Component.literal("-"), b -> { pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f); }).bounds(curX, btnY, 18, btnSize).build());
         adder.accept(Button.builder(Component.literal("+"), b -> { pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f); }).bounds(curX + 20, btnY, 18, btnSize).build());
@@ -911,7 +911,7 @@ public class TopBar {
         int btnSize = 18;
 
         int curX = barStartX + 4 + 20 + 6 + 66 + 6; 
-        int btnY = y + 16; 
+        int btnY = y + 4; 
         
         adder.accept(Button.builder(Component.literal("-"), b -> { pSel.slotSize = Math.max(5, pSel.slotSize - 1); }).bounds(curX, btnY, 20, btnSize).build());
         adder.accept(Button.builder(Component.literal("+"), b -> { pSel.slotSize = Math.min(100, pSel.slotSize + 1); }).bounds(curX + 22, btnY, 20, btnSize).build());
@@ -921,7 +921,7 @@ public class TopBar {
         if (!drawingToolsVisible || pSel == null) return false;
         if (!pSel.tipo.equals("IMAGEN_CUSTOM") && !pSel.tipo.equals("TEXTURA_JUEGO")) return false;
         
-        int sY = y + 24;
+        int sY = y + 12;
         if (mx >= sliderImageX && mx <= sliderImageX + 120 && my >= sY - 2 && my <= sY + 10) {
             isDraggingOpacityImage = true;
             handleOpacitySliderDrag(mx, pSel);
