@@ -8,6 +8,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 import questgrupo.questmod.client.GlobalGuiSettings;
+
 import java.util.function.Consumer;
 
 public class TopBar {
