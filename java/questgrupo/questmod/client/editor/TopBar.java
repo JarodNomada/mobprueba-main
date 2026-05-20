@@ -355,71 +355,69 @@ public class TopBar {
         
         if (textTools || esMisionTexto || esEstadistica) {
             int w = 8; // padding izquierdo + derecho (4+4)
+            int cols = 1;
             if (esMisionTexto) {
-                // 3 colores en 2 filas: fila1(2), fila2(1) -> max 2 cols
-                w += 2 * 24; // 2 cols * (16 swatch + 4 padding der + 4 padding izq)
+                cols = 2; // 2 columnas para 3 colores en filas de 2
             } else if (esEstadistica) {
-                // 2 colores apilados -> 1 col
-                w += 1 * 24;
-            } else {
-                // 1 color -> 1 col
-                w += 1 * 24;
+                cols = 1; // 1 columna para 2 colores apilados
             }
+            // Cada columna: 16 (swatch) + 1 (gap derecho) = 17, menos el ultimo que no lleva gap
+            w += cols * 16 + (cols - 1) * 1;
             return w;
         } else if (drawTools && pSel != null) {
             int totalCols = 0;
             
             if (pSel.tipo.equals("DETALLE_MISION")) {
-                // 5 secciones: F, O, R, T (1 color c/u), C (3 colores)
-                // Fila 1: F, O, R, T (4 cols)
-                // Fila 2: C1, C2, C3 (3 cols)
-                // Maximo 4 cols por fila
+                // Fila 1: F, O, R, T (4 cols), Fila 2: C1, C2, C3 (3 cols) -> max 4 cols
                 totalCols = 4;
             } else if (pSel.tipo.equals("MISION_OBJETIVOS")) {
-                // 9 colores organizados en filas de 2
-                totalCols = 5; // 5 cols max (ultima fila con 1 elemento)
+                // 9 colores en filas de 2 -> max 2 cols
+                totalCols = 2;
             } else if (pSel.tipo.equals("BOTON_PAGINA")) {
-                // 2 colores + espacio para etiqueta T
-                totalCols = 3;
+                // 2 colores en 1 fila -> 2 cols
+                totalCols = 2;
             } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
-                // 7-10 colores dependiendo de textoAsociado
-                totalCols = pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty() ? 5 : 4;
+                // 7-10 colores en filas de 2 -> max 2 cols
+                totalCols = 2;
             } else if (pSel.tipo.equals("MANIQUI") || pSel.tipo.equals("MISION_ICONO")) {
-                // 2 colores
+                // 2 colores -> 2 cols
                 totalCols = 2;
             } else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
-                // 4 colores (Fondo + 3 Slots)
-                totalCols = 4;
+                // 4 colores en filas de 2 -> 2 cols
+                totalCols = 2;
             } else if (pSel.tipo.startsWith("SLOT")) {
-                // 4 colores (Fondo + 3 Slot)
-                totalCols = 4;
+                // 4 colores en filas de 2 -> 2 cols
+                totalCols = 2;
             } else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) {
-                // Slider de opacidad
+                // Slider de opacidad + 1 color -> aprox 6 cols equivalentes
                 totalCols = 6;
             } else if (pSel.tipo.equals("LISTA_LOGROS")) {
-                // 10 colores en filas de 2
-                totalCols = 5;
+                // 10 colores en filas de 2 -> 2 cols
+                totalCols = 2;
             } else if (pSel.tipo.equals("PROGRESO")) {
-                // 2-3 colores + botones
+                // 2-3 colores + botones -> 4 cols
                 totalCols = 4;
             } else {
                 // Figuras generales
                 int cols = 1; // Fondo
                 if (!pSel.tipo.equals("LINEA") && !pSel.tipo.equals("TRIANGULO")) cols++; // Borde
-                if (pSel.tipo.equals("CUADRADO")) cols++; // B
+                if (pSel.tipo.equals("CUADRADO")) cols++; // B extra
                 if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) cols += 2; // T, I
                 totalCols = cols;
             }
             
-            // Cada columna: 16 (swatch) + 4 (padding izq) + 4 (padding der) = 24
-            // Padding inicial y final: 4 + 4 = 8
-            return 8 + totalCols * 24;
+            // Calcular columnas reales considerando filas de 2
+            int displayCols = Math.min(totalCols, 2); // Maximo 2 columnas visibles por fila
+            // Cada elemento: 16 (swatch) + 1 (gap) = 17, menos el ultimo de cada fila
+            int contentWidth = displayCols * 16 + (displayCols - 1) * 1;
+            return 8 + contentWidth; // padding izq + der (4+4) + contenido
         }
         return 0;
     }
 
     private static void renderTextTools(GuiGraphics g, int barStartX, int y, GlobalGuiSettings.TextConfig tSel, GlobalGuiSettings.PanelConfig pSel) {
         int swatchSize = 16;
+        int gap = 1; // Separación de 1px
         int startX = barStartX + 4;
         int rowY = y + 4;
         boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
@@ -427,16 +425,16 @@ public class TopBar {
         Font font = Minecraft.getInstance().font;
 
         if (esMisionTexto) {
-            // Fila 1: Fondo (F) y Borde (B)
+            // Fila 1: Fondo (F) y Borde (B) en filas de 2
             drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, startX, rowY);
-            drawColorSwatchWithLabel(g, font, "B", pSel.colorBorde, startX + 24, rowY);
+            drawColorSwatchWithLabel(g, font, "B", pSel.colorBorde, startX + swatchSize + gap, rowY);
             // Fila 2: Texto (T)
-            drawColorSwatchWithLabel(g, font, "T", pSel.colorTexto, startX, rowY + 24);
+            drawColorSwatchWithLabel(g, font, "T", pSel.colorTexto, startX, rowY + swatchSize + gap);
         } else if (esEstadistica) {
             // Fila 1: Fondo (F)
             drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, startX, rowY);
             // Fila 2: Texto (T)
-            drawColorSwatchWithLabel(g, font, "T", pSel.colorTexto, startX, rowY + 24);
+            drawColorSwatchWithLabel(g, font, "T", pSel.colorTexto, startX, rowY + swatchSize + gap);
         } else if (tSel != null) {
             // Texto normal (T)
             drawColorSwatchWithLabel(g, font, "T", tSel.colorARGB, startX, rowY);
@@ -448,11 +446,13 @@ public class TopBar {
         g.fill(x, y, x + 16, y + 16, color);
         g.renderOutline(x - 1, y - 1, 18, 18, 0xFF000000);
         
-        // Dibujar la etiqueta centrada sobre el swatch
-        int textW = font.width(label);
-        int textX = x + (16 - textW) / 2;
-        int textY = y + (16 - font.lineHeight) / 2;
-        g.drawString(font, label, textX, textY, 0xFFFFFFFF, true); // true = shadow para mejor contraste
+        // Dibujar la etiqueta centrada sobre el swatch (solo si hay etiqueta)
+        if (label != null && !label.isEmpty()) {
+            int textW = font.width(label);
+            int textX = x + (16 - textW) / 2;
+            int textY = y + (16 - font.lineHeight) / 2 + 1;
+            g.drawString(font, label, textX, textY, 0xFFFFFFFF, true); // true = shadow para mejor contraste
+        }
     }
 
     public static int getColorClick(int mx, int my, int guiWidth, int y, GlobalGuiSettings.TextConfig tSel, GlobalGuiSettings.PanelConfig pSel) {
@@ -502,125 +502,148 @@ public class TopBar {
         if (pSel == null) return;
         Font font = Minecraft.getInstance().font;
 
+        int swatchSize = 16;
+        int gap = 1; // Separación de 1px entre elementos
+        int startX = barStartX + 4; // Margen izquierdo 4px
+        int startY = y + 4; // Margen superior 4px
+
         if (pSel.tipo.equals("BOTON_PAGINA")) {
-            int rowY = y + 4;
-            int curX = barStartX + 4;
-            // Fila 1: Fondo (F) y Borde (B)
+            int rowY = startY;
+            int curX = startX;
+            // Fila 1: Fondo (F) y Borde (B) en filas de 2
             drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, curX, rowY);
-            drawColorSwatchWithLabel(g, font, "B", pSel.colorBorde, curX + 24, rowY);
-            // Espacio para etiqueta T (sin título encima)
+            drawColorSwatchWithLabel(g, font, "B", pSel.colorBorde, curX + swatchSize + gap, rowY);
             return;
         } else if (pSel.tipo.equals("DETALLE_MISION")) {
-            int row1Y = y + 4;
-            int row2Y = y + 28;
-            int curX = barStartX + 4;
+            int row1Y = startY;
+            int row2Y = startY + swatchSize + gap + 4; // +4 extra espaciado entre secciones
+            int curX = startX;
             
-            // Fila 1: F, O, R, T (4 columnas)
+            // Fila 1: F, O, R, T (4 elementos, organizados en filas de 2)
+            // Primera sub-fila: F, O
             drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, curX, row1Y);
-            drawColorSwatchWithLabel(g, font, "O", pSel.colorFondoIcono, curX + 24, row1Y);
-            drawColorSwatchWithLabel(g, font, "R", pSel.colorFondoRenglon, curX + 48, row1Y);
-            drawColorSwatchWithLabel(g, font, "T", pSel.colorTexto, curX + 72, row1Y);
+            drawColorSwatchWithLabel(g, font, "O", pSel.colorFondoIcono, curX + swatchSize + gap, row1Y);
+            // Segunda sub-fila: R, T
+            drawColorSwatchWithLabel(g, font, "R", pSel.colorFondoRenglon, curX, row1Y + swatchSize + gap);
+            drawColorSwatchWithLabel(g, font, "T", pSel.colorTexto, curX + swatchSize + gap, row1Y + swatchSize + gap);
             
-            // Fila 2: C1, C2, C3 (Check)
+            // Fila 2: C1, C2, C3 (Check, organizados en filas de 2)
             drawColorSwatchWithLabel(g, font, "C1", pSel.colorFondoCheck, curX, row2Y);
-            drawColorSwatchWithLabel(g, font, "C2", pSel.colorBordeCheckInterno, curX + 24, row2Y);
-            drawColorSwatchWithLabel(g, font, "C3", pSel.colorBordeCheckExterno, curX + 48, row2Y);
+            drawColorSwatchWithLabel(g, font, "C2", pSel.colorBordeCheckInterno, curX + swatchSize + gap, row2Y);
+            drawColorSwatchWithLabel(g, font, "C3", pSel.colorBordeCheckExterno, curX, row2Y + swatchSize + gap);
         } else if (pSel.tipo.equals("MISION_OBJETIVOS")) {
-            int row1Y = y + 4;
-            int row2Y = y + 28;
-            int curX = barStartX + 4;
+            int curX = startX;
+            int curY = startY;
+            int col = 0;
             
-            // Fila 1: Fondo, FondoRenglon, FondoIcono, FondoCheck, Texto
-            drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, curX, row1Y);
-            drawColorSwatchWithLabel(g, font, "FR", pSel.colorFondoRenglon, curX + 24, row1Y);
-            drawColorSwatchWithLabel(g, font, "FI", pSel.colorFondoIcono, curX + 48, row1Y);
-            drawColorSwatchWithLabel(g, font, "FC", pSel.colorFondoCheck, curX + 72, row1Y);
-            drawColorSwatchWithLabel(g, font, "T", pSel.colorTexto, curX + 96, row1Y);
+            // Lista de colores con sus etiquetas
+            String[] labels = {"F", "FR", "FI", "FC", "T", "B", "BR", "BI", "BC"};
+            int[] colors = {pSel.colorARGB, pSel.colorFondoRenglon, pSel.colorFondoIcono, 
+                           pSel.colorFondoCheck, pSel.colorTexto, pSel.colorBorde, 
+                           pSel.colorBordeRenglon, pSel.colorBordeIcono, pSel.colorBordeCheckInterno};
             
-            // Fila 2: Borde, BordeRenglon, BordeIcono, BordeCheckInterno
-            drawColorSwatchWithLabel(g, font, "B", pSel.colorBorde, curX, row2Y);
-            drawColorSwatchWithLabel(g, font, "BR", pSel.colorBordeRenglon, curX + 24, row2Y);
-            drawColorSwatchWithLabel(g, font, "BI", pSel.colorBordeIcono, curX + 48, row2Y);
-            drawColorSwatchWithLabel(g, font, "BC", pSel.colorBordeCheckInterno, curX + 72, row2Y);
+            for (int i = 0; i < colors.length; i++) {
+                drawColorSwatchWithLabel(g, font, labels[i], colors[i], curX + col * (swatchSize + gap), curY);
+                col++;
+                if (col >= 2) {
+                    col = 0;
+                    curY += swatchSize + gap;
+                }
+            }
         } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
-            int row1Y = y + 4;
-            int row2Y = y + 28;
-            int curX = barStartX + 4;
+            int curX = startX;
+            int curY = startY;
+            int col = 0;
             
-            // Fila 1: FondoCabecera, BordeCabecera, Fondo, Borde
-            drawColorSwatchWithLabel(g, font, "FC", pSel.colorFondoCabecera, curX, row1Y);
-            drawColorSwatchWithLabel(g, font, "BC", pSel.colorBordeCabecera, curX + 24, row1Y);
-            drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, curX + 48, row1Y);
-            drawColorSwatchWithLabel(g, font, "B", pSel.colorBorde, curX + 72, row1Y);
+            String[] labels = {"FC", "BC", "F", "B", "T", "FM", "BM"};
+            int[] colors = {pSel.colorFondoCabecera, pSel.colorBordeCabecera, pSel.colorARGB,
+                           pSel.colorBorde, pSel.colorTexto, pSel.colorFondoMision, pSel.colorBordeMision};
             
-            // Fila 2: Texto, FondoMision, BordeMision
-            drawColorSwatchWithLabel(g, font, "T", pSel.colorTexto, curX, row2Y);
-            drawColorSwatchWithLabel(g, font, "FM", pSel.colorFondoMision, curX + 24, row2Y);
-            drawColorSwatchWithLabel(g, font, "BM", pSel.colorBordeMision, curX + 48, row2Y);
-            
-            // Etiquetas adicionales si hay textoAsociado (sin título, solo espacio reservado)
-            if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
-                // Espacio reservado para T, TM, I (se manejan en otra parte)
+            for (int i = 0; i < colors.length; i++) {
+                drawColorSwatchWithLabel(g, font, labels[i], colors[i], curX + col * (swatchSize + gap), curY);
+                col++;
+                if (col >= 2) {
+                    col = 0;
+                    curY += swatchSize + gap;
+                }
             }
         } else if (pSel.tipo.equals("MANIQUI") || pSel.tipo.equals("MISION_ICONO")) {
-            int rowY = y + 4;
-            int curX = barStartX + 4;
+            int rowY = startY;
+            int curX = startX;
             drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, curX, rowY);
-            drawColorSwatchWithLabel(g, font, "B", pSel.colorBorde, curX + 24, rowY);
-            // Escala se maneja con botones aparte
+            drawColorSwatchWithLabel(g, font, "B", pSel.colorBorde, curX + swatchSize + gap, rowY);
         } else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
-            int rowY = y + 4;
-            int curX = barStartX + 4;
-            drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, curX, rowY);
-            drawColorSwatchWithLabel(g, font, "S1", pSel.colorSlotBg, curX + 24, rowY);
-            drawColorSwatchWithLabel(g, font, "S2", pSel.colorSlotDark, curX + 48, rowY);
-            drawColorSwatchWithLabel(g, font, "S3", pSel.colorSlotLight, curX + 72, rowY);
-        } else if (pSel.tipo.startsWith("SLOT")) {
-            int rowY = y + 4;
-            int curX = barStartX + 4;
-            drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, curX, rowY);
-            drawColorSwatchWithLabel(g, font, "S1", pSel.colorSlotBg, curX + 24, rowY);
-            drawColorSwatchWithLabel(g, font, "S2", pSel.colorSlotDark, curX + 48, rowY);
-            drawColorSwatchWithLabel(g, font, "S3", pSel.colorSlotLight, curX + 72, rowY);
-        } else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) {
-            int rowY = y + 4;
-            int curX = barStartX + 4;
-            // Solo slider de opacidad, sin colores
-            drawSectionTitle(g, font, "Opacidad: " + (int)(pSel.opacidad * 100) + "%", curX, y + 2, 140);
+            int curX = startX;
+            int curY = startY;
+            int col = 0;
             
-            sliderImageX = curX + 10;
-            int sY = y + 24;
+            String[] labels = {"F", "S1", "S2", "S3"};
+            int[] colors = {pSel.colorARGB, pSel.colorSlotBg, pSel.colorSlotDark, pSel.colorSlotLight};
+            
+            for (int i = 0; i < colors.length; i++) {
+                drawColorSwatchWithLabel(g, font, labels[i], colors[i], curX + col * (swatchSize + gap), curY);
+                col++;
+                if (col >= 2) {
+                    col = 0;
+                    curY += swatchSize + gap;
+                }
+            }
+        } else if (pSel.tipo.startsWith("SLOT")) {
+            int curX = startX;
+            int curY = startY;
+            int col = 0;
+            
+            String[] labels = {"F", "S1", "S2", "S3"};
+            int[] colors = {pSel.colorARGB, pSel.colorSlotBg, pSel.colorSlotDark, pSel.colorSlotLight};
+            
+            for (int i = 0; i < colors.length; i++) {
+                drawColorSwatchWithLabel(g, font, labels[i], colors[i], curX + col * (swatchSize + gap), curY);
+                col++;
+                if (col >= 2) {
+                    col = 0;
+                    curY += swatchSize + gap;
+                }
+            }
+        } else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) {
+            // Solo slider de opacidad
+            int curX = startX;
+            int sY = startY;
             int sW = 120;
+            g.drawString(font, "Opacidad: " + (int)(pSel.opacidad * 100) + "%", curX, sY - 2, 0xFF000000, false);
+            sY += 12;
+            
+            sliderImageX = curX;
             g.fill(sliderImageX, sY, sliderImageX + sW, sY + 6, 0xFF888888); 
             g.renderOutline(sliderImageX - 1, sY - 1, sW + 2, 8, 0xFF000000);
             int knobX = sliderImageX + (int)(pSel.opacidad * (sW - 8));
             g.fill(knobX, sY - 2, knobX + 8, sY + 8, 0xFF555555); 
             g.renderOutline(knobX, sY - 2, 8, 10, 0xFF000000);
         } else if (pSel.tipo.equals("LISTA_LOGROS")) {
-            int row1Y = y + 4;
-            int row2Y = y + 28;
-            int curX = barStartX + 4;
+            int curX = startX;
+            int curY = startY;
+            int col = 0;
             
-            // Fila 1: FondoCabecera, FondoBarra, FondoMision, FondoCheck, Texto
-            drawColorSwatchWithLabel(g, font, "FC", pSel.colorFondoCabecera, curX, row1Y);
-            drawColorSwatchWithLabel(g, font, "FB", pSel.colorFondoBarra, curX + 24, row1Y);
-            drawColorSwatchWithLabel(g, font, "FM", pSel.colorFondoMision, curX + 48, row1Y);
-            drawColorSwatchWithLabel(g, font, "FCk", pSel.colorFondoCheck, curX + 72, row1Y);
-            drawColorSwatchWithLabel(g, font, "T", pSel.colorTexto, curX + 96, row1Y);
+            String[] labels = {"FC", "FB", "FM", "FCk", "T", "BC", "BL", "BM", "BCk", "S"};
+            int[] colors = {pSel.colorFondoCabecera, pSel.colorFondoBarra, pSel.colorFondoMision,
+                           pSel.colorFondoCheck, pSel.colorTexto, pSel.colorBordeCabecera,
+                           pSel.colorBarraLleno, pSel.colorBordeMision, pSel.colorBordeCheckInterno,
+                           pSel.colorSlotBg};
             
-            // Fila 2: BordeCabecera, BarraLleno, BordeMision, BordeCheckInterno, SlotBg
-            drawColorSwatchWithLabel(g, font, "BC", pSel.colorBordeCabecera, curX, row2Y);
-            drawColorSwatchWithLabel(g, font, "BL", pSel.colorBarraLleno, curX + 24, row2Y);
-            drawColorSwatchWithLabel(g, font, "BM", pSel.colorBordeMision, curX + 48, row2Y);
-            drawColorSwatchWithLabel(g, font, "BCk", pSel.colorBordeCheckInterno, curX + 72, row2Y);
-            drawColorSwatchWithLabel(g, font, "S", pSel.colorSlotBg, curX + 96, row2Y);
+            for (int i = 0; i < colors.length; i++) {
+                drawColorSwatchWithLabel(g, font, labels[i], colors[i], curX + col * (swatchSize + gap), curY);
+                col++;
+                if (col >= 2) {
+                    col = 0;
+                    curY += swatchSize + gap;
+                }
+            }
         } else if (pSel.tipo.equals("PROGRESO")) {
-            int row1Y = y + 4;
-            int row2Y = y + 28;
-            int curX = barStartX + 4;
+            int row1Y = startY;
+            int row2Y = startY + swatchSize + gap + 4;
+            int curX = startX;
             
             drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, curX, row1Y);
-            drawColorSwatchWithLabel(g, font, "B", pSel.colorBorde, curX + 24, row1Y);
+            drawColorSwatchWithLabel(g, font, "B", pSel.colorBorde, curX + swatchSize + gap, row1Y);
             
             if (pSel.progresoTipo != 2 && pSel.progresoEstilo == 0) {
                 drawColorSwatchWithLabel(g, font, "L", pSel.colorBarraLleno, curX, row2Y);
@@ -628,10 +651,8 @@ public class TopBar {
                 drawColorSwatchWithLabel(g, font, "T", pSel.colorTexto, curX, row2Y);
             }
             
-            // Botones de ajuste (se inicializan aparte)
-            int btnCol1 = curX + 36 + 4;
-            int btnCol2 = btnCol1 + 48 + 4;
-            
+            // Botones de ajuste
+            int btnCol1 = curX + (swatchSize + gap) * 2 + 4;
             int btnY1 = row1Y - 1;
             int btnY2 = row2Y - 1;
             
@@ -648,35 +669,36 @@ public class TopBar {
             } else if (pSel.progresoEstilo == 0) {
                 if (btnProgEstilo != null) { btnProgEstilo.visible = true; btnProgEstilo.setX(btnCol1); btnProgEstilo.setY(btnY1); }
                 if (btnProgDiseno != null) { btnProgDiseno.visible = true; btnProgDiseno.setX(btnCol1); btnProgDiseno.setY(btnY2); }
-                if (btnProgBorde != null) { btnProgBorde.visible = true; btnProgBorde.setX(btnCol2); btnProgBorde.setY(btnY1); }
+                if (btnProgBorde != null) { btnProgBorde.visible = true; btnProgBorde.setX(btnCol1 + (swatchSize + gap) * 2); btnProgBorde.setY(btnY1); }
             } else {
                 if (btnProgEstilo != null) { btnProgEstilo.visible = true; btnProgEstilo.setX(btnCol1); btnProgEstilo.setY(btnY1); }
                 if (btnProgBorde != null) { btnProgBorde.visible = true; btnProgBorde.setX(btnCol1); btnProgBorde.setY(btnY2); }
-                if (btnProgEscalaMinus != null) { btnProgEscalaMinus.visible = true; btnProgEscalaMinus.setX(btnCol2); btnProgEscalaMinus.setY(btnY1); }
-                if (btnProgEscalaPlus != null) { btnProgEscalaPlus.visible = true; btnProgEscalaPlus.setX(btnCol2 + 26); btnProgEscalaPlus.setY(btnY1); }
+                if (btnProgEscalaMinus != null) { btnProgEscalaMinus.visible = true; btnProgEscalaMinus.setX(btnCol1 + (swatchSize + gap) * 2); btnProgEscalaMinus.setY(btnY1); }
+                if (btnProgEscalaPlus != null) { btnProgEscalaPlus.visible = true; btnProgEscalaPlus.setX(btnCol1 + (swatchSize + gap) * 2 + 26); btnProgEscalaPlus.setY(btnY1); }
             }
             return;
         } else {
             // Figuras generales
-            int rowY = y + 4;
-            int curX = barStartX + 4;
+            int curX = startX;
+            int curY = startY;
+            int col = 0;
             
-            drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, curX, rowY);
-            curX += 24;
+            drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, curX + col * (swatchSize + gap), curY);
+            col++;
             
             if (!pSel.tipo.equals("LINEA") && !pSel.tipo.equals("TRIANGULO")) {
-                drawColorSwatchWithLabel(g, font, "B", pSel.colorBorde, curX, rowY);
-                curX += 24;
+                drawColorSwatchWithLabel(g, font, "B", pSel.colorBorde, curX + col * (swatchSize + gap), curY);
+                col++;
             }
             
             if (pSel.tipo.equals("CUADRADO")) {
-                // Espacio para botón B
-                curX += 24;
+                // Botón B extra (se maneja aparte)
+                col++;
             }
             
             if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
                 // Espacio para T e I
-                curX += 24 * 2;
+                col += 2;
             }
         }
     }
