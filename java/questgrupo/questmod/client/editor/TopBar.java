@@ -354,28 +354,66 @@ public class TopBar {
         boolean esEstadistica = pSel != null && pSel.tipo.startsWith("ESTADISTICA_");
         
         if (textTools || esMisionTexto || esEstadistica) {
-            int w = 4; w += esMisionTexto ? 38 : 18; w += 2; 
-            int cols = esEstadistica ? 4 : 5; w += (cols * 18) + ((cols - 1) * 2); w += 4;
+            int w = 8; // padding izquierdo + derecho (4+4)
+            if (esMisionTexto) {
+                // 3 colores en 2 filas: fila1(2), fila2(1) -> max 2 cols
+                w += 2 * 24; // 2 cols * (16 swatch + 4 padding der + 4 padding izq)
+            } else if (esEstadistica) {
+                // 2 colores apilados -> 1 col
+                w += 1 * 24;
+            } else {
+                // 1 color -> 1 col
+                w += 1 * 24;
+            }
             return w;
         } else if (drawTools && pSel != null) {
-            if (pSel.tipo.equals("DETALLE_MISION")) return 244;
-            if (pSel.tipo.equals("MISION_OBJETIVOS")) return 230;
-            else if (pSel.tipo.equals("BOTON_PAGINA")) return 96;
-            else if (pSel.tipo.startsWith("DESPLEGABLE")) {
-                int w = 6 + 80; if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) w += 46 * 3; w += 6; return w;
-            } else if (pSel.tipo.equals("MANIQUI") || pSel.tipo.equals("MISION_ICONO")) return 94;
-            else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) return 280;
-            else if (pSel.tipo.startsWith("SLOT")) return 160;
-            else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) return 200;
-            else if (pSel.tipo.equals("LISTA_LOGROS")) return 265;
-            else if (pSel.tipo.equals("PROGRESO")) {
-                return 152;
+            int totalCols = 0;
+            
+            if (pSel.tipo.equals("DETALLE_MISION")) {
+                // 5 secciones: F, O, R, T (1 color c/u), C (3 colores)
+                // Fila 1: F, O, R, T (4 cols)
+                // Fila 2: C1, C2, C3 (3 cols)
+                // Maximo 4 cols por fila
+                totalCols = 4;
+            } else if (pSel.tipo.equals("MISION_OBJETIVOS")) {
+                // 9 colores organizados en filas de 2
+                totalCols = 5; // 5 cols max (ultima fila con 1 elemento)
+            } else if (pSel.tipo.equals("BOTON_PAGINA")) {
+                // 2 colores + espacio para etiqueta T
+                totalCols = 3;
+            } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
+                // 7-10 colores dependiendo de textoAsociado
+                totalCols = pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty() ? 5 : 4;
+            } else if (pSel.tipo.equals("MANIQUI") || pSel.tipo.equals("MISION_ICONO")) {
+                // 2 colores
+                totalCols = 2;
+            } else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
+                // 4 colores (Fondo + 3 Slots)
+                totalCols = 4;
+            } else if (pSel.tipo.startsWith("SLOT")) {
+                // 4 colores (Fondo + 3 Slot)
+                totalCols = 4;
+            } else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) {
+                // Slider de opacidad
+                totalCols = 6;
+            } else if (pSel.tipo.equals("LISTA_LOGROS")) {
+                // 10 colores en filas de 2
+                totalCols = 5;
+            } else if (pSel.tipo.equals("PROGRESO")) {
+                // 2-3 colores + botones
+                totalCols = 4;
             } else {
-                int w = 6 + 20 + (pSel.tipo.equals("LINEA") || pSel.tipo.equals("TRIANGULO") ? 0 : 20);
-                if (pSel.tipo.equals("CUADRADO")) w += 46;
-                if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) w += 46 * 2; w += 6;
-                return w;
+                // Figuras generales
+                int cols = 1; // Fondo
+                if (!pSel.tipo.equals("LINEA") && !pSel.tipo.equals("TRIANGULO")) cols++; // Borde
+                if (pSel.tipo.equals("CUADRADO")) cols++; // B
+                if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) cols += 2; // T, I
+                totalCols = cols;
             }
+            
+            // Cada columna: 16 (swatch) + 4 (padding izq) + 4 (padding der) = 24
+            // Padding inicial y final: 4 + 4 = 8
+            return 8 + totalCols * 24;
         }
         return 0;
     }
@@ -386,21 +424,35 @@ public class TopBar {
         int rowY = y + 4;
         boolean esMisionTexto = pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"));
         boolean esEstadistica = pSel != null && pSel.tipo.startsWith("ESTADISTICA_");
+        Font font = Minecraft.getInstance().font;
 
         if (esMisionTexto) {
-            int swatch2X = startX + swatchSize + 4;
-            int rowY2 = rowY + swatchSize + 4;
-            drawColorSwatch(g, pSel.colorARGB, startX + 1, rowY + 1);
-            drawColorSwatch(g, pSel.colorBorde, swatch2X + 1, rowY + 1);
-            drawColorSwatch(g, pSel.colorTexto, startX + 1, rowY2 + 1);
+            // Fila 1: Fondo (F) y Borde (B)
+            drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, startX, rowY);
+            drawColorSwatchWithLabel(g, font, "B", pSel.colorBorde, startX + 24, rowY);
+            // Fila 2: Texto (T)
+            drawColorSwatchWithLabel(g, font, "T", pSel.colorTexto, startX, rowY + 24);
         } else if (esEstadistica) {
-            int rowY2 = rowY + swatchSize + 4;
-            // Solo dibujamos Fondo y Color de Texto (apilados)
-            drawColorSwatch(g, pSel.colorARGB, startX + 1, rowY + 1);
-            drawColorSwatch(g, pSel.colorTexto, startX + 1, rowY2 + 1);
+            // Fila 1: Fondo (F)
+            drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, startX, rowY);
+            // Fila 2: Texto (T)
+            drawColorSwatchWithLabel(g, font, "T", pSel.colorTexto, startX, rowY + 24);
         } else if (tSel != null) {
-            drawColorSwatch(g, tSel.colorARGB, startX + 1, rowY + 1);
+            // Texto normal (T)
+            drawColorSwatchWithLabel(g, font, "T", tSel.colorARGB, startX, rowY);
         }
+    }
+
+    private static void drawColorSwatchWithLabel(GuiGraphics g, Font font, String label, int color, int x, int y) {
+        // Dibujar el swatch de color
+        g.fill(x, y, x + 16, y + 16, color);
+        g.renderOutline(x - 1, y - 1, 18, 18, 0xFF000000);
+        
+        // Dibujar la etiqueta centrada sobre el swatch
+        int textW = font.width(label);
+        int textX = x + (16 - textW) / 2;
+        int textY = y + (16 - font.lineHeight) / 2;
+        g.drawString(font, label, textX, textY, 0xFFFFFFFF, true); // true = shadow para mejor contraste
     }
 
     public static int getColorClick(int mx, int my, int guiWidth, int y, GlobalGuiSettings.TextConfig tSel, GlobalGuiSettings.PanelConfig pSel) {
@@ -416,17 +468,19 @@ public class TopBar {
         int startX = barStartX + 4;
 
         if (esMisionTexto) {
-            int swatch2X = startX + swatchSize + 4;
-            int rowY2 = rowY + swatchSize + 4;
-            if (mx >= startX && mx <= startX + swatchSize + 2 && my >= rowY && my <= rowY + swatchSize + 2) return BTN_FILL_COLOR;
-            if (mx >= swatch2X && mx <= swatch2X + swatchSize + 2 && my >= rowY && my <= rowY + swatchSize + 2) return BTN_BORDER_COLOR;
-            if (mx >= startX && mx <= startX + swatchSize + 2 && my >= rowY2 && my <= rowY2 + swatchSize + 2) return BTN_TEXT_COLOR;
+            // Fila 1: Fondo (F) y Borde (B)
+            if (mx >= startX && mx <= startX + swatchSize && my >= rowY && my <= rowY + swatchSize) return BTN_FILL_COLOR;
+            if (mx >= startX + 24 && mx <= startX + 24 + swatchSize && my >= rowY && my <= rowY + swatchSize) return BTN_BORDER_COLOR;
+            // Fila 2: Texto (T)
+            if (mx >= startX && mx <= startX + swatchSize && my >= rowY + 24 && my <= rowY + 24 + swatchSize) return BTN_TEXT_COLOR;
         } else if (esEstadistica) {
-            int rowY2 = rowY + swatchSize + 4;
-            if (mx >= startX && mx <= startX + swatchSize + 2 && my >= rowY && my <= rowY + swatchSize + 2) return BTN_FILL_COLOR;
-            if (mx >= startX && mx <= startX + swatchSize + 2 && my >= rowY2 && my <= rowY2 + swatchSize + 2) return BTN_TEXT_COLOR;
+            // Fila 1: Fondo (F)
+            if (mx >= startX && mx <= startX + swatchSize && my >= rowY && my <= rowY + swatchSize) return BTN_FILL_COLOR;
+            // Fila 2: Texto (T)
+            if (mx >= startX && mx <= startX + swatchSize && my >= rowY + 24 && my <= rowY + 24 + swatchSize) return BTN_TEXT_COLOR;
         } else if (tSel != null) {
-            if (mx >= startX && mx <= startX + swatchSize + 2 && my >= rowY && my <= rowY + swatchSize + 2) return BTN_TEXT_COLOR;
+            // Texto normal (T)
+            if (mx >= startX && mx <= startX + swatchSize && my >= rowY && my <= rowY + swatchSize) return BTN_TEXT_COLOR;
         }
         return -1;
     }
@@ -449,149 +503,89 @@ public class TopBar {
         Font font = Minecraft.getInstance().font;
 
         if (pSel.tipo.equals("BOTON_PAGINA")) {
-            int rowY = y + 14;
-            int curX = barStartX + 6;
-            drawSectionTitle(g, font, "F", curX, y + 2, 38);
-            drawColorSwatch(g, pSel.colorARGB, curX + 5, rowY);
-            drawColorSwatch(g, pSel.colorBorde, curX + 23, rowY);
-
-            curX += 42;
-            drawVerticalSeparator(g, curX, y + 4, 26);
-            curX += 4;
-            drawSectionTitle(g, font, "T", curX, y + 2, 38);
+            int rowY = y + 4;
+            int curX = barStartX + 4;
+            // Fila 1: Fondo (F) y Borde (B)
+            drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, curX, rowY);
+            drawColorSwatchWithLabel(g, font, "B", pSel.colorBorde, curX + 24, rowY);
+            // Espacio para etiqueta T (sin título encima)
             return;
-} else if (pSel.tipo.equals("DETALLE_MISION")) {
-            int rowY = y + 14;
-            int curX = barStartX + 6;
-            int sectionWidth = 46;
-            int sectionCWidth = 90;
-            int swatchOffset = (sectionWidth - 36) / 2;
-            int cSwatchOffset = 10;
-
-            drawSectionTitle(g, font, "F", curX, y + 2, sectionWidth);
-            drawColorSwatch(g, pSel.colorARGB, curX + swatchOffset, rowY);
-            curX += sectionWidth;
-            drawVerticalSeparator(g, curX - 1, y + 4, 44);
-
-            drawSectionTitle(g, font, "O", curX, y + 2, sectionWidth);
-            drawColorSwatch(g, pSel.colorFondoIcono, curX + swatchOffset, rowY);
-            curX += sectionWidth;
-            drawVerticalSeparator(g, curX - 1, y + 4, 44);
-
-            drawSectionTitle(g, font, "R", curX, y + 2, sectionWidth);
-            drawColorSwatch(g, pSel.colorFondoRenglon, curX + swatchOffset, rowY);
-            curX += sectionWidth;
-            drawVerticalSeparator(g, curX - 1, y + 4, 44);
-
-            drawSectionTitle(g, font, "T", curX, y + 2, sectionWidth);
-            drawColorSwatch(g, pSel.colorTexto, curX + swatchOffset, rowY);
-            curX += sectionWidth;
-            drawVerticalSeparator(g, curX - 1, y + 4, 44);
-
-            drawSectionTitle(g, font, "C", curX, y + 2, sectionCWidth);
-            drawColorSwatch(g, pSel.colorFondoCheck, curX + cSwatchOffset, rowY);
-            drawColorSwatch(g, pSel.colorBordeCheckInterno, curX + cSwatchOffset + 20, rowY);
-            drawColorSwatch(g, pSel.colorBordeCheckExterno, curX + cSwatchOffset + 40, rowY);
+        } else if (pSel.tipo.equals("DETALLE_MISION")) {
+            int row1Y = y + 4;
+            int row2Y = y + 28;
+            int curX = barStartX + 4;
+            
+            // Fila 1: F, O, R, T (4 columnas)
+            drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, curX, row1Y);
+            drawColorSwatchWithLabel(g, font, "O", pSel.colorFondoIcono, curX + 24, row1Y);
+            drawColorSwatchWithLabel(g, font, "R", pSel.colorFondoRenglon, curX + 48, row1Y);
+            drawColorSwatchWithLabel(g, font, "T", pSel.colorTexto, curX + 72, row1Y);
+            
+            // Fila 2: C1, C2, C3 (Check)
+            drawColorSwatchWithLabel(g, font, "C1", pSel.colorFondoCheck, curX, row2Y);
+            drawColorSwatchWithLabel(g, font, "C2", pSel.colorBordeCheckInterno, curX + 24, row2Y);
+            drawColorSwatchWithLabel(g, font, "C3", pSel.colorBordeCheckExterno, curX + 48, row2Y);
         } else if (pSel.tipo.equals("MISION_OBJETIVOS")) {
-            int curX = barStartX + 6;
-            int row1Y = y + 6;
-            int row2Y = y + 26;
+            int row1Y = y + 4;
+            int row2Y = y + 28;
+            int curX = barStartX + 4;
             
-            drawColorSwatch(g, pSel.colorARGB, curX, row1Y);
-            drawColorSwatch(g, pSel.colorBorde, curX, row2Y);
+            // Fila 1: Fondo, FondoRenglon, FondoIcono, FondoCheck, Texto
+            drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, curX, row1Y);
+            drawColorSwatchWithLabel(g, font, "FR", pSel.colorFondoRenglon, curX + 24, row1Y);
+            drawColorSwatchWithLabel(g, font, "FI", pSel.colorFondoIcono, curX + 48, row1Y);
+            drawColorSwatchWithLabel(g, font, "FC", pSel.colorFondoCheck, curX + 72, row1Y);
+            drawColorSwatchWithLabel(g, font, "T", pSel.colorTexto, curX + 96, row1Y);
             
-            drawColorSwatch(g, pSel.colorFondoRenglon, curX + 20, row1Y);
-            drawColorSwatch(g, pSel.colorBordeRenglon, curX + 20, row2Y);
-            
-            drawColorSwatch(g, pSel.colorFondoIcono, curX + 40, row1Y);
-            drawColorSwatch(g, pSel.colorBordeIcono, curX + 40, row2Y);
-            
-            drawColorSwatch(g, pSel.colorFondoCheck, curX + 60, row1Y);
-            drawColorSwatch(g, pSel.colorBordeCheckInterno, curX + 60, row2Y);
-            
-            drawColorSwatch(g, pSel.colorTexto, curX + 80, row1Y);
-            
-            curX += 100;
-            drawVerticalSeparator(g, curX, y + 4, 40);
+            // Fila 2: Borde, BordeRenglon, BordeIcono, BordeCheckInterno
+            drawColorSwatchWithLabel(g, font, "B", pSel.colorBorde, curX, row2Y);
+            drawColorSwatchWithLabel(g, font, "BR", pSel.colorBordeRenglon, curX + 24, row2Y);
+            drawColorSwatchWithLabel(g, font, "BI", pSel.colorBordeIcono, curX + 48, row2Y);
+            drawColorSwatchWithLabel(g, font, "BC", pSel.colorBordeCheckInterno, curX + 72, row2Y);
         } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
-            int colorsX = barStartX + 6;
-
-            int row1Y = y + 12;
-            int row2Y = y + 32;
-
-            drawColorSwatch(g, pSel.colorFondoCabecera, colorsX, row1Y);
-            drawColorSwatch(g, pSel.colorBordeCabecera, colorsX + 20, row1Y);
-            drawColorSwatch(g, pSel.colorARGB, colorsX + 40, row1Y);
-            drawColorSwatch(g, pSel.colorBorde, colorsX + 60, row1Y);
-
-            drawColorSwatch(g, pSel.colorTexto, colorsX, row2Y);
-            drawColorSwatch(g, pSel.colorFondoMision, colorsX + 20, row2Y);
-            drawColorSwatch(g, pSel.colorBordeMision, colorsX + 40, row2Y);
-
-            int currentX = colorsX + 80;
-
+            int row1Y = y + 4;
+            int row2Y = y + 28;
+            int curX = barStartX + 4;
+            
+            // Fila 1: FondoCabecera, BordeCabecera, Fondo, Borde
+            drawColorSwatchWithLabel(g, font, "FC", pSel.colorFondoCabecera, curX, row1Y);
+            drawColorSwatchWithLabel(g, font, "BC", pSel.colorBordeCabecera, curX + 24, row1Y);
+            drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, curX + 48, row1Y);
+            drawColorSwatchWithLabel(g, font, "B", pSel.colorBorde, curX + 72, row1Y);
+            
+            // Fila 2: Texto, FondoMision, BordeMision
+            drawColorSwatchWithLabel(g, font, "T", pSel.colorTexto, curX, row2Y);
+            drawColorSwatchWithLabel(g, font, "FM", pSel.colorFondoMision, curX + 24, row2Y);
+            drawColorSwatchWithLabel(g, font, "BM", pSel.colorBordeMision, curX + 48, row2Y);
+            
+            // Etiquetas adicionales si hay textoAsociado (sin título, solo espacio reservado)
             if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
-                drawVerticalSeparator(g, currentX, y + 4, 44);
-                currentX += 4;
-                drawSectionTitle(g, font, "T", currentX, y + 2, 38);
-                currentX += 46;
-
-                drawVerticalSeparator(g, currentX - 4, y + 4, 44);
-                drawSectionTitle(g, font, "TM", currentX, y + 2, 38);
-                currentX += 46;
-
-                drawVerticalSeparator(g, currentX - 4, y + 4, 44);
-                drawSectionTitle(g, font, "I", currentX, y + 2, 38);
+                // Espacio reservado para T, TM, I (se manejan en otra parte)
             }
-
         } else if (pSel.tipo.equals("MANIQUI") || pSel.tipo.equals("MISION_ICONO")) {
-            int curX = barStartX + 6;
-            int boxY = y + 16;
-            drawColorSwatch(g, pSel.colorARGB, curX, boxY);
-            curX += 20;
-            drawColorSwatch(g, pSel.colorBorde, curX, boxY);
-            curX += 20;
-            drawVerticalSeparator(g, curX, y + 4, 40);
-            curX += 4;
-            drawSectionTitle(g, font, "Escala", curX, y + 2, 38);
+            int rowY = y + 4;
+            int curX = barStartX + 4;
+            drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, curX, rowY);
+            drawColorSwatchWithLabel(g, font, "B", pSel.colorBorde, curX + 24, rowY);
+            // Escala se maneja con botones aparte
         } else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
-            int curX = barStartX + 6;
-            int boxY = y + 16;
-            drawSectionTitle(g, font, "Fondo", curX, y + 2, 20);
-            drawColorSwatch(g, pSel.colorARGB, curX + 2, boxY);
-            curX += 26;
-            drawVerticalSeparator(g, curX, y + 4, 40);
-            curX += 6;
-            drawSectionTitle(g, font, "Slots", curX, y + 2, 60);
-            drawColorSwatch(g, pSel.colorSlotBg, curX, boxY);
-            drawColorSwatch(g, pSel.colorSlotDark, curX + 20, boxY);
-            drawColorSwatch(g, pSel.colorSlotLight, curX + 40, boxY);
-            curX += 66;
-            drawVerticalSeparator(g, curX, y + 4, 40);
-            curX += 6;
-            drawSectionTitle(g, font, "Ajustes", curX, y + 2, 130);
+            int rowY = y + 4;
+            int curX = barStartX + 4;
+            drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, curX, rowY);
+            drawColorSwatchWithLabel(g, font, "S1", pSel.colorSlotBg, curX + 24, rowY);
+            drawColorSwatchWithLabel(g, font, "S2", pSel.colorSlotDark, curX + 48, rowY);
+            drawColorSwatchWithLabel(g, font, "S3", pSel.colorSlotLight, curX + 72, rowY);
         } else if (pSel.tipo.startsWith("SLOT")) {
-            int curX = barStartX + 6;
-            int boxY = y + 16;
-            drawSectionTitle(g, font, "Fondo", curX, y + 2, 20);
-            drawColorSwatch(g, pSel.colorARGB, curX + 2, boxY);
-            curX += 26;
-            drawVerticalSeparator(g, curX, y + 4, 40);
-            curX += 6;
-            drawSectionTitle(g, font, "Slot", curX, y + 2, 60);
-            drawColorSwatch(g, pSel.colorSlotBg, curX, boxY);
-            drawColorSwatch(g, pSel.colorSlotDark, curX + 20, boxY);
-            drawColorSwatch(g, pSel.colorSlotLight, curX + 40, boxY);
-            curX += 66;
-            drawVerticalSeparator(g, curX, y + 4, 40);
-            curX += 6;
-            drawSectionTitle(g, font, "Escala", curX, y + 2, 42);
+            int rowY = y + 4;
+            int curX = barStartX + 4;
+            drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, curX, rowY);
+            drawColorSwatchWithLabel(g, font, "S1", pSel.colorSlotBg, curX + 24, rowY);
+            drawColorSwatchWithLabel(g, font, "S2", pSel.colorSlotDark, curX + 48, rowY);
+            drawColorSwatchWithLabel(g, font, "S3", pSel.colorSlotLight, curX + 72, rowY);
         } else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) {
-            int curX = barStartX + 6;
-            drawSectionTitle(g, font, "Escala", curX, y + 2, 42);
-            curX += 48;
-            drawVerticalSeparator(g, curX, y + 4, 40);
-            curX += 6;
+            int rowY = y + 4;
+            int curX = barStartX + 4;
+            // Solo slider de opacidad, sin colores
             drawSectionTitle(g, font, "Opacidad: " + (int)(pSel.opacidad * 100) + "%", curX, y + 2, 140);
             
             sliderImageX = curX + 10;
@@ -603,43 +597,38 @@ public class TopBar {
             g.fill(knobX, sY - 2, knobX + 8, sY + 8, 0xFF555555); 
             g.renderOutline(knobX, sY - 2, 8, 10, 0xFF000000);
         } else if (pSel.tipo.equals("LISTA_LOGROS")) {
-            int curX = barStartX + 6;
-            int row1Y = y + 6;
-            int row2Y = y + 26;
-
-            // Eliminados el Fondo y Borde Global (ya no existen)
+            int row1Y = y + 4;
+            int row2Y = y + 28;
+            int curX = barStartX + 4;
             
-            drawColorSwatch(g, pSel.colorFondoCabecera, curX, row1Y);
-            drawColorSwatch(g, pSel.colorBordeCabecera, curX, row2Y);
-
-            drawColorSwatch(g, pSel.colorFondoBarra, curX + 20, row1Y);
-            drawColorSwatch(g, pSel.colorBarraLleno, curX + 20, row2Y);
-
-            drawColorSwatch(g, pSel.colorFondoMision, curX + 40, row1Y);
-            drawColorSwatch(g, pSel.colorBordeMision, curX + 40, row2Y);
-
-            drawColorSwatch(g, pSel.colorFondoCheck, curX + 60, row1Y);
-            drawColorSwatch(g, pSel.colorBordeCheckInterno, curX + 60, row2Y);
-
-            drawColorSwatch(g, pSel.colorTexto, curX + 80, row1Y);
-            drawColorSwatch(g, pSel.colorSlotBg, curX + 80, row2Y);
-
-            curX += 122;
-            drawVerticalSeparator(g, curX, y + 4, 40);
+            // Fila 1: FondoCabecera, FondoBarra, FondoMision, FondoCheck, Texto
+            drawColorSwatchWithLabel(g, font, "FC", pSel.colorFondoCabecera, curX, row1Y);
+            drawColorSwatchWithLabel(g, font, "FB", pSel.colorFondoBarra, curX + 24, row1Y);
+            drawColorSwatchWithLabel(g, font, "FM", pSel.colorFondoMision, curX + 48, row1Y);
+            drawColorSwatchWithLabel(g, font, "FCk", pSel.colorFondoCheck, curX + 72, row1Y);
+            drawColorSwatchWithLabel(g, font, "T", pSel.colorTexto, curX + 96, row1Y);
+            
+            // Fila 2: BordeCabecera, BarraLleno, BordeMision, BordeCheckInterno, SlotBg
+            drawColorSwatchWithLabel(g, font, "BC", pSel.colorBordeCabecera, curX, row2Y);
+            drawColorSwatchWithLabel(g, font, "BL", pSel.colorBarraLleno, curX + 24, row2Y);
+            drawColorSwatchWithLabel(g, font, "BM", pSel.colorBordeMision, curX + 48, row2Y);
+            drawColorSwatchWithLabel(g, font, "BCk", pSel.colorBordeCheckInterno, curX + 72, row2Y);
+            drawColorSwatchWithLabel(g, font, "S", pSel.colorSlotBg, curX + 96, row2Y);
         } else if (pSel.tipo.equals("PROGRESO")) {
-            int curX = barStartX + 6;
-            int row1Y = y + 6;
-            int row2Y = y + 26;
-            int swatchSize = 16;
+            int row1Y = y + 4;
+            int row2Y = y + 28;
+            int curX = barStartX + 4;
             
-            drawColorSwatch(g, pSel.colorARGB, curX, row1Y);
-            drawColorSwatch(g, pSel.colorBorde, curX + swatchSize + 4, row1Y);
+            drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, curX, row1Y);
+            drawColorSwatchWithLabel(g, font, "B", pSel.colorBorde, curX + 24, row1Y);
+            
             if (pSel.progresoTipo != 2 && pSel.progresoEstilo == 0) {
-                drawColorSwatch(g, pSel.colorBarraLleno, curX, row2Y);
+                drawColorSwatchWithLabel(g, font, "L", pSel.colorBarraLleno, curX, row2Y);
             } else {
-                drawColorSwatch(g, pSel.colorTexto, curX, row2Y);
+                drawColorSwatchWithLabel(g, font, "T", pSel.colorTexto, curX, row2Y);
             }
             
+            // Botones de ajuste (se inicializan aparte)
             int btnCol1 = curX + 36 + 4;
             int btnCol2 = btnCol1 + 48 + 4;
             
@@ -668,170 +657,165 @@ public class TopBar {
             }
             return;
         } else {
-            int currentX = barStartX + 6;
-            int boxY = y + 16; 
-
-            drawColorSwatch(g, pSel.colorARGB, currentX, boxY);
-            currentX += 20;
-
+            // Figuras generales
+            int rowY = y + 4;
+            int curX = barStartX + 4;
+            
+            drawColorSwatchWithLabel(g, font, "F", pSel.colorARGB, curX, rowY);
+            curX += 24;
+            
             if (!pSel.tipo.equals("LINEA") && !pSel.tipo.equals("TRIANGULO")) {
-                drawColorSwatch(g, pSel.colorBorde, currentX, boxY);
-                currentX += 20;
+                drawColorSwatchWithLabel(g, font, "B", pSel.colorBorde, curX, rowY);
+                curX += 24;
             }
-
+            
             if (pSel.tipo.equals("CUADRADO")) {
-                drawVerticalSeparator(g, currentX, y + 4, 40);
-                currentX += 4;
-                drawSectionTitle(g, font, "B", currentX, y + 2, 38);
-                currentX += 42;
+                // Espacio para botón B
+                curX += 24;
             }
-
+            
             if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
-                drawVerticalSeparator(g, currentX, y + 4, 40);
-                currentX += 4;
-                drawSectionTitle(g, font, "T", currentX, y + 2, 38);
-                currentX += 46;
-
-                drawVerticalSeparator(g, currentX - 4, y + 4, 40);
-                drawSectionTitle(g, font, "I", currentX, y + 2, 38);
+                // Espacio para T e I
+                curX += 24 * 2;
             }
         }
     }
 
     public static int getDrawingButtonAt(int mx, int my, int guiWidth, int y, GlobalGuiSettings.PanelConfig pSel) {
-        if (!drawingToolsVisible || pSel == null || my < y + 14 || my > y + 32) return -1;
+        if (!drawingToolsVisible || pSel == null || my < y + 4 || my > y + 28) return -1;
         int barX = LeftSidebar.getSidebarWidth();
         int expectedBarW = calculateBarWidth(false, true, null, pSel);
         int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
 
-        if (pSel.tipo.equals("DETALLE_MISION")) {
-            int rowY = y + 14;
-            int curX = barStartX + 6;
-            int sectionWidth = 46;
-            int sectionCWidth = 90;
-            int swatchOffset = (sectionWidth - 36) / 2;
-            int cSwatchOffset = 10;
-
-            if (pSel.tipo.equals("BOTON_PAGINA")) {
-                if (mx >= curX + 5 && mx <= curX + 21) return BTN_FILL_COLOR;
-                if (mx >= curX + 23 && mx <= curX + 39) return BTN_BORDER_COLOR;
-                return -1;
+        if (pSel.tipo.equals("BOTON_PAGINA")) {
+            int rowY = y + 4;
+            int curX = barStartX + 4;
+            if (my >= rowY && my <= rowY + 16) {
+                if (mx >= curX && mx <= curX + 16) return BTN_FILL_COLOR;
+                if (mx >= curX + 24 && mx <= curX + 24 + 16) return BTN_BORDER_COLOR;
             }
-
-            if (mx >= curX + swatchOffset && mx <= curX + swatchOffset + 16) return BTN_FILL_COLOR;
-            if (mx >= curX + swatchOffset + 20 && mx <= curX + swatchOffset + 36) return BTN_BORDER_COLOR;
-            curX += sectionWidth + 4;
-            curX += 4;
-
-            if (mx >= curX + swatchOffset && mx <= curX + swatchOffset + 16) return BTN_OBJ_ROW_FILL;
-            if (mx >= curX + swatchOffset + 20 && mx <= curX + swatchOffset + 36) return BTN_OBJ_ROW_BORDER;
-            curX += sectionWidth + 4;
-            curX += 4;
-
-            if (mx >= curX + swatchOffset && mx <= curX + swatchOffset + 16) return BTN_OBJ_ICON_FILL;
-            if (mx >= curX + swatchOffset + 20 && mx <= curX + swatchOffset + 36) return BTN_OBJ_ICON_BORDER;
-            curX += sectionWidth + 4;
-            curX += 4;
-
-            if (mx >= curX + cSwatchOffset && mx <= curX + cSwatchOffset + 16) return BTN_OBJ_CHECK_FILL;
-            if (mx >= curX + cSwatchOffset + 20 && mx <= curX + cSwatchOffset + 36) return BTN_OBJ_CHECK_BORDER_IN;
-            if (mx >= curX + cSwatchOffset + 40 && mx <= curX + cSwatchOffset + 56) return BTN_OBJ_CHECK_BORDER_OUT;
-        } else if (pSel.tipo.equals("MISION_OBJETIVOS")) {
-            int curX = barStartX + 6;
-            int row1Y = y + 6;
-            int row2Y = y + 26;
+            return -1;
+        } else if (pSel.tipo.equals("DETALLE_MISION")) {
+            int row1Y = y + 4;
+            int row2Y = y + 28;
+            int curX = barStartX + 4;
             
             if (my >= row1Y && my <= row1Y + 16) {
                 if (mx >= curX && mx <= curX + 16) return BTN_FILL_COLOR;
-                if (mx >= curX + 20 && mx <= curX + 36) return BTN_OBJ_ROW_FILL;
-                if (mx >= curX + 40 && mx <= curX + 56) return BTN_OBJ_ICON_FILL;
-                if (mx >= curX + 60 && mx <= curX + 76) return BTN_OBJ_CHECK_FILL;
-                if (mx >= curX + 80 && mx <= curX + 96) return BTN_TEXT_COLOR;
+                if (mx >= curX + 24 && mx <= curX + 40) return BTN_OBJ_ROW_FILL;
+                if (mx >= curX + 48 && mx <= curX + 64) return BTN_OBJ_ICON_FILL;
+                if (mx >= curX + 72 && mx <= curX + 88) return BTN_TEXT_COLOR;
+            }
+            if (my >= row2Y && my <= row2Y + 16) {
+                if (mx >= curX && mx <= curX + 16) return BTN_OBJ_CHECK_FILL;
+                if (mx >= curX + 24 && mx <= curX + 40) return BTN_OBJ_CHECK_BORDER_IN;
+                if (mx >= curX + 48 && mx <= curX + 64) return BTN_OBJ_CHECK_BORDER_OUT;
+            }
+        } else if (pSel.tipo.equals("MISION_OBJETIVOS")) {
+            int row1Y = y + 4;
+            int row2Y = y + 28;
+            int curX = barStartX + 4;
+            
+            if (my >= row1Y && my <= row1Y + 16) {
+                if (mx >= curX && mx <= curX + 16) return BTN_FILL_COLOR;
+                if (mx >= curX + 24 && mx <= curX + 40) return BTN_OBJ_ROW_FILL;
+                if (mx >= curX + 48 && mx <= curX + 64) return BTN_OBJ_ICON_FILL;
+                if (mx >= curX + 72 && mx <= curX + 88) return BTN_OBJ_CHECK_FILL;
+                if (mx >= curX + 96 && mx <= curX + 112) return BTN_TEXT_COLOR;
             }
             if (my >= row2Y && my <= row2Y + 16) {
                 if (mx >= curX && mx <= curX + 16) return BTN_BORDER_COLOR;
-                if (mx >= curX + 20 && mx <= curX + 36) return BTN_OBJ_ROW_BORDER;
-                if (mx >= curX + 40 && mx <= curX + 56) return BTN_OBJ_ICON_BORDER;
-                if (mx >= curX + 60 && mx <= curX + 76) return BTN_OBJ_CHECK_BORDER_IN;
+                if (mx >= curX + 24 && mx <= curX + 40) return BTN_OBJ_ROW_BORDER;
+                if (mx >= curX + 48 && mx <= curX + 64) return BTN_OBJ_ICON_BORDER;
+                if (mx >= curX + 72 && mx <= curX + 88) return BTN_OBJ_CHECK_BORDER_IN;
             }
         } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
-            int colorsX = barStartX + 6;
-            int row1Y = y + 12;
-            int row2Y = y + 32; 
-
-            if (my >= row1Y && my <= row1Y + 16) {
-                if (mx >= colorsX && mx <= colorsX + 16) return BTN_HEADER_FILL_COLOR;
-                if (mx >= colorsX + 20 && mx <= colorsX + 36) return BTN_HEADER_BORDER_COLOR;
-                if (mx >= colorsX + 40 && mx <= colorsX + 56) return BTN_FILL_COLOR;
-                if (mx >= colorsX + 60 && mx <= colorsX + 76) return BTN_BORDER_COLOR;
-            }
-            if (my >= row2Y && my <= row2Y + 16) {
-                if (mx >= colorsX && mx <= colorsX + 16) return BTN_TEXT_COLOR;
-                if (mx >= colorsX + 20 && mx <= colorsX + 36) return BTN_MISSION_FILL_COLOR;
-                if (mx >= colorsX + 40 && mx <= colorsX + 56) return BTN_MISSION_BORDER_COLOR;
-            }
-        } else if (pSel.tipo.equals("MANIQUI") || pSel.tipo.equals("MISION_ICONO")) {
-            int curX = barStartX + 6;
-            int boxY = y + 16;
-            if (my >= boxY && my <= boxY + 16) {
-                if (mx >= curX && mx <= curX + 16) return BTN_FILL_COLOR;
-                if (mx >= curX + 20 && mx <= curX + 36) return BTN_BORDER_COLOR;
-            }
-        } else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
-            int curX = barStartX + 6;
-            if (mx >= curX + 2 && mx <= curX + 18 && my >= y+16 && my <= y+32) return BTN_FILL_COLOR;
-            curX += 32;
-            if (mx >= curX && mx <= curX + 16 && my >= y+16 && my <= y+32) return BTN_SLOT_BG;
-            if (mx >= curX + 20 && mx <= curX + 36 && my >= y+16 && my <= y+32) return BTN_SLOT_DARK;
-            if (mx >= curX + 40 && mx <= curX + 56 && my >= y+16 && my <= y+32) return BTN_SLOT_LIGHT;
-        } else if (pSel.tipo.startsWith("SLOT")) {
-            int curX = barStartX + 6;
-            if (mx >= curX + 2 && mx <= curX + 18 && my >= y+16 && my <= y+32) return BTN_FILL_COLOR;
-            curX += 32;
-            if (mx >= curX && mx <= curX + 16 && my >= y+16 && my <= y+32) return BTN_SLOT_BG;
-            if (mx >= curX + 20 && mx <= curX + 36 && my >= y+16 && my <= y+32) return BTN_SLOT_DARK;
-            if (mx >= curX + 40 && mx <= curX + 56 && my >= y+16 && my <= y+32) return BTN_SLOT_LIGHT;
-        } else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) {
-            return -1; // Ignoramos el clic de color porque las imágenes solo tienen botones +/-
-        } else if (pSel.tipo.equals("LISTA_LOGROS")) {
-            int curX = barStartX + 6;
-            int row1Y = y + 6;
-            int row2Y = y + 26;
+            int row1Y = y + 4;
+            int row2Y = y + 28;
+            int curX = barStartX + 4;
             
             if (my >= row1Y && my <= row1Y + 16) {
                 if (mx >= curX && mx <= curX + 16) return BTN_HEADER_FILL_COLOR;
-                if (mx >= curX + 20 && mx <= curX + 36) return 103; 
-                if (mx >= curX + 40 && mx <= curX + 56) return BTN_MISSION_FILL_COLOR;
-                if (mx >= curX + 60 && mx <= curX + 76) return 100;
-                if (mx >= curX + 80 && mx <= curX + 96) return BTN_TEXT_COLOR;
+                if (mx >= curX + 24 && mx <= curX + 40) return BTN_HEADER_BORDER_COLOR;
+                if (mx >= curX + 48 && mx <= curX + 64) return BTN_FILL_COLOR;
+                if (mx >= curX + 72 && mx <= curX + 88) return BTN_BORDER_COLOR;
+            }
+            if (my >= row2Y && my <= row2Y + 16) {
+                if (mx >= curX && mx <= curX + 16) return BTN_TEXT_COLOR;
+                if (mx >= curX + 24 && mx <= curX + 40) return BTN_MISSION_FILL_COLOR;
+                if (mx >= curX + 48 && mx <= curX + 64) return BTN_MISSION_BORDER_COLOR;
+            }
+        } else if (pSel.tipo.equals("MANIQUI") || pSel.tipo.equals("MISION_ICONO")) {
+            int rowY = y + 4;
+            int curX = barStartX + 4;
+            if (my >= rowY && my <= rowY + 16) {
+                if (mx >= curX && mx <= curX + 16) return BTN_FILL_COLOR;
+                if (mx >= curX + 24 && mx <= curX + 40) return BTN_BORDER_COLOR;
+            }
+        } else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
+            int rowY = y + 4;
+            int curX = barStartX + 4;
+            if (my >= rowY && my <= rowY + 16) {
+                if (mx >= curX && mx <= curX + 16) return BTN_FILL_COLOR;
+                if (mx >= curX + 24 && mx <= curX + 40) return BTN_SLOT_BG;
+                if (mx >= curX + 48 && mx <= curX + 64) return BTN_SLOT_DARK;
+                if (mx >= curX + 72 && mx <= curX + 88) return BTN_SLOT_LIGHT;
+            }
+        } else if (pSel.tipo.startsWith("SLOT")) {
+            int rowY = y + 4;
+            int curX = barStartX + 4;
+            if (my >= rowY && my <= rowY + 16) {
+                if (mx >= curX && mx <= curX + 16) return BTN_FILL_COLOR;
+                if (mx >= curX + 24 && mx <= curX + 40) return BTN_SLOT_BG;
+                if (mx >= curX + 48 && mx <= curX + 64) return BTN_SLOT_DARK;
+                if (mx >= curX + 72 && mx <= curX + 88) return BTN_SLOT_LIGHT;
+            }
+        } else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) {
+            return -1; // Solo slider de opacidad
+        } else if (pSel.tipo.equals("LISTA_LOGROS")) {
+            int row1Y = y + 4;
+            int row2Y = y + 28;
+            int curX = barStartX + 4;
+            
+            if (my >= row1Y && my <= row1Y + 16) {
+                if (mx >= curX && mx <= curX + 16) return BTN_HEADER_FILL_COLOR;
+                if (mx >= curX + 24 && mx <= curX + 40) return 103; // FondoBarra
+                if (mx >= curX + 48 && mx <= curX + 64) return BTN_MISSION_FILL_COLOR;
+                if (mx >= curX + 72 && mx <= curX + 88) return 100; // FondoCheck
+                if (mx >= curX + 96 && mx <= curX + 112) return BTN_TEXT_COLOR;
             }
             if (my >= row2Y && my <= row2Y + 16) {
                 if (mx >= curX && mx <= curX + 16) return BTN_HEADER_BORDER_COLOR;
-                if (mx >= curX + 20 && mx <= curX + 36) return BTN_PROG_FILL; 
-                if (mx >= curX + 40 && mx <= curX + 56) return BTN_MISSION_BORDER_COLOR;
-                if (mx >= curX + 60 && mx <= curX + 76) return 101;
-                if (mx >= curX + 80 && mx <= curX + 96) return 102;
+                if (mx >= curX + 24 && mx <= curX + 40) return BTN_PROG_FILL; // BarraLleno
+                if (mx >= curX + 48 && mx <= curX + 64) return BTN_MISSION_BORDER_COLOR;
+                if (mx >= curX + 72 && mx <= curX + 88) return 101; // BordeCheckInterno
+                if (mx >= curX + 96 && mx <= curX + 112) return 102; // SlotBg
             }
         } else if (pSel.tipo.equals("PROGRESO")) {
-            int curX = barStartX + 6;
-            int row1Y = y + 6;
-            int row2Y = y + 26;
-            int swatchSize = 16;
+            int row1Y = y + 4;
+            int row2Y = y + 28;
+            int curX = barStartX + 4;
             
-            if (mx >= curX && mx <= curX + swatchSize && my >= row1Y && my <= row1Y + swatchSize) return BTN_FILL_COLOR;
-            if (mx >= curX + swatchSize + 4 && mx <= curX + swatchSize + 4 + swatchSize && my >= row1Y && my <= row1Y + swatchSize) return BTN_BORDER_COLOR;
-            if (mx >= curX && mx <= curX + swatchSize && my >= row2Y && my <= row2Y + swatchSize) {
-                return (pSel.progresoTipo != 2 && pSel.progresoEstilo == 0) ? BTN_PROG_FILL : BTN_TEXT_COLOR;
+            if (my >= row1Y && my <= row1Y + 16) {
+                if (mx >= curX && mx <= curX + 16) return BTN_FILL_COLOR;
+                if (mx >= curX + 24 && mx <= curX + 40) return BTN_BORDER_COLOR;
+            }
+            if (my >= row2Y && my <= row2Y + 16) {
+                if (mx >= curX && mx <= curX + 16) {
+                    return (pSel.progresoTipo != 2 && pSel.progresoEstilo == 0) ? BTN_PROG_FILL : BTN_TEXT_COLOR;
+                }
             }
             return -1;
         } else {
-            int currentX = barStartX + 6;
-            int boxY = y + 16;
-            if (my >= boxY && my <= boxY + 16) {
-                if (mx >= currentX && mx <= currentX + 16) return BTN_FILL_COLOR;
-                currentX += 20;
+            // Figuras generales
+            int rowY = y + 4;
+            int curX = barStartX + 4;
+            
+            if (my >= rowY && my <= rowY + 16) {
+                if (mx >= curX && mx <= curX + 16) return BTN_FILL_COLOR;
+                curX += 24;
                 if (!pSel.tipo.equals("LINEA") && !pSel.tipo.equals("TRIANGULO")) {
-                    if (mx >= currentX && mx <= currentX + 16) return BTN_BORDER_COLOR;
+                    if (mx >= curX && mx <= curX + 16) return BTN_BORDER_COLOR;
                 }
             }
         }
