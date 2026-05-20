@@ -449,53 +449,46 @@ public class TopBar {
         Font font = Minecraft.getInstance().font;
 
         if (pSel.tipo.equals("BOTON_PAGINA")) {
-            int rowY = y + 14;
-            int curX = barStartX + 6;
-            drawSectionTitle(g, font, "F", curX, y + 2, 38);
-            drawColorSwatch(g, pSel.colorARGB, curX + 5, rowY);
-            drawColorSwatch(g, pSel.colorBorde, curX + 23, rowY);
+            int rowY = y + 16;
+            int curX = barStartX + 4;
+            drawColorSwatch(g, pSel.colorARGB, curX, rowY);
+            drawColorSwatch(g, pSel.colorBorde, curX + 18, rowY);
 
-            curX += 42;
+            curX += 36;
             drawVerticalSeparator(g, curX, y + 4, 26);
             curX += 4;
-            drawSectionTitle(g, font, "T", curX, y + 2, 38);
             return;
 } else if (pSel.tipo.equals("DETALLE_MISION")) {
-            int rowY = y + 14;
-            int curX = barStartX + 6;
-            int sectionWidth = 46;
-            int sectionCWidth = 90;
-            int swatchOffset = (sectionWidth - 36) / 2;
-            int cSwatchOffset = 10;
+            int rowY = y + 16;
+            int curX = barStartX + 4;
+            int sectionWidth = 40;
+            int sectionCWidth = 80;
+            int swatchOffset = (sectionWidth - 16) / 2;
+            int cSwatchOffset = 4;
 
-            drawSectionTitle(g, font, "F", curX, y + 2, sectionWidth);
             drawColorSwatch(g, pSel.colorARGB, curX + swatchOffset, rowY);
             curX += sectionWidth;
             drawVerticalSeparator(g, curX - 1, y + 4, 44);
 
-            drawSectionTitle(g, font, "O", curX, y + 2, sectionWidth);
             drawColorSwatch(g, pSel.colorFondoIcono, curX + swatchOffset, rowY);
             curX += sectionWidth;
             drawVerticalSeparator(g, curX - 1, y + 4, 44);
 
-            drawSectionTitle(g, font, "R", curX, y + 2, sectionWidth);
             drawColorSwatch(g, pSel.colorFondoRenglon, curX + swatchOffset, rowY);
             curX += sectionWidth;
             drawVerticalSeparator(g, curX - 1, y + 4, 44);
 
-            drawSectionTitle(g, font, "T", curX, y + 2, sectionWidth);
             drawColorSwatch(g, pSel.colorTexto, curX + swatchOffset, rowY);
             curX += sectionWidth;
             drawVerticalSeparator(g, curX - 1, y + 4, 44);
 
-            drawSectionTitle(g, font, "C", curX, y + 2, sectionCWidth);
             drawColorSwatch(g, pSel.colorFondoCheck, curX + cSwatchOffset, rowY);
             drawColorSwatch(g, pSel.colorBordeCheckInterno, curX + cSwatchOffset + 20, rowY);
             drawColorSwatch(g, pSel.colorBordeCheckExterno, curX + cSwatchOffset + 40, rowY);
         } else if (pSel.tipo.equals("MISION_OBJETIVOS")) {
-            int curX = barStartX + 6;
-            int row1Y = y + 6;
-            int row2Y = y + 26;
+            int curX = barStartX + 4;
+            int row1Y = y + 16;
+            int row2Y = y + 36;
             
             drawColorSwatch(g, pSel.colorARGB, curX, row1Y);
             drawColorSwatch(g, pSel.colorBorde, curX, row2Y);
@@ -514,10 +507,10 @@ public class TopBar {
             curX += 100;
             drawVerticalSeparator(g, curX, y + 4, 40);
         } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
-            int colorsX = barStartX + 6;
+            int colorsX = barStartX + 4;
 
-            int row1Y = y + 12;
-            int row2Y = y + 32;
+            int row1Y = y + 16;
+            int row2Y = y + 36;
 
             drawColorSwatch(g, pSel.colorFondoCabecera, colorsX, row1Y);
             drawColorSwatch(g, pSel.colorBordeCabecera, colorsX + 20, row1Y);
@@ -533,19 +526,16 @@ public class TopBar {
             if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
                 drawVerticalSeparator(g, currentX, y + 4, 44);
                 currentX += 4;
-                drawSectionTitle(g, font, "T", currentX, y + 2, 38);
-                currentX += 46;
+                currentX += 40;
 
                 drawVerticalSeparator(g, currentX - 4, y + 4, 44);
-                drawSectionTitle(g, font, "TM", currentX, y + 2, 38);
-                currentX += 46;
+                currentX += 40;
 
                 drawVerticalSeparator(g, currentX - 4, y + 4, 44);
-                drawSectionTitle(g, font, "I", currentX, y + 2, 38);
             }
 
         } else if (pSel.tipo.equals("MANIQUI") || pSel.tipo.equals("MISION_ICONO")) {
-            int curX = barStartX + 6;
+            int curX = barStartX + 4;
             int boxY = y + 16;
             drawColorSwatch(g, pSel.colorARGB, curX, boxY);
             curX += 20;
@@ -553,46 +543,37 @@ public class TopBar {
             curX += 20;
             drawVerticalSeparator(g, curX, y + 4, 40);
             curX += 4;
-            drawSectionTitle(g, font, "Escala", curX, y + 2, 38);
         } else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
-            int curX = barStartX + 6;
+            int curX = barStartX + 4;
             int boxY = y + 16;
-            drawSectionTitle(g, font, "Fondo", curX, y + 2, 20);
-            drawColorSwatch(g, pSel.colorARGB, curX + 2, boxY);
-            curX += 26;
+            drawColorSwatch(g, pSel.colorARGB, curX, boxY);
+            curX += 20;
             drawVerticalSeparator(g, curX, y + 4, 40);
             curX += 6;
-            drawSectionTitle(g, font, "Slots", curX, y + 2, 60);
             drawColorSwatch(g, pSel.colorSlotBg, curX, boxY);
             drawColorSwatch(g, pSel.colorSlotDark, curX + 20, boxY);
             drawColorSwatch(g, pSel.colorSlotLight, curX + 40, boxY);
             curX += 66;
             drawVerticalSeparator(g, curX, y + 4, 40);
             curX += 6;
-            drawSectionTitle(g, font, "Ajustes", curX, y + 2, 130);
         } else if (pSel.tipo.startsWith("SLOT")) {
-            int curX = barStartX + 6;
+            int curX = barStartX + 4;
             int boxY = y + 16;
-            drawSectionTitle(g, font, "Fondo", curX, y + 2, 20);
-            drawColorSwatch(g, pSel.colorARGB, curX + 2, boxY);
-            curX += 26;
+            drawColorSwatch(g, pSel.colorARGB, curX, boxY);
+            curX += 20;
             drawVerticalSeparator(g, curX, y + 4, 40);
             curX += 6;
-            drawSectionTitle(g, font, "Slot", curX, y + 2, 60);
             drawColorSwatch(g, pSel.colorSlotBg, curX, boxY);
             drawColorSwatch(g, pSel.colorSlotDark, curX + 20, boxY);
             drawColorSwatch(g, pSel.colorSlotLight, curX + 40, boxY);
             curX += 66;
             drawVerticalSeparator(g, curX, y + 4, 40);
             curX += 6;
-            drawSectionTitle(g, font, "Escala", curX, y + 2, 42);
         } else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) {
-            int curX = barStartX + 6;
-            drawSectionTitle(g, font, "Escala", curX, y + 2, 42);
+            int curX = barStartX + 4;
             curX += 48;
             drawVerticalSeparator(g, curX, y + 4, 40);
             curX += 6;
-            drawSectionTitle(g, font, "Opacidad: " + (int)(pSel.opacidad * 100) + "%", curX, y + 2, 140);
             
             sliderImageX = curX + 10;
             int sY = y + 24;
@@ -603,9 +584,9 @@ public class TopBar {
             g.fill(knobX, sY - 2, knobX + 8, sY + 8, 0xFF555555); 
             g.renderOutline(knobX, sY - 2, 8, 10, 0xFF000000);
         } else if (pSel.tipo.equals("LISTA_LOGROS")) {
-            int curX = barStartX + 6;
-            int row1Y = y + 6;
-            int row2Y = y + 26;
+            int curX = barStartX + 4;
+            int row1Y = y + 16;
+            int row2Y = y + 36;
 
             // Eliminados el Fondo y Borde Global (ya no existen)
             
@@ -627,9 +608,9 @@ public class TopBar {
             curX += 122;
             drawVerticalSeparator(g, curX, y + 4, 40);
         } else if (pSel.tipo.equals("PROGRESO")) {
-            int curX = barStartX + 6;
-            int row1Y = y + 6;
-            int row2Y = y + 26;
+            int curX = barStartX + 4;
+            int row1Y = y + 16;
+            int row2Y = y + 36;
             int swatchSize = 16;
             
             drawColorSwatch(g, pSel.colorARGB, curX, row1Y);
@@ -668,7 +649,7 @@ public class TopBar {
             }
             return;
         } else {
-            int currentX = barStartX + 6;
+            int currentX = barStartX + 4;
             int boxY = y + 16; 
 
             drawColorSwatch(g, pSel.colorARGB, currentX, boxY);
@@ -682,64 +663,58 @@ public class TopBar {
             if (pSel.tipo.equals("CUADRADO")) {
                 drawVerticalSeparator(g, currentX, y + 4, 40);
                 currentX += 4;
-                drawSectionTitle(g, font, "B", currentX, y + 2, 38);
                 currentX += 42;
             }
 
             if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
                 drawVerticalSeparator(g, currentX, y + 4, 40);
                 currentX += 4;
-                drawSectionTitle(g, font, "T", currentX, y + 2, 38);
                 currentX += 46;
 
                 drawVerticalSeparator(g, currentX - 4, y + 4, 40);
-                drawSectionTitle(g, font, "I", currentX, y + 2, 38);
             }
         }
     }
 
     public static int getDrawingButtonAt(int mx, int my, int guiWidth, int y, GlobalGuiSettings.PanelConfig pSel) {
-        if (!drawingToolsVisible || pSel == null || my < y + 14 || my > y + 32) return -1;
+        if (!drawingToolsVisible || pSel == null || my < y + 16 || my > y + 32) return -1;
         int barX = LeftSidebar.getSidebarWidth();
         int expectedBarW = calculateBarWidth(false, true, null, pSel);
         int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
 
         if (pSel.tipo.equals("DETALLE_MISION")) {
-            int rowY = y + 14;
-            int curX = barStartX + 6;
-            int sectionWidth = 46;
-            int sectionCWidth = 90;
-            int swatchOffset = (sectionWidth - 36) / 2;
-            int cSwatchOffset = 10;
+            int rowY = y + 16;
+            int curX = barStartX + 4;
+            int sectionWidth = 40;
+            int sectionCWidth = 80;
+            int swatchOffset = (sectionWidth - 16) / 2;
+            int cSwatchOffset = 4;
 
             if (pSel.tipo.equals("BOTON_PAGINA")) {
-                if (mx >= curX + 5 && mx <= curX + 21) return BTN_FILL_COLOR;
-                if (mx >= curX + 23 && mx <= curX + 39) return BTN_BORDER_COLOR;
+                if (mx >= curX && mx <= curX + 16) return BTN_FILL_COLOR;
+                if (mx >= curX + 18 && mx <= curX + 34) return BTN_BORDER_COLOR;
                 return -1;
             }
 
             if (mx >= curX + swatchOffset && mx <= curX + swatchOffset + 16) return BTN_FILL_COLOR;
             if (mx >= curX + swatchOffset + 20 && mx <= curX + swatchOffset + 36) return BTN_BORDER_COLOR;
             curX += sectionWidth + 4;
-            curX += 4;
 
             if (mx >= curX + swatchOffset && mx <= curX + swatchOffset + 16) return BTN_OBJ_ROW_FILL;
             if (mx >= curX + swatchOffset + 20 && mx <= curX + swatchOffset + 36) return BTN_OBJ_ROW_BORDER;
             curX += sectionWidth + 4;
-            curX += 4;
 
             if (mx >= curX + swatchOffset && mx <= curX + swatchOffset + 16) return BTN_OBJ_ICON_FILL;
             if (mx >= curX + swatchOffset + 20 && mx <= curX + swatchOffset + 36) return BTN_OBJ_ICON_BORDER;
             curX += sectionWidth + 4;
-            curX += 4;
 
             if (mx >= curX + cSwatchOffset && mx <= curX + cSwatchOffset + 16) return BTN_OBJ_CHECK_FILL;
             if (mx >= curX + cSwatchOffset + 20 && mx <= curX + cSwatchOffset + 36) return BTN_OBJ_CHECK_BORDER_IN;
             if (mx >= curX + cSwatchOffset + 40 && mx <= curX + cSwatchOffset + 56) return BTN_OBJ_CHECK_BORDER_OUT;
         } else if (pSel.tipo.equals("MISION_OBJETIVOS")) {
-            int curX = barStartX + 6;
-            int row1Y = y + 6;
-            int row2Y = y + 26;
+            int curX = barStartX + 4;
+            int row1Y = y + 16;
+            int row2Y = y + 36;
             
             if (my >= row1Y && my <= row1Y + 16) {
                 if (mx >= curX && mx <= curX + 16) return BTN_FILL_COLOR;
@@ -755,9 +730,9 @@ public class TopBar {
                 if (mx >= curX + 60 && mx <= curX + 76) return BTN_OBJ_CHECK_BORDER_IN;
             }
         } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
-            int colorsX = barStartX + 6;
-            int row1Y = y + 12;
-            int row2Y = y + 32; 
+            int colorsX = barStartX + 4;
+            int row1Y = y + 16;
+            int row2Y = y + 36; 
 
             if (my >= row1Y && my <= row1Y + 16) {
                 if (mx >= colorsX && mx <= colorsX + 16) return BTN_HEADER_FILL_COLOR;
@@ -771,32 +746,32 @@ public class TopBar {
                 if (mx >= colorsX + 40 && mx <= colorsX + 56) return BTN_MISSION_BORDER_COLOR;
             }
         } else if (pSel.tipo.equals("MANIQUI") || pSel.tipo.equals("MISION_ICONO")) {
-            int curX = barStartX + 6;
+            int curX = barStartX + 4;
             int boxY = y + 16;
             if (my >= boxY && my <= boxY + 16) {
                 if (mx >= curX && mx <= curX + 16) return BTN_FILL_COLOR;
                 if (mx >= curX + 20 && mx <= curX + 36) return BTN_BORDER_COLOR;
             }
         } else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
-            int curX = barStartX + 6;
-            if (mx >= curX + 2 && mx <= curX + 18 && my >= y+16 && my <= y+32) return BTN_FILL_COLOR;
-            curX += 32;
+            int curX = barStartX + 4;
+            if (mx >= curX && mx <= curX + 16 && my >= y+16 && my <= y+32) return BTN_FILL_COLOR;
+            curX += 26;
             if (mx >= curX && mx <= curX + 16 && my >= y+16 && my <= y+32) return BTN_SLOT_BG;
             if (mx >= curX + 20 && mx <= curX + 36 && my >= y+16 && my <= y+32) return BTN_SLOT_DARK;
             if (mx >= curX + 40 && mx <= curX + 56 && my >= y+16 && my <= y+32) return BTN_SLOT_LIGHT;
         } else if (pSel.tipo.startsWith("SLOT")) {
-            int curX = barStartX + 6;
-            if (mx >= curX + 2 && mx <= curX + 18 && my >= y+16 && my <= y+32) return BTN_FILL_COLOR;
-            curX += 32;
+            int curX = barStartX + 4;
+            if (mx >= curX && mx <= curX + 16 && my >= y+16 && my <= y+32) return BTN_FILL_COLOR;
+            curX += 26;
             if (mx >= curX && mx <= curX + 16 && my >= y+16 && my <= y+32) return BTN_SLOT_BG;
             if (mx >= curX + 20 && mx <= curX + 36 && my >= y+16 && my <= y+32) return BTN_SLOT_DARK;
             if (mx >= curX + 40 && mx <= curX + 56 && my >= y+16 && my <= y+32) return BTN_SLOT_LIGHT;
         } else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) {
             return -1; // Ignoramos el clic de color porque las imágenes solo tienen botones +/-
         } else if (pSel.tipo.equals("LISTA_LOGROS")) {
-            int curX = barStartX + 6;
-            int row1Y = y + 6;
-            int row2Y = y + 26;
+            int curX = barStartX + 4;
+            int row1Y = y + 16;
+            int row2Y = y + 36;
             
             if (my >= row1Y && my <= row1Y + 16) {
                 if (mx >= curX && mx <= curX + 16) return BTN_HEADER_FILL_COLOR;
@@ -813,9 +788,9 @@ public class TopBar {
                 if (mx >= curX + 80 && mx <= curX + 96) return 102;
             }
         } else if (pSel.tipo.equals("PROGRESO")) {
-            int curX = barStartX + 6;
-            int row1Y = y + 6;
-            int row2Y = y + 26;
+            int curX = barStartX + 4;
+            int row1Y = y + 16;
+            int row2Y = y + 36;
             int swatchSize = 16;
             
             if (mx >= curX && mx <= curX + swatchSize && my >= row1Y && my <= row1Y + swatchSize) return BTN_FILL_COLOR;
@@ -825,7 +800,7 @@ public class TopBar {
             }
             return -1;
         } else {
-            int currentX = barStartX + 6;
+            int currentX = barStartX + 4;
             int boxY = y + 16;
             if (my >= boxY && my <= boxY + 16) {
                 if (mx >= currentX && mx <= currentX + 16) return BTN_FILL_COLOR;
@@ -846,30 +821,30 @@ public class TopBar {
         int btnSize = 18;
 
         if (pSel.tipo.startsWith("DESPLEGABLE")) {
-            int btnY1 = y + 12;
-            int btnY2 = y + 32; 
-            int curX = barStartX + 6 + 80 + 4; 
+            int btnY1 = y + 16;
+            int btnY2 = y + 36; 
+            int curX = barStartX + 4 + 80 + 4; 
 
             adder.accept(Button.builder(Component.literal("←"), b -> pSel.offsetXTexto -= 2.0f).bounds(curX, btnY1, btnSize, btnSize).build());
             adder.accept(Button.builder(Component.literal("→"), b -> pSel.offsetXTexto += 2.0f).bounds(curX + 20, btnY1, btnSize, btnSize).build());
             adder.accept(Button.builder(Component.literal("-"), b -> pSel.escalaTexto = Math.max(0.1f, pSel.escalaTexto - 0.1f)).bounds(curX, btnY2, btnSize, btnSize).build());
             adder.accept(Button.builder(Component.literal("+"), b -> pSel.escalaTexto = Math.min(10.0f, pSel.escalaTexto + 0.1f)).bounds(curX + 20, btnY2, btnSize, btnSize).build());
-            curX += 46; 
+            curX += 40; 
             
             adder.accept(Button.builder(Component.literal("←"), b -> pSel.offsetXTextoMision -= 2.0f).bounds(curX, btnY1, btnSize, btnSize).build());
             adder.accept(Button.builder(Component.literal("→"), b -> pSel.offsetXTextoMision += 2.0f).bounds(curX + 20, btnY1, btnSize, btnSize).build());
             adder.accept(Button.builder(Component.literal("-"), b -> pSel.escalaTextoMision = Math.max(0.1f, pSel.escalaTextoMision - 0.1f)).bounds(curX, btnY2, btnSize, btnSize).build());
             adder.accept(Button.builder(Component.literal("+"), b -> pSel.escalaTextoMision = Math.min(10.0f, pSel.escalaTextoMision + 0.1f)).bounds(curX + 20, btnY2, btnSize, btnSize).build());
-            curX += 46; 
+            curX += 40; 
 
             adder.accept(Button.builder(Component.literal("←"), b -> pSel.offsetXIcono -= 2.0f).bounds(curX, btnY1, btnSize, btnSize).build());
             adder.accept(Button.builder(Component.literal("→"), b -> pSel.offsetXIcono += 2.0f).bounds(curX + 20, btnY1, btnSize, btnSize).build());
             adder.accept(Button.builder(Component.literal("-"), b -> pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f)).bounds(curX, btnY2, btnSize, btnSize).build());
             adder.accept(Button.builder(Component.literal("+"), b -> pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f)).bounds(curX + 20, btnY2, btnSize, btnSize).build());
         } else {
-            int btnY1 = y + 12;
-            int btnY2 = y + 30; 
-            int curX = barStartX + 6 + 20 + (pSel.tipo.equals("LINEA") || pSel.tipo.equals("TRIANGULO") ? 0 : 20) + 4;
+            int btnY1 = y + 16;
+            int btnY2 = y + 34; 
+            int curX = barStartX + 4 + 20 + (pSel.tipo.equals("LINEA") || pSel.tipo.equals("TRIANGULO") ? 0 : 20) + 4;
 
             adder.accept(Button.builder(Component.literal("←"), b -> pSel.offsetXTexto -= 2.0f).bounds(curX, btnY1, btnSize, btnSize).build());
             adder.accept(Button.builder(Component.literal("→"), b -> pSel.offsetXTexto += 2.0f).bounds(curX + 20, btnY1, btnSize, btnSize).build());
@@ -893,7 +868,7 @@ public class TopBar {
         int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
         int btnSize = 18;
 
-        int curX = barStartX + 6 + 26 + 6 + 66 + 6; 
+        int curX = barStartX + 4 + 20 + 6 + 66 + 6; 
         int row1 = y + 5;
         int row2 = y + 25;
         
@@ -920,7 +895,7 @@ public class TopBar {
         int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
         int btnSize = 18;
 
-        int curX = barStartX + 6 + 40 + 4; 
+        int curX = barStartX + 4 + 40 + 4; 
         int btnY = y + 20; 
         
         adder.accept(Button.builder(Component.literal("-"), b -> { pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f); }).bounds(curX, btnY, 18, btnSize).build());
@@ -934,7 +909,7 @@ public class TopBar {
         int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
         int btnSize = 18;
 
-        int curX = barStartX + 6 + 26 + 6 + 66 + 6; 
+        int curX = barStartX + 4 + 20 + 6 + 66 + 6; 
         int btnY = y + 16; 
         
         adder.accept(Button.builder(Component.literal("-"), b -> { pSel.slotSize = Math.max(5, pSel.slotSize - 1); }).bounds(curX, btnY, 20, btnSize).build());
