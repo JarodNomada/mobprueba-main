@@ -368,7 +368,7 @@ public class TopBar {
             else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) return 280;
             else if (pSel.tipo.startsWith("SLOT")) return 160;
             else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) return 200;
-            else if (pSel.tipo.equals("LISTA_LOGROS")) return 265;
+            else if (pSel.tipo.equals("LISTA_LOGROS")) return 106;
             else if (pSel.tipo.equals("PROGRESO")) {
                 return 152;
             } else {
@@ -436,13 +436,10 @@ public class TopBar {
         int textW = font.width(title);
         int textX = x + (width - textW) / 2;
         g.drawString(font, title, textX, y, 0xFF444444, false);
-        g.fill(x, y + 4, textX - 2, y + 5, 0xFF888888);
-        g.fill(textX + textW + 2, y + 4, x + width, y + 5, 0xFF888888);
     }
 
     private static void drawVerticalSeparator(GuiGraphics g, int x, int y, int height) {
-        g.fill(x, y, x + 1, y + height, 0xFF888888);
-        g.fill(x + 1, y, x + 2, y + height, 0xFFFFFFFF);
+        // Líneas divisoras eliminadas para diseño más limpio
     }
 
     private static void renderDrawingTools(GuiGraphics g, int barStartX, int y, GlobalGuiSettings.PanelConfig pSel) {
@@ -456,8 +453,6 @@ public class TopBar {
             drawColorSwatch(g, pSel.colorBorde, curX + 18, rowY);
 
             curX += 36;
-            drawVerticalSeparator(g, curX, y + 4, 26);
-            curX += 4;
             return;
 } else if (pSel.tipo.equals("DETALLE_MISION")) {
             int rowY = y + 4;
@@ -469,19 +464,15 @@ public class TopBar {
 
             drawColorSwatch(g, pSel.colorARGB, curX + swatchOffset, rowY);
             curX += sectionWidth;
-            drawVerticalSeparator(g, curX - 1, y + 4, 44);
 
             drawColorSwatch(g, pSel.colorFondoIcono, curX + swatchOffset, rowY);
             curX += sectionWidth;
-            drawVerticalSeparator(g, curX - 1, y + 4, 44);
 
             drawColorSwatch(g, pSel.colorFondoRenglon, curX + swatchOffset, rowY);
             curX += sectionWidth;
-            drawVerticalSeparator(g, curX - 1, y + 4, 44);
 
             drawColorSwatch(g, pSel.colorTexto, curX + swatchOffset, rowY);
             curX += sectionWidth;
-            drawVerticalSeparator(g, curX - 1, y + 4, 44);
 
             drawColorSwatch(g, pSel.colorFondoCheck, curX + cSwatchOffset, rowY);
             drawColorSwatch(g, pSel.colorBordeCheckInterno, curX + cSwatchOffset + 20, rowY);
@@ -506,7 +497,6 @@ public class TopBar {
             drawColorSwatch(g, pSel.colorTexto, curX + 80, row1Y);
             
             curX += 100;
-            drawVerticalSeparator(g, curX, y + 4, 40);
         } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
             int colorsX = barStartX + 4;
 
@@ -522,19 +512,6 @@ public class TopBar {
             drawColorSwatch(g, pSel.colorFondoMision, colorsX + 20, row2Y);
             drawColorSwatch(g, pSel.colorBordeMision, colorsX + 40, row2Y);
 
-            int currentX = colorsX + 80;
-
-            if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
-                drawVerticalSeparator(g, currentX, y + 4, 44);
-                currentX += 4;
-                currentX += 40;
-
-                drawVerticalSeparator(g, currentX - 4, y + 4, 44);
-                currentX += 40;
-
-                drawVerticalSeparator(g, currentX - 4, y + 4, 44);
-            }
-
         } else if (pSel.tipo.equals("MANIQUI") || pSel.tipo.equals("MISION_ICONO")) {
             int curX = barStartX + 4;
             int boxY = y + 4;
@@ -542,39 +519,29 @@ public class TopBar {
             curX += 20;
             drawColorSwatch(g, pSel.colorBorde, curX, boxY);
             curX += 20;
-            drawVerticalSeparator(g, curX, y + 4, 40);
-            curX += 4;
         } else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) {
             int curX = barStartX + 4;
             int boxY = y + 4;
             drawColorSwatch(g, pSel.colorARGB, curX, boxY);
             curX += 20;
-            drawVerticalSeparator(g, curX, y + 4, 40);
             curX += 6;
             drawColorSwatch(g, pSel.colorSlotBg, curX, boxY);
             drawColorSwatch(g, pSel.colorSlotDark, curX + 20, boxY);
             drawColorSwatch(g, pSel.colorSlotLight, curX + 40, boxY);
             curX += 66;
-            drawVerticalSeparator(g, curX, y + 4, 40);
-            curX += 6;
         } else if (pSel.tipo.startsWith("SLOT")) {
             int curX = barStartX + 4;
             int boxY = y + 4;
             drawColorSwatch(g, pSel.colorARGB, curX, boxY);
             curX += 20;
-            drawVerticalSeparator(g, curX, y + 4, 40);
             curX += 6;
             drawColorSwatch(g, pSel.colorSlotBg, curX, boxY);
             drawColorSwatch(g, pSel.colorSlotDark, curX + 20, boxY);
             drawColorSwatch(g, pSel.colorSlotLight, curX + 40, boxY);
             curX += 66;
-            drawVerticalSeparator(g, curX, y + 4, 40);
-            curX += 6;
         } else if (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO")) {
             int curX = barStartX + 4;
             curX += 48;
-            drawVerticalSeparator(g, curX, y + 4, 40);
-            curX += 6;
             
             sliderImageX = curX + 10;
             int sY = y + 12;
@@ -606,8 +573,7 @@ public class TopBar {
             drawColorSwatch(g, pSel.colorTexto, curX + 80, row1Y);
             drawColorSwatch(g, pSel.colorSlotBg, curX + 80, row2Y);
 
-            curX += 122;
-            drawVerticalSeparator(g, curX, y + 4, 40);
+            curX += 102;
         } else if (pSel.tipo.equals("PROGRESO")) {
             int curX = barStartX + 4;
             int row1Y = y + 4;
@@ -662,17 +628,13 @@ public class TopBar {
             }
 
             if (pSel.tipo.equals("CUADRADO")) {
-                drawVerticalSeparator(g, currentX, y + 4, 40);
                 currentX += 4;
                 currentX += 42;
             }
 
             if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
-                drawVerticalSeparator(g, currentX, y + 4, 40);
                 currentX += 4;
                 currentX += 46;
-
-                drawVerticalSeparator(g, currentX - 4, y + 4, 40);
             }
         }
     }
