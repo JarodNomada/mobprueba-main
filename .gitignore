@@ -1,18 +1,1 @@
-(java/.gradle/
-.classpath
-.project
-.settings/
-target/
-*.class
-*.jar
-*.war
-*.ear
-!*.java
-!*.properties
-!*.xml
-!*.yml
-!*.yaml
-!*.json
-!*.txt
-!*.md
-)
+Nothing needs to be added to .gitignore since only a Java source file was modified and no build artifacts, dependencies, or temporary files were included in the changes.
