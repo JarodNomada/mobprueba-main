@@ -736,43 +736,44 @@ public class TopBar {
         int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
         int btnSize = 18;
 
+        int baseX = barStartX + 4 + 80 + 4; 
+        int btnY1 = y + 4;
+        int btnY2 = y + 24; 
+
         if (pSel.tipo.startsWith("DESPLEGABLE")) {
-            int btnY1 = y + 4;
-            int btnY2 = y + 24; 
-            int curX = barStartX + 4 + 80 + 4; 
-
-            adder.accept(Button.builder(Component.literal("←"), b -> pSel.offsetXTexto -= 2.0f).bounds(curX, btnY1, btnSize, btnSize).build());
-            adder.accept(Button.builder(Component.literal("→"), b -> pSel.offsetXTexto += 2.0f).bounds(curX + 20, btnY1, btnSize, btnSize).build());
-            adder.accept(Button.builder(Component.literal("-"), b -> pSel.escalaTexto = Math.max(0.1f, pSel.escalaTexto - 0.1f)).bounds(curX, btnY2, btnSize, btnSize).build());
-            adder.accept(Button.builder(Component.literal("+"), b -> pSel.escalaTexto = Math.min(10.0f, pSel.escalaTexto + 0.1f)).bounds(curX + 20, btnY2, btnSize, btnSize).build());
-            curX += 40; 
+            // Texto offsets/escala
+            adder.accept(Button.builder(Component.literal("←"), b -> pSel.offsetXTexto -= 2.0f).bounds(baseX, btnY1, btnSize, btnSize).build());
+            adder.accept(Button.builder(Component.literal("→"), b -> pSel.offsetXTexto += 2.0f).bounds(baseX + 20, btnY1, btnSize, btnSize).build());
+            adder.accept(Button.builder(Component.literal("-"), b -> pSel.escalaTexto = Math.max(0.1f, pSel.escalaTexto - 0.1f)).bounds(baseX, btnY2, btnSize, btnSize).build());
+            adder.accept(Button.builder(Component.literal("+"), b -> pSel.escalaTexto = Math.min(10.0f, pSel.escalaTexto + 0.1f)).bounds(baseX + 20, btnY2, btnSize, btnSize).build());
             
-            adder.accept(Button.builder(Component.literal("←"), b -> pSel.offsetXTextoMision -= 2.0f).bounds(curX, btnY1, btnSize, btnSize).build());
-            adder.accept(Button.builder(Component.literal("→"), b -> pSel.offsetXTextoMision += 2.0f).bounds(curX + 20, btnY1, btnSize, btnSize).build());
-            adder.accept(Button.builder(Component.literal("-"), b -> pSel.escalaTextoMision = Math.max(0.1f, pSel.escalaTextoMision - 0.1f)).bounds(curX, btnY2, btnSize, btnSize).build());
-            adder.accept(Button.builder(Component.literal("+"), b -> pSel.escalaTextoMision = Math.min(10.0f, pSel.escalaTextoMision + 0.1f)).bounds(curX + 20, btnY2, btnSize, btnSize).build());
-            curX += 40; 
+            // Texto Mision offsets/escala
+            int textoMisionX = baseX + 40;
+            adder.accept(Button.builder(Component.literal("←"), b -> pSel.offsetXTextoMision -= 2.0f).bounds(textoMisionX, btnY1, btnSize, btnSize).build());
+            adder.accept(Button.builder(Component.literal("→"), b -> pSel.offsetXTextoMision += 2.0f).bounds(textoMisionX + 20, btnY1, btnSize, btnSize).build());
+            adder.accept(Button.builder(Component.literal("-"), b -> pSel.escalaTextoMision = Math.max(0.1f, pSel.escalaTextoMision - 0.1f)).bounds(textoMisionX, btnY2, btnSize, btnSize).build());
+            adder.accept(Button.builder(Component.literal("+"), b -> pSel.escalaTextoMision = Math.min(10.0f, pSel.escalaTextoMision + 0.1f)).bounds(textoMisionX + 20, btnY2, btnSize, btnSize).build());
 
-            adder.accept(Button.builder(Component.literal("←"), b -> pSel.offsetXIcono -= 2.0f).bounds(curX, btnY1, btnSize, btnSize).build());
-            adder.accept(Button.builder(Component.literal("→"), b -> pSel.offsetXIcono += 2.0f).bounds(curX + 20, btnY1, btnSize, btnSize).build());
-            adder.accept(Button.builder(Component.literal("-"), b -> pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f)).bounds(curX, btnY2, btnSize, btnSize).build());
-            adder.accept(Button.builder(Component.literal("+"), b -> pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f)).bounds(curX + 20, btnY2, btnSize, btnSize).build());
+            // Icono offsets/escala
+            int iconoX = baseX + 80;
+            adder.accept(Button.builder(Component.literal("←"), b -> pSel.offsetXIcono -= 2.0f).bounds(iconoX, btnY1, btnSize, btnSize).build());
+            adder.accept(Button.builder(Component.literal("→"), b -> pSel.offsetXIcono += 2.0f).bounds(iconoX + 20, btnY1, btnSize, btnSize).build());
+            adder.accept(Button.builder(Component.literal("-"), b -> pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f)).bounds(iconoX, btnY2, btnSize, btnSize).build());
+            adder.accept(Button.builder(Component.literal("+"), b -> pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f)).bounds(iconoX + 20, btnY2, btnSize, btnSize).build());
         } else {
-            int btnY1 = y + 4;
-            int btnY2 = y + 24; 
-            int curX = barStartX + 4 + 20 + (pSel.tipo.equals("LINEA") || pSel.tipo.equals("TRIANGULO") ? 0 : 20) + 4;
+            int formaBaseX = barStartX + 4 + 20 + (pSel.tipo.equals("LINEA") || pSel.tipo.equals("TRIANGULO") ? 0 : 20) + 4;
 
-            adder.accept(Button.builder(Component.literal("←"), b -> pSel.offsetXTexto -= 2.0f).bounds(curX, btnY1, btnSize, btnSize).build());
-            adder.accept(Button.builder(Component.literal("→"), b -> pSel.offsetXTexto += 2.0f).bounds(curX + 20, btnY1, btnSize, btnSize).build());
-            adder.accept(Button.builder(Component.literal("-"), b -> pSel.escalaTexto = Math.max(0.1f, pSel.escalaTexto - 0.1f)).bounds(curX, btnY2, btnSize, btnSize).build());
-            adder.accept(Button.builder(Component.literal("+"), b -> pSel.escalaTexto = Math.min(10.0f, pSel.escalaTexto + 0.1f)).bounds(curX + 20, btnY2, btnSize, btnSize).build());
-            curX += 46;
+            adder.accept(Button.builder(Component.literal("←"), b -> pSel.offsetXTexto -= 2.0f).bounds(formaBaseX, btnY1, btnSize, btnSize).build());
+            adder.accept(Button.builder(Component.literal("→"), b -> pSel.offsetXTexto += 2.0f).bounds(formaBaseX + 20, btnY1, btnSize, btnSize).build());
+            adder.accept(Button.builder(Component.literal("-"), b -> pSel.escalaTexto = Math.max(0.1f, pSel.escalaTexto - 0.1f)).bounds(formaBaseX, btnY2, btnSize, btnSize).build());
+            adder.accept(Button.builder(Component.literal("+"), b -> pSel.escalaTexto = Math.min(10.0f, pSel.escalaTexto + 0.1f)).bounds(formaBaseX + 20, btnY2, btnSize, btnSize).build());
 
             if (!pSel.tipo.equals("BOTON_PAGINA")) {
-                adder.accept(Button.builder(Component.literal("←"), b -> pSel.offsetXIcono -= 2.0f).bounds(curX, btnY1, btnSize, btnSize).build());
-                adder.accept(Button.builder(Component.literal("→"), b -> pSel.offsetXIcono += 2.0f).bounds(curX + 20, btnY1, btnSize, btnSize).build());
-                adder.accept(Button.builder(Component.literal("-"), b -> pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f)).bounds(curX, btnY2, btnSize, btnSize).build());
-                adder.accept(Button.builder(Component.literal("+"), b -> pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f)).bounds(curX + 20, btnY2, btnSize, btnSize).build());
+                int iconoBaseX = formaBaseX + 46;
+                adder.accept(Button.builder(Component.literal("←"), b -> pSel.offsetXIcono -= 2.0f).bounds(iconoBaseX, btnY1, btnSize, btnSize).build());
+                adder.accept(Button.builder(Component.literal("→"), b -> pSel.offsetXIcono += 2.0f).bounds(iconoBaseX + 20, btnY1, btnSize, btnSize).build());
+                adder.accept(Button.builder(Component.literal("-"), b -> pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f)).bounds(iconoBaseX, btnY2, btnSize, btnSize).build());
+                adder.accept(Button.builder(Component.literal("+"), b -> pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f)).bounds(iconoBaseX + 20, btnY2, btnSize, btnSize).build());
             }
         }
     }
@@ -784,24 +785,24 @@ public class TopBar {
         int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
         int btnSize = 18;
 
-        int curX = barStartX + 4 + 20 + 6 + 66 + 6; 
+        int baseX = barStartX + 4 + 20 + 6 + 66 + 6; 
         int row1 = y + 5;
         int row2 = y + 25;
         
         if (pSel.tipo.equals("HOTBAR")) {
-            adder.accept(Button.builder(Component.literal("🔄"), b -> pSel.isVertical = !pSel.isVertical).bounds(curX, row1, btnSize, btnSize).build());
-            adder.accept(Button.builder(Component.literal("V-"), b -> { pSel.visibleSlots = Math.max(1, pSel.visibleSlots - 1); }).bounds(curX + 22, row1, 20, btnSize).build());
-            adder.accept(Button.builder(Component.literal("V+"), b -> { pSel.visibleSlots = Math.min(9, pSel.visibleSlots + 1); }).bounds(curX + 44, row1, 20, btnSize).build());
+            adder.accept(Button.builder(Component.literal("🔄"), b -> pSel.isVertical = !pSel.isVertical).bounds(baseX, row1, btnSize, btnSize).build());
+            adder.accept(Button.builder(Component.literal("V-"), b -> { pSel.visibleSlots = Math.max(1, pSel.visibleSlots - 1); }).bounds(baseX + 22, row1, 20, btnSize).build());
+            adder.accept(Button.builder(Component.literal("V+"), b -> { pSel.visibleSlots = Math.min(9, pSel.visibleSlots + 1); }).bounds(baseX + 44, row1, 20, btnSize).build());
         } else {
-            adder.accept(Button.builder(Component.literal("C-"), b -> { pSel.columnas = Math.max(1, pSel.columnas - 1); }).bounds(curX, row1, 20, btnSize).build());
-            adder.accept(Button.builder(Component.literal("C+"), b -> { pSel.columnas = Math.min(27, pSel.columnas + 1); }).bounds(curX + 22, row1, 20, btnSize).build());
+            adder.accept(Button.builder(Component.literal("C-"), b -> { pSel.columnas = Math.max(1, pSel.columnas - 1); }).bounds(baseX, row1, 20, btnSize).build());
+            adder.accept(Button.builder(Component.literal("C+"), b -> { pSel.columnas = Math.min(27, pSel.columnas + 1); }).bounds(baseX + 22, row1, 20, btnSize).build());
         }
 
-        adder.accept(Button.builder(Component.literal("T-"), b -> { pSel.slotSize = Math.max(5, pSel.slotSize - 1); }).bounds(curX + 66, row1, 20, btnSize).build());
-        adder.accept(Button.builder(Component.literal("T+"), b -> { pSel.slotSize = Math.min(100, pSel.slotSize + 1); }).bounds(curX + 88, row1, 20, btnSize).build());
+        adder.accept(Button.builder(Component.literal("T-"), b -> { pSel.slotSize = Math.max(5, pSel.slotSize - 1); }).bounds(baseX + 66, row1, 20, btnSize).build());
+        adder.accept(Button.builder(Component.literal("T+"), b -> { pSel.slotSize = Math.min(100, pSel.slotSize + 1); }).bounds(baseX + 88, row1, 20, btnSize).build());
         
-        adder.accept(Button.builder(Component.literal("G-"), b -> { pSel.gap = Math.max(0, pSel.gap - 1); }).bounds(curX + 66, row2, 20, btnSize).build());
-        adder.accept(Button.builder(Component.literal("G+"), b -> { pSel.gap = Math.min(50, pSel.gap + 1); }).bounds(curX + 88, row2, 20, btnSize).build());
+        adder.accept(Button.builder(Component.literal("G-"), b -> { pSel.gap = Math.max(0, pSel.gap - 1); }).bounds(baseX + 66, row2, 20, btnSize).build());
+        adder.accept(Button.builder(Component.literal("G+"), b -> { pSel.gap = Math.min(50, pSel.gap + 1); }).bounds(baseX + 88, row2, 20, btnSize).build());
     }
 
     public static void inicializarBotonesManiqui(int guiWidth, int y, java.util.function.Consumer<Button> adder, GlobalGuiSettings.PanelConfig pSel) {
@@ -811,11 +812,11 @@ public class TopBar {
         int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
         int btnSize = 18;
 
-        int curX = barStartX + 4 + 40 + 4; 
+        int baseX = barStartX + 4 + 40 + 4; 
         int btnY = y + 4; 
         
-        adder.accept(Button.builder(Component.literal("-"), b -> { pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f); }).bounds(curX, btnY, 18, btnSize).build());
-        adder.accept(Button.builder(Component.literal("+"), b -> { pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f); }).bounds(curX + 20, btnY, 18, btnSize).build());
+        adder.accept(Button.builder(Component.literal("-"), b -> { pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f); }).bounds(baseX, btnY, 18, btnSize).build());
+        adder.accept(Button.builder(Component.literal("+"), b -> { pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f); }).bounds(baseX + 20, btnY, 18, btnSize).build());
     }
 
     public static void inicializarBotonesSlot(int guiWidth, int y, Consumer<Button> adder, GlobalGuiSettings.PanelConfig pSel) {
@@ -825,11 +826,11 @@ public class TopBar {
         int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
         int btnSize = 18;
 
-        int curX = barStartX + 4 + 20 + 6 + 66 + 6; 
+        int baseX = barStartX + 4 + 20 + 6 + 66 + 6; 
         int btnY = y + 4; 
         
-        adder.accept(Button.builder(Component.literal("-"), b -> { pSel.slotSize = Math.max(5, pSel.slotSize - 1); }).bounds(curX, btnY, 20, btnSize).build());
-        adder.accept(Button.builder(Component.literal("+"), b -> { pSel.slotSize = Math.min(100, pSel.slotSize + 1); }).bounds(curX + 22, btnY, 20, btnSize).build());
+        adder.accept(Button.builder(Component.literal("-"), b -> { pSel.slotSize = Math.max(5, pSel.slotSize - 1); }).bounds(baseX, btnY, 20, btnSize).build());
+        adder.accept(Button.builder(Component.literal("+"), b -> { pSel.slotSize = Math.min(100, pSel.slotSize + 1); }).bounds(baseX + 22, btnY, 20, btnSize).build());
     }
 
     public static boolean handleOpacitySliderClick(double mx, double my, int guiWidth, int y, GlobalGuiSettings.PanelConfig pSel) {
@@ -858,18 +859,18 @@ public class TopBar {
         int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
         int btnSize = 18;
 
-        int curX = barStartX + 6 + 2; 
+        int baseX = barStartX + 6 + 2; 
         int btnY = y + 16; 
         
         adder.accept(Button.builder(Component.literal("-"), b -> { 
             pSel.ancho = Math.max(5, pSel.ancho - 5); 
             pSel.alto = Math.max(5, pSel.alto - 5); 
-        }).bounds(curX, btnY, 18, btnSize).build());
+        }).bounds(baseX, btnY, 18, btnSize).build());
         
         adder.accept(Button.builder(Component.literal("+"), b -> { 
             pSel.ancho += 5; 
             pSel.alto += 5; 
-        }).bounds(curX + 20, btnY, 18, btnSize).build());
+        }).bounds(baseX + 20, btnY, 18, btnSize).build());
     }
 
     public static void inicializarBotonesLogros(int guiWidth, int y, Consumer<Button> adder, GlobalGuiSettings.PanelConfig pSel) {
@@ -879,25 +880,25 @@ public class TopBar {
         int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
         int btnSize = 18;
 
-        int curX = barStartX + 6 + 112; 
+        int baseX = barStartX + 6 + 112; 
         int btnY1 = y + 5;
         int btnY2 = y + 25;
 
-        adder.accept(Button.builder(Component.literal("T+"), b -> { pSel.escalaTexto = Math.min(3.0f, pSel.escalaTexto + 0.1f); }).bounds(curX, btnY1, btnSize, btnSize).build());
-        adder.accept(Button.builder(Component.literal("T-"), b -> { pSel.escalaTexto = Math.max(0.4f, pSel.escalaTexto - 0.1f); }).bounds(curX, btnY2, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("T+"), b -> { pSel.escalaTexto = Math.min(3.0f, pSel.escalaTexto + 0.1f); }).bounds(baseX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("T-"), b -> { pSel.escalaTexto = Math.max(0.4f, pSel.escalaTexto - 0.1f); }).bounds(baseX, btnY2, btnSize, btnSize).build());
         
-        curX += 20;
-        adder.accept(Button.builder(Component.literal("D+"), b -> { pSel.escalaDesc = Math.min(3.0f, pSel.escalaDesc + 0.1f); }).bounds(curX, btnY1, btnSize, btnSize).build());
-        adder.accept(Button.builder(Component.literal("D-"), b -> { pSel.escalaDesc = Math.max(0.4f, pSel.escalaDesc - 0.1f); }).bounds(curX, btnY2, btnSize, btnSize).build());
+        int descX = baseX + 20;
+        adder.accept(Button.builder(Component.literal("D+"), b -> { pSel.escalaDesc = Math.min(3.0f, pSel.escalaDesc + 0.1f); }).bounds(descX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("D-"), b -> { pSel.escalaDesc = Math.max(0.4f, pSel.escalaDesc - 0.1f); }).bounds(descX, btnY2, btnSize, btnSize).build());
 
-        curX += 20;
+        int iconoX = baseX + 40;
         adder.accept(Button.builder(Component.literal("C+"), b -> { 
             int oldStep = (int)(36 * (pSel.escalaIcono > 0.1f ? pSel.escalaIcono : 1.0f)) + 1;
             int idx = Math.round(pSel.scrollY / (float)oldStep); // Guarda en qué logro estás
             pSel.escalaIcono = Math.min(3.0f, pSel.escalaIcono + 0.1f); 
             int newStep = (int)(36 * pSel.escalaIcono) + 1;
             pSel.scrollY = idx * newStep; // Mueve el scroll para que encaje perfecto
-        }).bounds(curX, btnY1, btnSize, btnSize).build());
+        }).bounds(iconoX, btnY1, btnSize, btnSize).build());
         
         adder.accept(Button.builder(Component.literal("C-"), b -> { 
             int oldStep = (int)(36 * (pSel.escalaIcono > 0.1f ? pSel.escalaIcono : 1.0f)) + 1;
@@ -905,23 +906,23 @@ public class TopBar {
             pSel.escalaIcono = Math.max(0.4f, pSel.escalaIcono - 0.1f); 
             int newStep = (int)(36 * pSel.escalaIcono) + 1;
             pSel.scrollY = idx * newStep; 
-        }).bounds(curX, btnY2, btnSize, btnSize).build());
+        }).bounds(iconoX, btnY2, btnSize, btnSize).build());
 
-        curX += 20;
-        adder.accept(Button.builder(Component.literal("M+"), b -> { pSel.escalaMarco = Math.min(3.0f, pSel.escalaMarco + 0.1f); }).bounds(curX, btnY1, btnSize, btnSize).build());
-        adder.accept(Button.builder(Component.literal("M-"), b -> { pSel.escalaMarco = Math.max(0.4f, pSel.escalaMarco - 0.1f); }).bounds(curX, btnY2, btnSize, btnSize).build());
+        int marcoX = baseX + 60;
+        adder.accept(Button.builder(Component.literal("M+"), b -> { pSel.escalaMarco = Math.min(3.0f, pSel.escalaMarco + 0.1f); }).bounds(marcoX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("M-"), b -> { pSel.escalaMarco = Math.max(0.4f, pSel.escalaMarco - 0.1f); }).bounds(marcoX, btnY2, btnSize, btnSize).build());
 
-        curX += 20;
-        adder.accept(Button.builder(Component.literal("I+"), b -> { pSel.escalaItem = Math.min(3.0f, pSel.escalaItem + 0.1f); }).bounds(curX, btnY1, btnSize, btnSize).build());
-        adder.accept(Button.builder(Component.literal("I-"), b -> { pSel.escalaItem = Math.max(0.4f, pSel.escalaItem - 0.1f); }).bounds(curX, btnY2, btnSize, btnSize).build());
+        int itemX = baseX + 80;
+        adder.accept(Button.builder(Component.literal("I+"), b -> { pSel.escalaItem = Math.min(3.0f, pSel.escalaItem + 0.1f); }).bounds(itemX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("I-"), b -> { pSel.escalaItem = Math.max(0.4f, pSel.escalaItem - 0.1f); }).bounds(itemX, btnY2, btnSize, btnSize).build());
 
-        curX += 20;
-        adder.accept(Button.builder(Component.literal("K+"), b -> { pSel.escalaCheck = Math.min(3.0f, pSel.escalaCheck + 0.1f); }).bounds(curX, btnY1, btnSize, btnSize).build());
-        adder.accept(Button.builder(Component.literal("K-"), b -> { pSel.escalaCheck = Math.max(0.4f, pSel.escalaCheck - 0.1f); }).bounds(curX, btnY2, btnSize, btnSize).build());
+        int checkX = baseX + 100;
+        adder.accept(Button.builder(Component.literal("K+"), b -> { pSel.escalaCheck = Math.min(3.0f, pSel.escalaCheck + 0.1f); }).bounds(checkX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("K-"), b -> { pSel.escalaCheck = Math.max(0.4f, pSel.escalaCheck - 0.1f); }).bounds(checkX, btnY2, btnSize, btnSize).build());
 
-        curX += 20;
-        adder.accept(Button.builder(Component.literal("B+"), b -> { pSel.redondezBorde = Math.min(5, pSel.redondezBorde + 1); }).bounds(curX, btnY1, btnSize, btnSize).build());
-        adder.accept(Button.builder(Component.literal("B-"), b -> { pSel.redondezBorde = Math.max(0, pSel.redondezBorde - 1); }).bounds(curX, btnY2, btnSize, btnSize).build());
+        int bordeX = baseX + 120;
+        adder.accept(Button.builder(Component.literal("B+"), b -> { pSel.redondezBorde = Math.min(5, pSel.redondezBorde + 1); }).bounds(bordeX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("B-"), b -> { pSel.redondezBorde = Math.max(0, pSel.redondezBorde - 1); }).bounds(bordeX, btnY2, btnSize, btnSize).build());
     }
 
     public static void inicializarBotonesProgreso(int guiWidth, int y, Consumer<Button> adder, GlobalGuiSettings.PanelConfig pSel) {
@@ -967,28 +968,28 @@ public class TopBar {
         int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
         int btnSize = 18;
 
-        int curX = barStartX + 6 + 105 + 5; 
+        int baseX = barStartX + 6 + 105 + 5; 
         int btnY1 = y + 5;
         int btnY2 = y + 25;
 
-        adder.accept(Button.builder(Component.literal("T+"), b -> { pSel.escalaTexto = Math.min(3.0f, pSel.escalaTexto + 0.1f); }).bounds(curX, btnY1, btnSize, btnSize).build());
-        adder.accept(Button.builder(Component.literal("T-"), b -> { pSel.escalaTexto = Math.max(0.4f, pSel.escalaTexto - 0.1f); }).bounds(curX, btnY2, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("T+"), b -> { pSel.escalaTexto = Math.min(3.0f, pSel.escalaTexto + 0.1f); }).bounds(baseX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("T-"), b -> { pSel.escalaTexto = Math.max(0.4f, pSel.escalaTexto - 0.1f); }).bounds(baseX, btnY2, btnSize, btnSize).build());
         
-        curX += 20;
-        adder.accept(Button.builder(Component.literal("I+"), b -> { pSel.escalaItem = Math.min(3.0f, pSel.escalaItem + 0.1f); }).bounds(curX, btnY1, btnSize, btnSize).build());
-        adder.accept(Button.builder(Component.literal("I-"), b -> { pSel.escalaItem = Math.max(0.4f, pSel.escalaItem - 0.1f); }).bounds(curX, btnY2, btnSize, btnSize).build());
+        int itemX = baseX + 20;
+        adder.accept(Button.builder(Component.literal("I+"), b -> { pSel.escalaItem = Math.min(3.0f, pSel.escalaItem + 0.1f); }).bounds(itemX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("I-"), b -> { pSel.escalaItem = Math.max(0.4f, pSel.escalaItem - 0.1f); }).bounds(itemX, btnY2, btnSize, btnSize).build());
 
-        curX += 20;
-        adder.accept(Button.builder(Component.literal("C+"), b -> { pSel.escalaCheck = Math.min(3.0f, pSel.escalaCheck + 0.1f); }).bounds(curX, btnY1, btnSize, btnSize).build());
-        adder.accept(Button.builder(Component.literal("C-"), b -> { pSel.escalaCheck = Math.max(0.4f, pSel.escalaCheck - 0.1f); }).bounds(curX, btnY2, btnSize, btnSize).build());
+        int checkX = baseX + 40;
+        adder.accept(Button.builder(Component.literal("C+"), b -> { pSel.escalaCheck = Math.min(3.0f, pSel.escalaCheck + 0.1f); }).bounds(checkX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("C-"), b -> { pSel.escalaCheck = Math.max(0.4f, pSel.escalaCheck - 0.1f); }).bounds(checkX, btnY2, btnSize, btnSize).build());
 
-        curX += 20;
-        adder.accept(Button.builder(Component.literal("B+"), b -> { pSel.redondezBorde = Math.min(5, pSel.redondezBorde + 1); }).bounds(curX, btnY1, btnSize, btnSize).build());
-        adder.accept(Button.builder(Component.literal("B-"), b -> { pSel.redondezBorde = Math.max(0, pSel.redondezBorde - 1); }).bounds(curX, btnY2, btnSize, btnSize).build());
+        int bordeX = baseX + 60;
+        adder.accept(Button.builder(Component.literal("B+"), b -> { pSel.redondezBorde = Math.min(5, pSel.redondezBorde + 1); }).bounds(bordeX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("B-"), b -> { pSel.redondezBorde = Math.max(0, pSel.redondezBorde - 1); }).bounds(bordeX, btnY2, btnSize, btnSize).build());
 
-        curX += 20;
-        adder.accept(Button.builder(Component.literal("G+"), b -> { pSel.gap = Math.min(5, pSel.gap + 1); }).bounds(curX, btnY1, btnSize, btnSize).build());
-        adder.accept(Button.builder(Component.literal("G-"), b -> { pSel.gap = Math.max(-1, pSel.gap - 1); }).bounds(curX, btnY2, btnSize, btnSize).build());
+        int gapX = baseX + 80;
+        adder.accept(Button.builder(Component.literal("G+"), b -> { pSel.gap = Math.min(5, pSel.gap + 1); }).bounds(gapX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("G-"), b -> { pSel.gap = Math.max(-1, pSel.gap - 1); }).bounds(gapX, btnY2, btnSize, btnSize).build());
     }
 
     public static void inicializarBotonesCuadrado(int guiWidth, int y, Consumer<Button> adder, GlobalGuiSettings.PanelConfig pSel) {
