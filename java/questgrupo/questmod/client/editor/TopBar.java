@@ -72,7 +72,7 @@ public class TopBar {
 
     public static int getHeight() {
         if (!visible) return 0;
-        if (currentPanel != null && (currentPanel.tipo.equals("MISION_OBJETIVOS") || currentPanel.tipo.equals("DETALLE_MISION"))) {
+        if (currentPanel != null && currentPanel.tipo.equals("DETALLE_MISION")) {
             return 34;
         }
         return 48;
@@ -358,7 +358,8 @@ public class TopBar {
             int cols = esEstadistica ? 4 : 5; w += (cols * 18) + ((cols - 1) * 2); w += 4;
             return w;
         } else if (drawTools && pSel != null) {
-            if (pSel.tipo.equals("MISION_OBJETIVOS") || pSel.tipo.equals("DETALLE_MISION")) return 244;
+            if (pSel.tipo.equals("DETALLE_MISION")) return 244;
+            if (pSel.tipo.equals("MISION_OBJETIVOS")) return 230;
             else if (pSel.tipo.equals("BOTON_PAGINA")) return 96;
             else if (pSel.tipo.startsWith("DESPLEGABLE")) {
                 int w = 6 + 80; if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) w += 46 * 3; w += 6; return w;
@@ -371,6 +372,7 @@ public class TopBar {
                 return 152;
             } else {
                 int w = 6 + 20 + (pSel.tipo.equals("LINEA") || pSel.tipo.equals("TRIANGULO") ? 0 : 20);
+                if (pSel.tipo.equals("CUADRADO")) w += 46;
                 if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) w += 46 * 2; w += 6;
                 return w;
             }
@@ -458,7 +460,7 @@ public class TopBar {
             curX += 4;
             drawSectionTitle(g, font, "T", curX, y + 2, 38);
             return;
-        } else if (pSel.tipo.equals("MISION_OBJETIVOS") || pSel.tipo.equals("DETALLE_MISION")) {
+} else if (pSel.tipo.equals("DETALLE_MISION")) {
             int rowY = y + 14;
             int curX = barStartX + 6;
             int sectionWidth = 46;
@@ -466,41 +468,51 @@ public class TopBar {
             int swatchOffset = (sectionWidth - 36) / 2;
             int cSwatchOffset = 10;
 
-            // Sección F: Fondo y Borde del panel
             drawSectionTitle(g, font, "F", curX, y + 2, sectionWidth);
             drawColorSwatch(g, pSel.colorARGB, curX + swatchOffset, rowY);
-            drawColorSwatch(g, pSel.colorBorde, curX + swatchOffset + 20, rowY);
-            curX += sectionWidth + 4;
+            curX += sectionWidth;
+            drawVerticalSeparator(g, curX - 1, y + 4, 44);
 
-            // Separador vertical
-            drawVerticalSeparator(g, curX, y + 4, 26);
-            curX += 4;
+            drawSectionTitle(g, font, "O", curX, y + 2, sectionWidth);
+            drawColorSwatch(g, pSel.colorFondoIcono, curX + swatchOffset, rowY);
+            curX += sectionWidth;
+            drawVerticalSeparator(g, curX - 1, y + 4, 44);
 
-            // Sección R: Fondo y Borde del renglón
             drawSectionTitle(g, font, "R", curX, y + 2, sectionWidth);
             drawColorSwatch(g, pSel.colorFondoRenglon, curX + swatchOffset, rowY);
-            drawColorSwatch(g, pSel.colorBordeRenglon, curX + swatchOffset + 20, rowY);
-            curX += sectionWidth + 4;
+            curX += sectionWidth;
+            drawVerticalSeparator(g, curX - 1, y + 4, 44);
 
-            // Separador vertical
-            drawVerticalSeparator(g, curX, y + 4, 26);
-            curX += 4;
+            drawSectionTitle(g, font, "T", curX, y + 2, sectionWidth);
+            drawColorSwatch(g, pSel.colorTexto, curX + swatchOffset, rowY);
+            curX += sectionWidth;
+            drawVerticalSeparator(g, curX - 1, y + 4, 44);
 
-            // Sección I: Fondo y Borde del icono
-            drawSectionTitle(g, font, "I", curX, y + 2, sectionWidth);
-            drawColorSwatch(g, pSel.colorFondoIcono, curX + swatchOffset, rowY);
-            drawColorSwatch(g, pSel.colorBordeIcono, curX + swatchOffset + 20, rowY);
-            curX += sectionWidth + 4;
-
-            // Separador vertical
-            drawVerticalSeparator(g, curX, y + 4, 26);
-            curX += 4;
-
-            // Sección C: Check (Fondo, Borde interno, Borde externo)
-            drawSectionTitle(g, font, "C", curX, y + 2, 90);
+            drawSectionTitle(g, font, "C", curX, y + 2, sectionCWidth);
             drawColorSwatch(g, pSel.colorFondoCheck, curX + cSwatchOffset, rowY);
             drawColorSwatch(g, pSel.colorBordeCheckInterno, curX + cSwatchOffset + 20, rowY);
             drawColorSwatch(g, pSel.colorBordeCheckExterno, curX + cSwatchOffset + 40, rowY);
+        } else if (pSel.tipo.equals("MISION_OBJETIVOS")) {
+            int curX = barStartX + 6;
+            int row1Y = y + 6;
+            int row2Y = y + 26;
+            
+            drawColorSwatch(g, pSel.colorARGB, curX, row1Y);
+            drawColorSwatch(g, pSel.colorBorde, curX, row2Y);
+            
+            drawColorSwatch(g, pSel.colorFondoRenglon, curX + 20, row1Y);
+            drawColorSwatch(g, pSel.colorBordeRenglon, curX + 20, row2Y);
+            
+            drawColorSwatch(g, pSel.colorFondoIcono, curX + 40, row1Y);
+            drawColorSwatch(g, pSel.colorBordeIcono, curX + 40, row2Y);
+            
+            drawColorSwatch(g, pSel.colorFondoCheck, curX + 60, row1Y);
+            drawColorSwatch(g, pSel.colorBordeCheckInterno, curX + 60, row2Y);
+            
+            drawColorSwatch(g, pSel.colorTexto, curX + 80, row1Y);
+            
+            curX += 100;
+            drawVerticalSeparator(g, curX, y + 4, 40);
         } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
             int colorsX = barStartX + 6;
 
@@ -667,6 +679,13 @@ public class TopBar {
                 currentX += 20;
             }
 
+            if (pSel.tipo.equals("CUADRADO")) {
+                drawVerticalSeparator(g, currentX, y + 4, 40);
+                currentX += 4;
+                drawSectionTitle(g, font, "B", currentX, y + 2, 38);
+                currentX += 42;
+            }
+
             if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
                 drawVerticalSeparator(g, currentX, y + 4, 40);
                 currentX += 4;
@@ -685,7 +704,7 @@ public class TopBar {
         int expectedBarW = calculateBarWidth(false, true, null, pSel);
         int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
 
-        if (pSel.tipo.equals("MISION_OBJETIVOS") || pSel.tipo.equals("DETALLE_MISION")) {
+        if (pSel.tipo.equals("DETALLE_MISION")) {
             int rowY = y + 14;
             int curX = barStartX + 6;
             int sectionWidth = 46;
@@ -699,28 +718,42 @@ public class TopBar {
                 return -1;
             }
 
-            // Sección F
             if (mx >= curX + swatchOffset && mx <= curX + swatchOffset + 16) return BTN_FILL_COLOR;
             if (mx >= curX + swatchOffset + 20 && mx <= curX + swatchOffset + 36) return BTN_BORDER_COLOR;
             curX += sectionWidth + 4;
             curX += 4;
 
-            // Sección R
             if (mx >= curX + swatchOffset && mx <= curX + swatchOffset + 16) return BTN_OBJ_ROW_FILL;
             if (mx >= curX + swatchOffset + 20 && mx <= curX + swatchOffset + 36) return BTN_OBJ_ROW_BORDER;
             curX += sectionWidth + 4;
             curX += 4;
 
-            // Sección I
             if (mx >= curX + swatchOffset && mx <= curX + swatchOffset + 16) return BTN_OBJ_ICON_FILL;
             if (mx >= curX + swatchOffset + 20 && mx <= curX + swatchOffset + 36) return BTN_OBJ_ICON_BORDER;
             curX += sectionWidth + 4;
             curX += 4;
 
-            // Sección C
             if (mx >= curX + cSwatchOffset && mx <= curX + cSwatchOffset + 16) return BTN_OBJ_CHECK_FILL;
             if (mx >= curX + cSwatchOffset + 20 && mx <= curX + cSwatchOffset + 36) return BTN_OBJ_CHECK_BORDER_IN;
             if (mx >= curX + cSwatchOffset + 40 && mx <= curX + cSwatchOffset + 56) return BTN_OBJ_CHECK_BORDER_OUT;
+        } else if (pSel.tipo.equals("MISION_OBJETIVOS")) {
+            int curX = barStartX + 6;
+            int row1Y = y + 6;
+            int row2Y = y + 26;
+            
+            if (my >= row1Y && my <= row1Y + 16) {
+                if (mx >= curX && mx <= curX + 16) return BTN_FILL_COLOR;
+                if (mx >= curX + 20 && mx <= curX + 36) return BTN_OBJ_ROW_FILL;
+                if (mx >= curX + 40 && mx <= curX + 56) return BTN_OBJ_ICON_FILL;
+                if (mx >= curX + 60 && mx <= curX + 76) return BTN_OBJ_CHECK_FILL;
+                if (mx >= curX + 80 && mx <= curX + 96) return BTN_TEXT_COLOR;
+            }
+            if (my >= row2Y && my <= row2Y + 16) {
+                if (mx >= curX && mx <= curX + 16) return BTN_BORDER_COLOR;
+                if (mx >= curX + 20 && mx <= curX + 36) return BTN_OBJ_ROW_BORDER;
+                if (mx >= curX + 40 && mx <= curX + 56) return BTN_OBJ_ICON_BORDER;
+                if (mx >= curX + 60 && mx <= curX + 76) return BTN_OBJ_CHECK_BORDER_IN;
+            }
         } else if (pSel.tipo.startsWith("DESPLEGABLE")) {
             int colorsX = barStartX + 6;
             int row1Y = y + 12;
@@ -1034,5 +1067,51 @@ public class TopBar {
 
     private static String getProgresoDisenoName(int diseno) {
         switch(diseno) { case 0: return "Dise\u00f1o 1"; case 1: return "Dise\u00f1o 2"; default: return "Dise\u00f1o 1"; }
+    }
+
+    public static void inicializarBotonesObjetivos(int guiWidth, int y, Consumer<Button> adder, GlobalGuiSettings.PanelConfig pSel) {
+        if (pSel == null || !pSel.tipo.equals("MISION_OBJETIVOS")) return;
+        int barX = LeftSidebar.getSidebarWidth();
+        int expectedBarW = calculateBarWidth(false, true, null, pSel);
+        int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
+        int btnSize = 18;
+
+        int curX = barStartX + 6 + 105 + 5; 
+        int btnY1 = y + 5;
+        int btnY2 = y + 25;
+
+        adder.accept(Button.builder(Component.literal("T+"), b -> { pSel.escalaTexto = Math.min(3.0f, pSel.escalaTexto + 0.1f); }).bounds(curX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("T-"), b -> { pSel.escalaTexto = Math.max(0.4f, pSel.escalaTexto - 0.1f); }).bounds(curX, btnY2, btnSize, btnSize).build());
+        
+        curX += 20;
+        adder.accept(Button.builder(Component.literal("I+"), b -> { pSel.escalaItem = Math.min(3.0f, pSel.escalaItem + 0.1f); }).bounds(curX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("I-"), b -> { pSel.escalaItem = Math.max(0.4f, pSel.escalaItem - 0.1f); }).bounds(curX, btnY2, btnSize, btnSize).build());
+
+        curX += 20;
+        adder.accept(Button.builder(Component.literal("C+"), b -> { pSel.escalaCheck = Math.min(3.0f, pSel.escalaCheck + 0.1f); }).bounds(curX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("C-"), b -> { pSel.escalaCheck = Math.max(0.4f, pSel.escalaCheck - 0.1f); }).bounds(curX, btnY2, btnSize, btnSize).build());
+
+        curX += 20;
+        adder.accept(Button.builder(Component.literal("B+"), b -> { pSel.redondezBorde = Math.min(5, pSel.redondezBorde + 1); }).bounds(curX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("B-"), b -> { pSel.redondezBorde = Math.max(0, pSel.redondezBorde - 1); }).bounds(curX, btnY2, btnSize, btnSize).build());
+
+        curX += 20;
+        adder.accept(Button.builder(Component.literal("G+"), b -> { pSel.gap = Math.min(5, pSel.gap + 1); }).bounds(curX, btnY1, btnSize, btnSize).build());
+        adder.accept(Button.builder(Component.literal("G-"), b -> { pSel.gap = Math.max(-1, pSel.gap - 1); }).bounds(curX, btnY2, btnSize, btnSize).build());
+    }
+
+    public static void inicializarBotonesCuadrado(int guiWidth, int y, Consumer<Button> adder, GlobalGuiSettings.PanelConfig pSel) {
+        if (pSel == null || !pSel.tipo.equals("CUADRADO")) return;
+        
+        int barX = LeftSidebar.getSidebarWidth();
+        int expectedBarW = calculateBarWidth(false, true, null, pSel);
+        int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
+        int btnSize = 18;
+
+        int currentX = barStartX + 6 + 40 + 4;
+        int btnY1 = y + 16; 
+
+        adder.accept(Button.builder(Component.literal("B+"), b -> { pSel.redondezBorde = Math.min(5, pSel.redondezBorde + 1); }).bounds(currentX, btnY1, 18, btnSize).build());
+        adder.accept(Button.builder(Component.literal("B-"), b -> { pSel.redondezBorde = Math.max(0, pSel.redondezBorde - 1); }).bounds(currentX + 20, btnY1, 18, btnSize).build());
     }
 }

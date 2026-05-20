@@ -218,9 +218,12 @@ this.inputColor.setResponder(s -> {
                 TopBar.inicializarBotonesImagen(this.width, 5, this::addRenderableWidget, pSel);
             } else if (pSel.tipo.equals("LISTA_LOGROS")) {
                 TopBar.inicializarBotonesLogros(this.width, 5, this::addRenderableWidget, pSel);
-            } else if (pSel.tipo.equals("PROGRESO")) { // <--- ¡LO MOVIMOS ARRIBA PARA QUE NO SE CONFUNDA!
+            } else if (pSel.tipo.equals("MISION_OBJETIVOS")) {
+                TopBar.inicializarBotonesObjetivos(this.width, 5, this::addRenderableWidget, pSel);
+            } else if (pSel.tipo.equals("PROGRESO")) {
                 TopBar.inicializarBotonesProgreso(this.width, 0, this::addRenderableWidget, pSel);
-            } else if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty() && !pSel.tipo.equals("INVENTORY_GRID")) {
+            } else {
+                TopBar.inicializarBotonesCuadrado(this.width, 5, this::addRenderableWidget, pSel);
                 TopBar.inicializarBotonesMision(this.width, 5, this::addRenderableWidget, pSel);
             }
         }

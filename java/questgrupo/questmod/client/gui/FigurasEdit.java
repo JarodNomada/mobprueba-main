@@ -113,6 +113,7 @@ public static void crearBotonPagina(int numPagina) {
 
         GlobalGuiSettings.PanelConfig p = new GlobalGuiSettings.PanelConfig(x, y, ancho, alto);
         p.tipo = tipo;
+        if (tipo.equals("MISION_OBJETIVOS")) p.gap = 4;
         p.colorARGB = 0xAA222222;
         p.colorBorde = 0xFFA6A6A6;
         p.pagina = GlobalGuiSettings.paginaActual;
@@ -199,7 +200,7 @@ public static void crearBotonPagina(int numPagina) {
             if (player != null) {
                 // 1. Fondo y borde editables desde la TopBar
                 g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
-                g.renderOutline(p.x, p.y, p.ancho, p.alto, seleccionado ? 0xFFFFFF00 : p.colorBorde);
+                g.renderOutline(p.x, p.y, p.ancho, p.alto, seleccionado ? 0xFF00DECA : p.colorBorde);
 
                 // 2. Calculamos el centro y aplicamos la escala independiente (usando escalaIcono como multiplicador)
                 int centroX = p.x + (p.ancho / 2);
@@ -334,7 +335,7 @@ public static void crearBotonPagina(int numPagina) {
 
             drawRoundedOutline(g, p.x, p.y, p.ancho, p.alto, r, p.colorBorde);
 
-            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFFFFFF00);
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF00DECA);
             return;
         } 
 
@@ -418,7 +419,7 @@ public static void crearBotonPagina(int numPagina) {
             g.drawString(font, net.minecraft.network.chat.Component.literal(textoMostrar).setStyle(estilo), 0, 0, p.colorTexto, p.sombra);
             g.pose().popPose();
 
-            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFFFFFF00);
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF00DECA);
             return;
         }
 
@@ -468,7 +469,7 @@ public static void crearBotonPagina(int numPagina) {
                     }
                 }
             }
-            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFFFFFF00);
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF00DECA);
             return;
         }
 
@@ -518,7 +519,7 @@ public static void crearBotonPagina(int numPagina) {
                     }
                 }
             }
-            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFFFFFF00);
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF00DECA);
             return;
         }
 
@@ -585,7 +586,7 @@ public static void crearBotonPagina(int numPagina) {
             }
             g.pose().popPose();
 
-            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFFFFFF00);
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF00DECA);
             return; 
         }
 
@@ -792,7 +793,7 @@ public static void crearBotonPagina(int numPagina) {
             g.pose().popPose();
             g.disableScissor();
             
-            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFFFFFF00);
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF00DECA);
             return;
         }
 
@@ -800,13 +801,13 @@ public static void crearBotonPagina(int numPagina) {
             if (p.x2 != 0 || p.y2 != 0) {
                 drawLineThick(g, p.x, p.y, p.x2, p.y2, p.colorARGB, p.grosor);
             }
+        } else if (p.tipo.equals("LINEA")) {
+            if (p.x2 != 0 || p.y2 != 0) {
+                drawLineThick(g, p.x, p.y, p.x2, p.y2, p.colorARGB, p.grosor);
+            }
         } else if (p.tipo.equals("CUADRADO") || p.tipo.equals("RECTANGULO") || p.tipo.equals("BOTON_PAGINA")) {
-            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
-            int t = 1;
-            g.fill(p.x, p.y, p.x + p.ancho, p.y + t, p.colorBorde);
-            g.fill(p.x, p.y + p.alto - t, p.x + p.ancho, p.y + p.alto, p.colorBorde);
-            g.fill(p.x, p.y, p.x + t, p.y + p.alto, p.colorBorde);
-            g.fill(p.x + p.ancho - t, p.y, p.x + p.ancho, p.y + p.alto, p.colorBorde);
+            int r = p.tipo.equals("CUADRADO") ? p.redondezBorde : 0;
+            drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, Math.min(5, Math.max(0, r)), p.colorARGB, p.colorBorde);
         } else if (p.tipo.equals("TRIANGULO")) {
             int centerX = p.x + p.ancho / 2;
             int bottomY = p.y + p.alto;
@@ -973,50 +974,87 @@ public static void crearBotonPagina(int numPagina) {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
             Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
 
-            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
-            g.renderOutline(p.x, p.y, p.ancho, p.alto, p.colorBorde);
+            int r = p.redondezBorde;
+            drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, r, p.colorARGB, p.colorBorde);
 
             if (data != null) {
-                int oY = 0;
-                g.pose().pushPose();
-                g.pose().translate(p.x + 5, p.y + 5, 0);
-                g.pose().scale(p.escalaTexto, p.escalaTexto, 1);
+                float eText = p.escalaTexto > 0.1f ? p.escalaTexto : 1.0f;
+                float eItem = p.escalaItem > 0.1f ? p.escalaItem : 1.0f;
+                float eCheck = p.escalaCheck > 0.1f ? p.escalaCheck : 1.0f;
+                
+                int baseRowH = 22;
+                int rowH = (int)(baseRowH * Math.max(eText, Math.max(eItem, eCheck)));
+                int oY = p.y + 5;
+                
+                g.enableScissor(p.x + 1, p.y + 1, p.x + p.ancho - 1, p.y + p.alto - 1);
+                
                 for (Config.Objetivo obj : data.objetivos) {
+                    if (oY > p.y + p.alto) break;
+                    
                     int cant = net.minecraft.client.Minecraft.getInstance().player.getInventory().countItem(obj.itemReal);
                     boolean ok = cant >= obj.cantidad;
 
-                    g.fill(0, oY, p.ancho - 10, oY + 22, p.colorFondoRenglon);
+                    drawRoundedBox(g, p.x + 5, oY, p.ancho - 10, rowH, r, p.colorFondoRenglon, p.colorBordeRenglon);
 
-                    g.fill(5, oY + 2, 23, oY + 20, p.colorFondoIcono);
-                    g.renderOutline(5, oY + 2, 18, 18, p.colorBordeIcono);
-                    if (obj.itemReal != null) g.renderFakeItem(new net.minecraft.world.item.ItemStack(obj.itemReal), 6, oY + 3);
+                    int iconBoxSize = (int)(18 * eItem);
+                    int iconX = p.x + 10;
+                    int iconY = oY + (rowH - iconBoxSize) / 2;
+                    drawRoundedBox(g, iconX, iconY, iconBoxSize, iconBoxSize, r, p.colorFondoIcono, p.colorBordeIcono);
+                    
+                    if (obj.itemReal != null) {
+                        g.pose().pushPose();
+                        float scaleF = eItem;
+                        g.pose().translate(iconX + (iconBoxSize - 16 * scaleF)/2f, iconY + (iconBoxSize - 16 * scaleF)/2f, 0);
+                        g.pose().scale(scaleF, scaleF, 1.0f);
+                        g.renderFakeItem(new net.minecraft.world.item.ItemStack(obj.itemReal), 0, 0);
+                        g.pose().popPose();
+                    }
+
+                    int checkBoxSize = (int)(16 * eCheck); 
+                    int checkX = p.x + p.ancho - 10 - checkBoxSize - 5;
+                    int checkY = oY + (rowH - checkBoxSize) / 2;
+                    
+                    int checkColor = 0xFF00B01B; 
+                    int bordeActual = ok ? checkColor : p.colorBordeCheckInterno;
+                    
+                    drawRoundedBox(g, checkX, checkY, checkBoxSize, checkBoxSize, r, p.colorFondoCheck, bordeActual);
+                    
+                    if (ok) {
+                        g.pose().pushPose();
+                        g.pose().translate(checkX, checkY, 0);
+                        g.pose().scale(eCheck, eCheck, 1.0f);
+                        
+                        g.fill(3, 8, 5, 10, checkColor);  
+                        g.fill(5, 10, 8, 13, checkColor); 
+                        g.fill(8, 8, 10, 10, checkColor); 
+                        g.fill(10, 6, 12, 8, checkColor); 
+                        g.fill(12, 4, 14, 6, checkColor); 
+                        
+                        g.pose().popPose();
+                    }
 
                     String txtObj = (obj.texto != null && !obj.texto.isEmpty()) ? obj.texto : obj.itemReal.getDescription().getString();
-                    g.drawString(font, txtObj, 28, oY + 7, p.colorTexto, true);
+                    g.pose().pushPose();
+                    g.pose().translate(iconX + iconBoxSize + 5, oY + (rowH - font.lineHeight * eText) / 2f, 0);
+                    g.pose().scale(eText, eText, 1.0f);
+                    g.drawString(font, txtObj, 0, 0, p.colorTexto, true);
+                    g.pose().popPose();
 
-                    int boxSize = 11;
-                    int boxX = p.ancho - 10 - 18;
-                    int boxY = oY + 5;
+                    String txtCant = cant + "/" + obj.cantidad;
+                    float cantWidth = font.width(txtCant) * eText;
+                    g.pose().pushPose();
+                    g.pose().translate(checkX - 5 - cantWidth, oY + (rowH - font.lineHeight * eText) / 2f, 0);
+                    g.pose().scale(eText, eText, 1.0f);
+                    g.drawString(font, (ok ? "§a" : "§c") + txtCant, 0, 0, 0xFFFFFFFF, true);
+                    g.pose().popPose();
 
-                    g.renderOutline(boxX - 1, boxY - 1, boxSize + 2, boxSize + 2, p.colorBordeCheckExterno);
-
-                    g.fill(boxX, boxY, boxX + boxSize, boxY + boxSize, ok ? 0xFF00AA00 : p.colorFondoCheck);
-                    g.renderOutline(boxX, boxY, boxSize, boxSize, ok ? 0xFF00FF00 : p.colorBordeCheckInterno);
-
-                    if (ok) g.drawString(font, "✔", boxX + 3, boxY + 3, 0xFF00FF00, false);
-
-                    g.renderOutline(0, oY, p.ancho - 10, 22, p.colorBordeRenglon);
-
-                    String txt = cant + "/" + obj.cantidad;
-                    int cantWidth = font.width(txt);
-                    g.drawString(font, (ok ? "§a" : "§c") + txt, boxX - 6 - cantWidth, oY + 7, 0xFFFFFFFF, true);
-
-                    oY += 26;
+                    oY += rowH + p.gap;
                 }
-                g.pose().popPose();
+                g.disableScissor();
             } else {
                 g.drawCenteredString(font, "Lista de Objetivos", p.x + p.ancho/2, p.y + p.alto/2, 0xFF888888);
             }
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF00DECA);
         } else if (p.tipo.equals("MISION_ICONO")) {
             Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
 
@@ -1046,7 +1084,7 @@ public static void crearBotonPagina(int numPagina) {
                 g.drawCenteredString(font, "Icono", p.x + p.ancho/2, p.y + (p.alto - font.lineHeight)/2, 0xFF888888);
             }
             
-            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFFFFFF00);
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF00DECA);
         } else if (p.tipo.startsWith("DESPLEGABLE")) {
             int t = 1;
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
@@ -1311,6 +1349,10 @@ public static void crearBotonPagina(int numPagina) {
             }
         }
 
+        if (seleccionado && !p.tipo.equals("MISION_OBJETIVOS") && !p.tipo.equals("MISION_ICONO")) {
+            g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF00DECA);
+        }
+
     }
 
     public static boolean mouseSobreFigura(double mx, double my, GlobalGuiSettings.PanelConfig p) {
@@ -1388,9 +1430,13 @@ public static void crearBotonPagina(int numPagina) {
         
         for (int dy = 0; dy < r; dy++) {
             int currentInset = getCornerInset(dy, h, r);
+            int innerR = Math.max(0, r - 1);
+            int innerInset = (dy == 0 || innerR == 0) ? currentInset : getCornerInset(dy - 1, h - 2, innerR);
+            int endInset = innerInset + 1;
             int prevInset = (dy == 0) ? r : getCornerInset(dy - 1, h, r);
-            int endInset = Math.max(currentInset + 1, prevInset);
-            if (currentInset < endInset) { // Evita Draw Calls fantasmas de ancho 0
+            endInset = Math.max(endInset, Math.max(currentInset + 1, prevInset));
+            
+            if (currentInset < endInset) {
                 g.fill(x + currentInset, y + dy, x + endInset, y + dy + 1, color); 
                 g.fill(x + w - endInset, y + dy, x + w - currentInset, y + dy + 1, color); 
             }
@@ -1399,8 +1445,12 @@ public static void crearBotonPagina(int numPagina) {
         for (int dy = h - r; dy < h; dy++) {
             int ry = h - 1 - dy; 
             int currentInset = getCornerInset(ry, h, r);
+            int innerR = Math.max(0, r - 1);
+            int innerInset = (ry == 0 || innerR == 0) ? currentInset : getCornerInset(ry - 1, h - 2, innerR);
+            int endInset = innerInset + 1;
             int prevInset = (ry == 0) ? r : getCornerInset(ry - 1, h, r);
-            int endInset = Math.max(currentInset + 1, prevInset);
+            endInset = Math.max(endInset, Math.max(currentInset + 1, prevInset));
+            
             if (currentInset < endInset) {
                 g.fill(x + currentInset, y + dy, x + endInset, y + dy + 1, color); 
                 g.fill(x + w - endInset, y + dy, x + w - currentInset, y + dy + 1, color); 
