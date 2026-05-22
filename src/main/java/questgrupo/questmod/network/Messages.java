@@ -42,6 +42,13 @@ public class Messages {
                 .encoder(PacketMisionesSync::toBytes)
                 .consumerMainThread(PacketMisionesSync::handle)
                 .add();
+
+        // Paquete Servidor -> Cliente (Sincronizar progreso de muertes)
+        net.messageBuilder(PacketSyncProgresoMuertes.class, id())
+                .decoder(PacketSyncProgresoMuertes::new)
+                .encoder(PacketSyncProgresoMuertes::toBytes)
+                .consumerMainThread(PacketSyncProgresoMuertes::handle)
+                .add();
     }
 
     public static <MSG> void sendToServer(MSG message) {

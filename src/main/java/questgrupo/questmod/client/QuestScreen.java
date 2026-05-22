@@ -67,10 +67,23 @@ public class QuestScreen extends Screen {
         this.btnEntregar = this.addRenderableWidget(new BotonCustom(x - 40, y, 80, 20, TXT_ENTREGAR, TXT_ENTREGAR_HOVER, b -> {
             // VERIFICAR SI TIENE TODO
             boolean tieneTodo = true;
+            String questKey = "";
+            for (String qk : GlobalGuiSettings.misionesAceptadasCliente) {
+                if (qk.endsWith("_" + mision.nombre.replace(" ", "_"))) { questKey = qk; break; }
+            }
+
             for (Config.Objetivo obj : mision.objetivos) {
-                if (this.minecraft.player.getInventory().countItem(obj.itemReal) < obj.cantidad) {
-                    tieneTodo = false;
-                    break;
+                if (obj.entidad != null && !obj.entidad.isEmpty()) {
+                    String progressKey = this.minecraft.player.getUUID().toString() + "_" + questKey + "_" + obj.entidad;
+                    if (GlobalGuiSettings.progresoMuertesCliente.getOrDefault(progressKey, 0) < obj.cantidad) {
+                        tieneTodo = false;
+                        break;
+                    }
+                } else if (obj.itemReal != null) {
+                    if (this.minecraft.player.getInventory().countItem(obj.itemReal) < obj.cantidad) {
+                        tieneTodo = false;
+                        break;
+                    }
                 }
             }
 
@@ -180,16 +193,32 @@ public class QuestScreen extends Screen {
     }
 
     private void prepararMensajeError() {
+        String questKey = "";
+        for (String qk : GlobalGuiSettings.misionesAceptadasCliente) {
+            if (qk.endsWith("_" + mision.nombre.replace(" ", "_"))) { questKey = qk; break; }
+        }
+
         // Buscamos el primer item que le falta al jugador para el mensaje
         Config.Objetivo falta = mision.objetivos.get(0);
         for(Config.Objetivo o : mision.objetivos) {
-            if(this.minecraft.player.getInventory().countItem(o.itemReal) < o.cantidad) {
-                falta = o;
-                break;
+            if (o.entidad != null && !o.entidad.isEmpty()) {
+                String progressKey = this.minecraft.player.getUUID().toString() + "_" + questKey + "_" + o.entidad;
+                if (GlobalGuiSettings.progresoMuertesCliente.getOrDefault(progressKey, 0) < o.cantidad) {
+                    falta = o; break;
+                }
+            } else if (o.itemReal != null) {
+                if(this.minecraft.player.getInventory().countItem(o.itemReal) < o.cantidad) {
+                    falta = o;
+                    break;
+                }
             }
         }
+        
         if (falta != null) {
-            String nombreItem = falta.itemReal.getDescription().getString();
+            String nombreItem = (falta.entidad != null && !falta.entidad.isEmpty()) 
+                                ? (falta.texto != null && !falta.texto.isEmpty() ? falta.texto : "enemigos")
+                                : (falta.itemReal != null ? falta.itemReal.getDescription().getString() : "objetivo");
+            
             String msgError = (mision.error != null && !mision.error.isEmpty()) 
                 ? mision.error 
                 : "Aún te faltan materiales.";

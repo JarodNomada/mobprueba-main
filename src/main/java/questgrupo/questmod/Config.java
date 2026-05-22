@@ -60,6 +60,9 @@ public class Config {
         public int cantidad;
         public String texto;
         public transient Item itemReal;
+        public String entidad;
+        public String textura;
+        public transient ResourceLocation iconoRL;
     }
 
     public static class Recompensa {
@@ -152,7 +155,12 @@ public class Config {
                                 // Registrar Ítems de Objetivos
                                 if (m.objetivos != null) {
                                     for (Objetivo obj : m.objetivos) {
-                                        obj.itemReal = ForgeRegistries.ITEMS.getValue(ResourceLocation.tryParse(obj.item));
+                                        if (obj.item != null && !obj.item.isEmpty()) {
+                                            obj.itemReal = ForgeRegistries.ITEMS.getValue(ResourceLocation.tryParse(obj.item));
+                                        }
+                                        if (obj.textura != null && !obj.textura.isEmpty()) {
+                                            obj.iconoRL = ResourceLocation.tryParse(obj.textura);
+                                        }
                                     }
                                 }
 
@@ -245,7 +253,8 @@ public class Config {
 
         Objetivo obj1 = new Objetivo(); obj1.item = "minecraft:paper"; obj1.cantidad = 10; obj1.texto = "Papel antiguo";
         Objetivo obj2 = new Objetivo(); obj2.item = "minecraft:leather"; obj2.cantidad = 2; obj2.texto = "Cuero resistente";
-        a1.objetivos = List.of(obj1, obj2);
+        Objetivo obj3 = new Objetivo(); obj3.entidad = "minecraft:zombie"; obj3.cantidad = 5; obj3.texto = "Zombies Asesinados"; obj3.textura = "minecraft:textures/item/rotten_flesh.png";
+        a1.objetivos = List.of(obj1, obj2, obj3);
 
         Recompensa rec1 = new Recompensa(); rec1.item = "minecraft:emerald"; rec1.cantidad = 2;
         a1.recompensas = List.of(rec1);

@@ -18,6 +18,7 @@ import questgrupo.questmod.client.QuestScreen;
 import questgrupo.questmod.network.Messages;
 import questgrupo.questmod.network.PacketMisionCompletada;
 import questgrupo.questmod.network.PacketMisionesSync;
+import questgrupo.questmod.network.PacketSyncProgresoMuertes;
 
 import java.util.*;
 
@@ -27,6 +28,7 @@ public class ClickAldeano {
     private static final Set<String> misionesAceptadas = new HashSet<>();
     private static final Set<String> misionesFinalizadas = new HashSet<>();
     private static final Map<UUID, UUID> entidadesMirandoJugador = new HashMap<>();
+    public static final Map<String, Integer> progresoMuertes = new HashMap<>();
 
     public static boolean esMisionAceptada(String key) { return misionesAceptadas.contains(key); }
     public static boolean esMisionFinalizada(String key) { return misionesFinalizadas.contains(key); }
@@ -139,16 +141,26 @@ public class ClickAldeano {
             // VERIFICAR TODOS LOS OBJETIVOS
             boolean tieneTodo = true;
             for (Config.Objetivo obj : misionFinal.objetivos) {
-                if (player.getInventory().countItem(obj.itemReal) < obj.cantidad) {
-                    tieneTodo = false;
-                    break;
+                if (obj.entidad != null && !obj.entidad.isEmpty()) {
+                    String progressKey = player.getUUID().toString() + "_" + questKey + "_" + obj.entidad;
+                    if (progresoMuertes.getOrDefault(progressKey, 0) < obj.cantidad) {
+                        tieneTodo = false;
+                        break;
+                    }
+                } else if (obj.itemReal != null) {
+                    if (player.getInventory().countItem(obj.itemReal) < obj.cantidad) {
+                        tieneTodo = false;
+                        break;
+                    }
                 }
             }
 
             if (tieneTodo) {
                 // QUITAR TODOS LOS ITEMS
                 for (Config.Objetivo obj : misionFinal.objetivos) {
-                    player.getInventory().clearOrCountMatchingItems(p -> p.getItem() == obj.itemReal, obj.cantidad, player.inventoryMenu.getCraftSlots());
+                    if (obj.itemReal != null) {
+                        player.getInventory().clearOrCountMatchingItems(p -> p.getItem() == obj.itemReal, obj.cantidad, player.inventoryMenu.getCraftSlots());
+                    }
                 }
 
                 // DAR TODAS LAS RECOMPENSAS
@@ -159,9 +171,53 @@ public class ClickAldeano {
                 misionesAceptadas.remove(questKey);
                 misionesFinalizadas.add(questKey);
 
+                // Limpiar progreso de muertes liberando memoria
+                for (Config.Objetivo obj : misionFinal.objetivos) {
+                    if (obj.entidad != null && !obj.entidad.isEmpty()) {
+                        progresoMuertes.remove(player.getUUID().toString() + "_" + questKey + "_" + obj.entidad);
+                    }
+                }
+
                 Messages.sendToPlayer(new PacketMisionCompletada(), player);
             }
         }
+    }
+
+    // EVENTO NUEVO PARA CONTAR LAS MUERTES
+    @SubscribeEvent
+    public static void onEntityDeath(net.minecraftforge.event.entity.living.LivingDeathEvent event) {
+        if (event.getSource().getEntity() instanceof ServerPlayer player) {
+            ResourceLocation idMuerto = ForgeRegistries.ENTITY_TYPES.getKey(event.getEntity().getType());
+            if (idMuerto == null) return;
+            String mobMatado = idMuerto.toString();
+
+            for (String questKey : misionesAceptadas) {
+                if (questKey.startsWith(player.getUUID().toString())) {
+                    Config.MisionData mision = obtenerMisionPorQuestKey(questKey);
+                    if (mision != null) {
+                        for (Config.Objetivo obj : mision.objetivos) {
+                            if (mobMatado.equals(obj.entidad)) {
+                                String progressKey = player.getUUID().toString() + "_" + questKey + "_" + obj.entidad;
+                                int muertes = progresoMuertes.getOrDefault(progressKey, 0) + 1;
+                                progresoMuertes.put(progressKey, muertes);
+                                Messages.sendToPlayer(new PacketSyncProgresoMuertes(progressKey, muertes), player);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static Config.MisionData obtenerMisionPorQuestKey(String questKey) {
+        for(List<Config.MisionData> lista : Config.misionesCargadas.values()) {
+            for(Config.MisionData m : lista) {
+                if(questKey.endsWith("_" + m.nombre.replace(" ", "_"))) {
+                    return m;
+                }
+            }
+        }
+        return null;
     }
 
     private static String generarQuestKey(Entity jugador, Entity entidad, Config.MisionData mision) {

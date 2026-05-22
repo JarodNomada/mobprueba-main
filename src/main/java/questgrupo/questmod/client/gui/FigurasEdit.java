@@ -886,16 +886,39 @@ public static void crearBotonPagina(int numPagina) {
             g.pose().scale(p.scaleObj, p.scaleObj, 1);
             int oY = 0;
             for (Config.Objetivo obj : data.objetivos) {
-                int cantJugador = net.minecraft.client.Minecraft.getInstance().player.getInventory().countItem(obj.itemReal);
+                int cantJugador = 0;
+                String txtObj = "";
+
+                if (obj.entidad != null && !obj.entidad.isEmpty()) {
+                    String questKeyFound = "";
+                    for (String qk : GlobalGuiSettings.misionesAceptadasCliente) {
+                        if (qk.endsWith("_" + data.nombre.replace(" ", "_"))) { questKeyFound = qk; break; }
+                    }
+                    String progressKey = net.minecraft.client.Minecraft.getInstance().player.getUUID().toString() + "_" + questKeyFound + "_" + obj.entidad;
+                    cantJugador = GlobalGuiSettings.progresoMuertesCliente.getOrDefault(progressKey, 0);
+                    txtObj = (obj.texto != null && !obj.texto.isEmpty()) ? obj.texto : "Matar " + obj.entidad.replace("minecraft:", "");
+                } else if (obj.itemReal != null) {
+                    cantJugador = net.minecraft.client.Minecraft.getInstance().player.getInventory().countItem(obj.itemReal);
+                    txtObj = (obj.texto != null && !obj.texto.isEmpty()) ? obj.texto : obj.itemReal.getDescription().getString();
+                }
+
                 boolean completado = cantJugador >= obj.cantidad;
 
                 g.fill(0, oY, p.ancho - 20, oY + 22, p.colorFondoRenglon);
 
                 g.fill(5, oY + 2, 23, oY + 20, p.colorFondoIcono);
                 g.renderOutline(5, oY + 2, 18, 18, p.colorBordeIcono);
-                if (obj.itemReal != null) g.renderFakeItem(new net.minecraft.world.item.ItemStack(obj.itemReal), 6, oY + 3);
 
-                String txtObj = (obj.texto != null && !obj.texto.isEmpty()) ? obj.texto : obj.itemReal.getDescription().getString();
+                if (obj.iconoRL != null) {
+                    com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+                    g.blit(obj.iconoRL, 6, oY + 3, 0, 0, 16, 16, 16, 16);
+                    com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+                } else if (obj.itemReal != null) {
+                    g.renderFakeItem(new net.minecraft.world.item.ItemStack(obj.itemReal), 6, oY + 3);
+                } else if (obj.entidad != null && !obj.entidad.isEmpty()) {
+                    g.renderFakeItem(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_SWORD), 6, oY + 3);
+                }
+
                 g.drawString(font, txtObj, 28, oY + 7, p.colorObj, true);
 
                 int boxSize = 11;
@@ -990,8 +1013,21 @@ public static void crearBotonPagina(int numPagina) {
                 
                 for (Config.Objetivo obj : data.objetivos) {
                     if (oY > p.y + p.alto) break;
-                    
-                    int cant = net.minecraft.client.Minecraft.getInstance().player.getInventory().countItem(obj.itemReal);
+
+                    int cant = 0;
+                    String txtObj = "";
+                    if (obj.entidad != null && !obj.entidad.isEmpty()) {
+                        String questKeyFound = "";
+                        for (String qk : GlobalGuiSettings.misionesAceptadasCliente) {
+                            if (qk.endsWith("_" + data.nombre.replace(" ", "_"))) { questKeyFound = qk; break; }
+                        }
+                        String progressKey = net.minecraft.client.Minecraft.getInstance().player.getUUID().toString() + "_" + questKeyFound + "_" + obj.entidad;
+                        cant = GlobalGuiSettings.progresoMuertesCliente.getOrDefault(progressKey, 0);
+                        txtObj = (obj.texto != null && !obj.texto.isEmpty()) ? obj.texto : "Matar " + obj.entidad.replace("minecraft:", "");
+                    } else if (obj.itemReal != null) {
+                        cant = net.minecraft.client.Minecraft.getInstance().player.getInventory().countItem(obj.itemReal);
+                        txtObj = (obj.texto != null && !obj.texto.isEmpty()) ? obj.texto : obj.itemReal.getDescription().getString();
+                    }
                     boolean ok = cant >= obj.cantidad;
 
                     drawRoundedBox(g, p.x + 5, oY, p.ancho - 10, rowH, r, p.colorFondoRenglon, p.colorBordeRenglon);
@@ -1000,40 +1036,46 @@ public static void crearBotonPagina(int numPagina) {
                     int iconX = p.x + 10;
                     int iconY = oY + (rowH - iconBoxSize) / 2;
                     drawRoundedBox(g, iconX, iconY, iconBoxSize, iconBoxSize, r, p.colorFondoIcono, p.colorBordeIcono);
-                    
-                    if (obj.itemReal != null) {
-                        g.pose().pushPose();
-                        float scaleF = eItem;
-                        g.pose().translate(iconX + (iconBoxSize - 16 * scaleF)/2f, iconY + (iconBoxSize - 16 * scaleF)/2f, 0);
-                        g.pose().scale(scaleF, scaleF, 1.0f);
+
+                    g.pose().pushPose();
+                    float scaleF = eItem;
+                    g.pose().translate(iconX + (iconBoxSize - 16 * scaleF)/2f, iconY + (iconBoxSize - 16 * scaleF)/2f, 0);
+                    g.pose().scale(scaleF, scaleF, 1.0f);
+
+                    if (obj.iconoRL != null) {
+                        com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+                        g.blit(obj.iconoRL, 0, 0, 0, 0, 16, 16, 16, 16);
+                        com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+                    } else if (obj.itemReal != null) {
                         g.renderFakeItem(new net.minecraft.world.item.ItemStack(obj.itemReal), 0, 0);
-                        g.pose().popPose();
+                    } else if (obj.entidad != null && !obj.entidad.isEmpty()) {
+                        g.renderFakeItem(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_SWORD), 0, 0);
                     }
+                    g.pose().popPose();
 
                     int checkBoxSize = (int)(16 * eCheck); 
                     int checkX = p.x + p.ancho - 10 - checkBoxSize - 5;
                     int checkY = oY + (rowH - checkBoxSize) / 2;
-                    
+
                     int checkColor = 0xFF00B01B; 
                     int bordeActual = ok ? checkColor : p.colorBordeCheckInterno;
-                    
+
                     drawRoundedBox(g, checkX, checkY, checkBoxSize, checkBoxSize, r, p.colorFondoCheck, bordeActual);
-                    
+
                     if (ok) {
                         g.pose().pushPose();
                         g.pose().translate(checkX, checkY, 0);
                         g.pose().scale(eCheck, eCheck, 1.0f);
-                        
+
                         g.fill(3, 8, 5, 10, checkColor);  
                         g.fill(5, 10, 8, 13, checkColor); 
                         g.fill(8, 8, 10, 10, checkColor); 
                         g.fill(10, 6, 12, 8, checkColor); 
                         g.fill(12, 4, 14, 6, checkColor); 
-                        
+
                         g.pose().popPose();
                     }
 
-                    String txtObj = (obj.texto != null && !obj.texto.isEmpty()) ? obj.texto : obj.itemReal.getDescription().getString();
                     g.pose().pushPose();
                     g.pose().translate(iconX + iconBoxSize + 5, oY + (rowH - font.lineHeight * eText) / 2f, 0);
                     g.pose().scale(eText, eText, 1.0f);
