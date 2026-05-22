@@ -1,0 +1,80 @@
+[
+  {
+    "nombre": "Huevos Frescos",
+    "descripcion": "El granjero necesita huevos frescos",
+    "mob": "minecraft:chicken",
+    "textura": "minecraft:textures/entity/chicken.png",
+    "esPrimaria": false,
+    "objetivos": [
+      {
+        "item": "minecraft:egg",
+        "cantidad": 8
+      }
+    ],
+    "recompensas": [
+      {
+        "item": "minecraft:emerald",
+        "cantidad": 2
+      }
+    ],
+    "frases": [
+      "¡Mis gallinas no ponen huevos!",
+      "¿Tienes huevos?"
+    ],
+    "recordatorio": "¿Tienes los huevos?",
+    "error": "Aún necesito más huevos.",
+    "agradecimiento": "¡Gracias por los huevos!"
+  },
+  {
+    "nombre": "Criadero Rural",
+    "descripcion": "Expande el criadero de pollos",
+    "mob": "minecraft:chicken",
+    "textura": "minecraft:textures/entity/chicken.png",
+    "esPrimaria": false,
+    "objetivos": [
+      {
+        "item": "minecraft:feather",
+        "cantidad": 10
+      }
+    ],
+    "recompensas": [
+      {
+        "item": "minecraft:emerald",
+        "cantidad": 3
+      }
+    ],
+    "frases": [
+      "¡Necesito plumas!",
+      "¿Para hacer almohadas?"
+    ],
+    "recordatorio": "¿Tienes las plumas?",
+    "error": "Aún necesito más plumas.",
+    "agradecimiento": "¡Tengo plumas para las almohadas!"
+  },
+  {
+    "nombre": "Desayuno del Granjero",
+    "descripcion": "Prepara un desayuno nutritivo",
+    "mob": "minecraft:chicken",
+    "textura": "minecraft:textures/entity/chicken.png",
+    "esPrimaria": false,
+    "objetivos": [
+      {
+        "item": "minecraft:cooked_chicken",
+        "cantidad": 3
+      }
+    ],
+    "recompensas": [
+      {
+        "item": "minecraft:emerald",
+        "cantidad": 4
+      }
+    ],
+    "frases": [
+      "¡Tengo hambre!",
+      "¿Cocinarás para mí?"
+    ],
+    "recordatorio": "¿Tienes el pollo cocinado?",
+    "error": "Aún tengo hambre.",
+    "agradecimiento": "¡Qué buen desayuno!"
+  }
+]

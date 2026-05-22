@@ -1,0 +1,26 @@
+# Minecraft Forge / Gradle
+build/
+.gradle/
+run/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+out/
+
+# Eclipse
+.eclipse/
+*.classpath
+*.project
+.settings/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+*.gz
+
+# Temporary files
+*.tmp
+*.bak

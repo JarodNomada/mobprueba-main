@@ -1,0 +1,80 @@
+[
+  {
+    "nombre": "Tormenta Nocturna",
+    "descripcion": "Los phantoms ataca de noche",
+    "mob": "minecraft:phantom",
+    "textura": "minecraft:textures/entity/phantom.png",
+    "esPrimaria": true,
+    "objetivos": [
+      {
+        "item": "minecraft:phantom membrane",
+        "cantidad": 3
+      }
+    ],
+    "recompensas": [
+      {
+        "item": "minecraft:emerald",
+        "cantidad": 4
+      }
+    ],
+    "frases": [
+      "¡El cielo se oscurece!",
+      "¿Lucharás?"
+    ],
+    "recordatorio": "¿Derrotaste a los phantoms?",
+    "error": "Aún hay phantoms en el cielo.",
+    "agradecimiento": "¡El cielo está limpio!"
+  },
+  {
+    "nombre": "El Vuelo",
+    "descripcion": "Derrota phantoms en el cielo",
+    "mob": "minecraft:phantom",
+    "textura": "minecraft:textures/entity/phantom.png",
+    "esPrimaria": true,
+    "objetivos": [
+      {
+        "item": "minecraft:arrow",
+        "cantidad": 10
+      }
+    ],
+    "recompensas": [
+      {
+        "item": "minecraft:bow",
+        "cantidad": 1
+      }
+    ],
+    "frases": [
+      "¡Ellos vuelan alto!",
+      "¿Puedes alcanzarlos?"
+    ],
+    "recordatorio": "¿Tienes las flechas?",
+    "error": "Necesito más flechas.",
+    "agradecimiento": "¡Buena puntería!"
+  },
+  {
+    "nombre": "Sombras del Amanecer",
+    "descripcion": "Acaba con la amenaza antes del amanecer",
+    "mob": "minecraft:phantom",
+    "textura": "minecraft:textures/entity/phantom.png",
+    "esPrimaria": true,
+    "objetivos": [
+      {
+        "item": "minecraft:phantom membrane",
+        "cantidad": 5
+      }
+    ],
+    "recompensas": [
+      {
+        "item": "minecraft:shulker_shell",
+        "cantidad": 2
+      }
+    ],
+    "frases": [
+      "¡Antes del amanecer!",
+      "¿Estás listo?"
+    ],
+    "recordatorio": "¿Derrotaste a todos?",
+    "error": "Aún queda tiempo.",
+    "agradecimiento": "¡Sobrevivimos!"
+  }
+]

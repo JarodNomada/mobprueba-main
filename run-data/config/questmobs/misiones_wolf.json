@@ -1,0 +1,80 @@
+[
+  {
+    "nombre": "Instinto Salvaje",
+    "descripcion": "El lobo necesita carne fresca para sobrevivir",
+    "mob": "minecraft:wolf",
+    "textura": "minecraft:textures/entity/wolf/wolf.png",
+    "esPrimaria": false,
+    "objetivos": [
+      {
+        "item": "minecraft:porkchop",
+        "cantidad": 5
+      }
+    ],
+    "recompensas": [
+      {
+        "item": "minecraft:emerald",
+        "cantidad": 3
+      }
+    ],
+    "frases": [
+      "¡El lobo tiene hambre!",
+      "¿Tienes comida?"
+    ],
+    "recordatorio": "¿Tienes la comida?",
+    "error": "Aún no tienes suficiente comida.",
+    "agradecimiento": "¡Gracias, amigo!"
+  },
+  {
+    "nombre": "Guardián del Bosque",
+    "descripcion": "Protege el Bosque de intrusos",
+    "mob": "minecraft:wolf",
+    "textura": "minecraft:textures/entity/wolf/wolf.png",
+    "esPrimaria": false,
+    "objetivos": [
+      {
+        "item": "minecraft:phantom membrane",
+        "cantidad": 2
+      }
+    ],
+    "recompensas": [
+      {
+        "item": "minecraft:emerald",
+        "cantidad": 5
+      }
+    ],
+    "frases": [
+      "¡Hay peligrosas amenazas!",
+      "¿Puedes ayudar?"
+    ],
+    "recordatorio": "¿Derrotaste a las amenazas?",
+    "error": "Aún hay amenazas cerca.",
+    "agradecimiento": "¡El bosque está a salvo!"
+  },
+  {
+    "nombre": "Caza Mayor",
+    "descripcion": "Derrota a las criaturas hostiles",
+    "mob": "minecraft:wolf",
+    "textura": "minecraft:textures/entity/wolf/wolf.png",
+    "esPrimaria": false,
+    "objetivos": [
+      {
+        "item": "minecraft:zombie_head",
+        "cantidad": 3
+      }
+    ],
+    "recompensas": [
+      {
+        "item": "minecraft:diamond",
+        "cantidad": 1
+      }
+    ],
+    "frases": [
+      "¡Los monstruos merodean!",
+      "¿Los enfrentarás?"
+    ],
+    "recordatorio": "¿Derrotaste a los monstruos?",
+    "error": "Aún merodean monstruos.",
+    "agradecimiento": "¡Eres un auténtico герой!"
+  }
+]

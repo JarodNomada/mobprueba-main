@@ -1,0 +1,1695 @@
+package questgrupo.questmod.client.gui;
+
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
+import questgrupo.questmod.Config;
+import questgrupo.questmod.client.GlobalGuiSettings;
+import net.minecraft.client.Minecraft;
+import java.util.Collections;
+import java.util.List;
+
+public class FigurasEdit {
+    public static int editandoColorIndex = 0; // 0=Fondo, 1=Borde, 2=Texto, 3=FondoMision, 4=BordeMision, 7=RecuadroMisionTexto, 8=BordeMisionTexto, 9=TextoMision
+    public static int EditandoMaestroTitle = 0; // 0=Normal, 1=Principales, 2=Secundarias
+
+    private static long ultimoClicPanel = 0;
+    private static GlobalGuiSettings.PanelConfig ultimoPanelClickeado = null;
+
+    private static java.util.List<LogroInfo> cacheLogrosLista = null;
+    private static long ultimoTiempoCache = 0;
+
+    public static boolean esDobleClic(GlobalGuiSettings.PanelConfig p) {
+        long ahora = System.currentTimeMillis();
+        boolean esDoble = (p == ultimoPanelClickeado && (ahora - ultimoClicPanel) < 250);
+        ultimoClicPanel = ahora;
+        ultimoPanelClickeado = p;
+        return esDoble;
+    }
+
+    public static void crearCuadrado(int x, int y) {
+        GlobalGuiSettings.PanelConfig p = new GlobalGuiSettings.PanelConfig(x, y, 50, 50);
+        p.tipo = "CUADRADO";
+        p.pagina = GlobalGuiSettings.paginaActual;
+        GlobalGuiSettings.PANELES.add(p);
+    }
+
+    public static void crearRectangulo(int x, int y) {
+        GlobalGuiSettings.PanelConfig p = new GlobalGuiSettings.PanelConfig(x, y, 80, 40);
+        p.tipo = "RECTANGULO";
+        p.pagina = GlobalGuiSettings.paginaActual;
+        GlobalGuiSettings.PANELES.add(p);
+    }
+
+    public static void crearTriangulo(int x, int y) {
+        GlobalGuiSettings.PanelConfig p = new GlobalGuiSettings.PanelConfig(x - 25, y - 20, 50, 40);
+        p.tipo = "TRIANGULO";
+        p.grosor = 1;
+        p.pagina = GlobalGuiSettings.paginaActual;
+        GlobalGuiSettings.PANELES.add(p);
+    }
+
+    public static void crearCirculo(int x, int y) {
+        GlobalGuiSettings.PanelConfig p = new GlobalGuiSettings.PanelConfig(x - 20, y - 20, 40, 40);
+        p.tipo = "CIRCULO";
+        p.pagina = GlobalGuiSettings.paginaActual;
+        GlobalGuiSettings.PANELES.add(p);
+    }
+
+public static void crearBotonPagina(int numPagina) {
+        GlobalGuiSettings.PanelConfig p = new GlobalGuiSettings.PanelConfig(50, 50 + (numPagina * 30), 40, 40);
+        p.tipo = "BOTON_PAGINA";
+        p.textoAsociado = String.valueOf(numPagina);
+        p.colorARGB = 0xFF888888;
+        p.pagina = 0; 
+        p.escalaTexto = 1.2f;
+        GlobalGuiSettings.PANELES.add(p);
+    }
+
+    public static void crearMisionTarjeta(int x, int y, String nombreMision, net.minecraft.resources.ResourceLocation icono) {
+        GlobalGuiSettings.PanelConfig p = new GlobalGuiSettings.PanelConfig(x, y, 120, 40);
+        p.tipo = "RECTANGULO";
+        p.textoAsociado = nombreMision;
+        p.iconoRL = icono;
+        p.colorARGB = 0xFF444444; // Dark gray background
+        p.colorBorde = 0xFFAAAAAA; // Light gray border
+        p.pagina = GlobalGuiSettings.paginaActual;
+        GlobalGuiSettings.PANELES.add(p);
+    }
+
+    public static void crearDesplegable(int x, int y, int type) {
+        GlobalGuiSettings.PanelConfig p = new GlobalGuiSettings.PanelConfig(x, y, 160, 200);
+        if (type == 2) {
+            p.tipo = "DESPLEGABLE_MAESTRO";
+            p.textoAsociado = "Libro de Misiones";
+        } else {
+            p.tipo = type == 0 ? "DESPLEGABLE_PRINCIPAL" : "DESPLEGABLE_SECUNDARIA";
+            p.textoAsociado = type == 0 ? "Misiones Principales" : "Misiones Secundarias";
+        }
+        p.colorARGB = 0xAA000000;
+        p.colorBorde = 0xFFFFFFFF;
+        p.iconoRL = net.minecraft.resources.ResourceLocation.parse("minecraft:textures/item/book.png");
+        p.pagina = GlobalGuiSettings.paginaActual;
+        GlobalGuiSettings.PANELES.add(p);
+    }
+
+    public static void crearDetalleMision(int x, int y) {
+        GlobalGuiSettings.PanelConfig p = new GlobalGuiSettings.PanelConfig(x, y, 220, 240);
+        p.tipo = "DETALLE_MISION";
+        p.textoAsociado = "Selecciona una mision";
+        p.colorARGB = 0xEE1A1A1A;
+        p.colorBorde = 0xFFA6A6A6;
+        p.pagina = GlobalGuiSettings.paginaActual;
+        GlobalGuiSettings.PANELES.add(p);
+    }
+
+    public static void crearPiezaMision(String tipo, int x, int y) {
+        int ancho = 150;
+        int alto = 30;
+        if (tipo.equals("MISION_DESCRIPCION")) alto = 60;
+        if (tipo.equals("MISION_OBJETIVOS")) alto = 100;
+        if (tipo.equals("MISION_ICONO")) { ancho = 40; alto = 40; }
+
+        GlobalGuiSettings.PanelConfig p = new GlobalGuiSettings.PanelConfig(x, y, ancho, alto);
+        p.tipo = tipo;
+        if (tipo.equals("MISION_OBJETIVOS")) p.gap = 4;
+        p.colorARGB = 0xAA222222;
+        p.colorBorde = 0xFFA6A6A6;
+        p.pagina = GlobalGuiSettings.paginaActual;
+        GlobalGuiSettings.PANELES.add(p);
+    }
+
+    private static void drawLine1px(GuiGraphics g, int x0, int y0, int x1, int y1, int color) {
+        int dx = Math.abs(x1 - x0);
+        int dy = Math.abs(y1 - y0);
+        int sx = x0 < x1 ? 1 : -1;
+        int sy = y0 < y1 ? 1 : -1;
+        int err = dx - dy;
+        while (true) {
+            g.fill(x0, y0, x0 + 1, y0 + 1, color);
+            if (x0 == x1 && y0 == y1) break;
+            int e2 = 2 * err;
+            if (e2 > -dy) { err -= dy; x0 += sx; }
+            if (e2 < dx) { err += dx; y0 += sy; }
+        }
+    }
+
+    private static void drawLineThick(GuiGraphics g, int x0, int y0, int x1, int y1, int color, int grosor) {
+        if (grosor <= 1) {
+            drawLine1px(g, x0, y0, x1, y1, color);
+            return;
+        }
+
+        int dx = Math.abs(x1 - x0);
+        int dy = Math.abs(y1 - y0);
+        int sx = x0 < x1 ? 1 : -1;
+        int sy = y0 < y1 ? 1 : -1;
+        int err = dx - dy;
+        int halfGrosor = grosor / 2;
+
+        while (true) {
+            g.fill(x0 - halfGrosor, y0 - halfGrosor, x0 - halfGrosor + grosor, y0 - halfGrosor + grosor, color);
+
+            if (x0 == x1 && y0 == y1) break;
+            int e2 = 2 * err;
+            if (e2 > -dy) { err -= dy; x0 += sx; }
+            if (e2 < dx) { err += dx; y0 += sy; }
+        }
+    }
+
+    private static void drawDummyMission(GuiGraphics g, net.minecraft.client.gui.Font font, GlobalGuiSettings.PanelConfig p, int cardY, int marginX, int cardWidth, int cardHeight, String text) {
+        g.fill(p.x + marginX, cardY, p.x + marginX + cardWidth, cardY + cardHeight, p.colorFondoMision);
+        g.renderOutline(p.x + marginX, cardY, cardWidth, cardHeight, p.colorBordeMision);
+        float textX = p.x + marginX + 5;
+        
+        // BUSCAMOS LA MISIÓN ESPECÍFICA PARA OBTENER SU ÍCONO PERSONALIZADO
+        Config.MisionData mision = Config.getMisionPorNombre(text);
+        net.minecraft.resources.ResourceLocation iconoUsar = (mision != null && mision.iconoRL != null) ? mision.iconoRL : p.iconoRL;
+
+        if (iconoUsar != null) {
+            float baseIconSize = 16;
+            float scaledIconSize = baseIconSize * p.escalaIcono;
+            float iconBaseX = p.x + marginX + 5;
+            float iconX = iconBaseX + p.offsetXIcono;
+            float iconY = cardY + (cardHeight - scaledIconSize) / 2;
+            g.pose().pushPose();
+            g.pose().translate(iconX, iconY, 0);
+            g.pose().scale(p.escalaIcono, p.escalaIcono, 1.0f);
+            
+            // Habilitamos transparencia por si la textura tiene bordes invisibles (estilo Vanilla)
+            com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+            g.blit(iconoUsar, 0, 0, 0, 0, (int)baseIconSize, (int)baseIconSize, (int)baseIconSize, (int)baseIconSize);
+            com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+            
+            g.pose().popPose();
+            textX = iconBaseX + scaledIconSize + 5;
+        }
+        
+        g.pose().pushPose();
+        g.pose().translate(textX + p.offsetXTextoMision, cardY + (cardHeight - font.lineHeight * p.escalaTextoMision) / 2, 0);
+        g.pose().scale(p.escalaTextoMision, p.escalaTextoMision, 1.0f);
+        g.drawString(font, text, 0, 0, 0xFFFFFFFF, false);
+        g.pose().popPose();
+    }
+
+    public static void renderizar(GuiGraphics g, GlobalGuiSettings.PanelConfig p, boolean seleccionado, boolean escribiendo) {
+        // ─── RENDERING EN 3D DEL MANIQUÍ RPG ───
+        if ("MANIQUI".equals(p.tipo)) {
+            Player player = Minecraft.getInstance().player;
+            if (player != null) {
+                // 1. Fondo y borde editables desde la TopBar
+                g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
+                g.renderOutline(p.x, p.y, p.ancho, p.alto, seleccionado ? 0xFF00DECA : p.colorBorde);
+
+                // 2. Calculamos el centro y aplicamos la escala independiente (usando escalaIcono como multiplicador)
+                int centroX = p.x + (p.ancho / 2);
+                int baseY = p.y + p.alto - 8; 
+                int escala = (int) (p.alto * 0.45F * p.escalaIcono); 
+
+                // 3. Seguimiento real del ratón
+                double mouseX = Minecraft.getInstance().mouseHandler.xpos() * (double) g.guiWidth() / (double) Minecraft.getInstance().getWindow().getScreenWidth();
+                double mouseY = Minecraft.getInstance().mouseHandler.ypos() * (double) g.guiHeight() / (double) Minecraft.getInstance().getWindow().getScreenHeight();
+
+                float rotY = (float) (centroX - mouseX);
+                float rotX = (float) (baseY - (p.alto * 0.45f) - mouseY);
+
+                // 4. Invocamos el renderizador nativo en 3D de Minecraft
+                g.pose().pushPose();
+                InventoryScreen.renderEntityInInventoryFollowsMouse(g, centroX, baseY, escala, rotY, rotX, player);
+                g.pose().popPose();
+            }
+            return; 
+        }
+
+        // ─── RENDERING DEL WIDGET DE PROGRESO ───
+        if ("PROGRESO".equals(p.tipo)) {
+            int r = p.redondezBorde; 
+            
+            int innerX = p.x + 1;
+            int innerY = p.y + 1;
+            int innerW = p.ancho - 2;
+            int innerH = p.alto - 2;
+            int innerR = Math.max(0, r - 1);
+
+            if (p.colorARGB != 0) {
+                for (int dy = 0; dy < innerH; dy++) {
+                    int inset = getCornerInset(dy, innerH, innerR);
+                    g.fill(innerX + inset, innerY + dy, innerX + innerW - inset, innerY + dy + 1, p.colorARGB);
+                }
+            }
+            
+            String textoMostrar = "";
+            boolean dibujarBarra = false;
+            float porcentajeLlenado = 0.0f;
+            int maxProgreso = 1, actualProgreso = 0;
+
+            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+            
+            if (p.progresoTipo == 0) {
+                maxProgreso = 0;
+                for (java.util.List<Config.MisionData> lista : Config.misionesCargadas.values()) maxProgreso += lista.size();
+                if (maxProgreso == 0) maxProgreso = 1; 
+                actualProgreso = questgrupo.questmod.events.ClickAldeano.getMisionesCompletadasCount();
+                
+            } else if (p.progresoTipo == 1 || p.progresoTipo == 3) {
+                int[] stats = obtenerLogrosYBiomasCached(mc);
+                if (p.progresoTipo == 1) {
+                    actualProgreso = stats[0];
+                    maxProgreso = stats[1];
+                } else {
+                    actualProgreso = stats[2];
+                    maxProgreso = stats[3];
+                }
+                
+            } else if (p.progresoTipo == 2) {
+                if (mc.player != null) {
+                    long ahora = System.currentTimeMillis();
+                    if (ahora - ultimaPeticionStats > 5000) {
+                        mc.player.connection.send(new net.minecraft.network.protocol.game.ServerboundClientCommandPacket(net.minecraft.network.protocol.game.ServerboundClientCommandPacket.Action.REQUEST_STATS));
+                        ultimaPeticionStats = ahora;
+                    }
+                    
+                    int playTimeTicks = mc.player.getStats().getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.PLAY_TIME));
+                    
+                    long tSecs = playTimeTicks > 0 ? (playTimeTicks / 20) : (mc.level != null ? mc.level.getGameTime() / 20 : 0);
+                    
+                    long horas = tSecs / 3600;
+                    long minutos = (tSecs % 3600) / 60;
+                    textoMostrar = String.format("%02dh %02dm", horas, minutos);
+                } else {
+                    textoMostrar = "00h 00m";
+                }
+            }
+
+            if (p.progresoTipo != 2) { 
+                porcentajeLlenado = Math.min(1.0f, (float) actualProgreso / maxProgreso);
+                if (p.progresoEstilo == 0) dibujarBarra = true;
+                else if (p.progresoEstilo == 1) textoMostrar = (int)(porcentajeLlenado * 100) + "%";
+                else if (p.progresoEstilo == 2) textoMostrar = actualProgreso + " / " + maxProgreso;
+            }
+
+            if (dibujarBarra) {
+                int anchoLleno = (int) (innerW * porcentajeLlenado);
+                if (porcentajeLlenado >= 1.0f) anchoLleno = innerW;
+                
+                if (anchoLleno > 0) {
+                    for (int dy = 0; dy < innerH; dy++) {
+                        int inset = getCornerInset(dy, innerH, innerR);
+                        int rowStartX = innerX + inset;
+                        int rowEndX = innerX + innerW - inset;
+                        if (rowEndX <= rowStartX) continue;
+
+                        int fillEnd = Math.min(innerX + anchoLleno, rowEndX);
+                        if (fillEnd > rowStartX) {
+                            g.fill(rowStartX, innerY + dy, fillEnd, innerY + dy + 1, p.colorBarraLleno);
+                        }
+                    }
+                }
+
+                if (p.disenoBarra == 1) {
+                    int hitColor = (p.colorBorde & 0x00FFFFFF) | 0x44000000;
+                    for (int i = 1; i <= 6; i++) {
+                        int hitX = innerX + (innerW * (i * 15) / 100);
+                        if (hitX >= innerX && hitX < innerX + innerW) {
+                            for (int dy = 0; dy < innerH; dy++) {
+                                int inset = getCornerInset(dy, innerH, innerR);
+                                if (hitX >= innerX + inset && hitX < innerX + innerW - inset) {
+                                    g.fill(hitX, innerY + dy, hitX + 1, innerY + dy + 1, hitColor);
+                                }
+                            }
+                        }
+                    }
+                }
+            } else if (!textoMostrar.isEmpty()) {
+                net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
+                float scale = p.escalaTexto; 
+                float tX = p.x + (p.ancho - (font.width(textoMostrar) * scale)) / 2 + p.offsetXTexto;
+                float tY = p.y + (p.alto - (font.lineHeight * scale)) / 2 + p.offsetYTexto;
+
+                g.pose().pushPose(); g.pose().translate(tX, tY, 0); g.pose().scale(scale, scale, 1.0f);
+                net.minecraft.network.chat.Style estilo = net.minecraft.network.chat.Style.EMPTY.withBold(p.negrita).withItalic(p.cursiva).withUnderlined(p.subrayado).withStrikethrough(p.tachado);
+                g.drawString(font, net.minecraft.network.chat.Component.literal(textoMostrar).setStyle(estilo), 0, 0, p.colorTexto, p.sombra);
+                g.pose().popPose();
+            }
+
+            drawRoundedOutline(g, p.x, p.y, p.ancho, p.alto, r, p.colorBorde);
+
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF00DECA);
+            return;
+        } 
+
+        // ─── RENDERING DEL WIDGET DE ESTADÍSTICAS RPG ───
+        if (p.tipo != null && p.tipo.startsWith("ESTADISTICA_")) {
+            // Fondo general opcional del recuadro
+            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
+            
+            String textoMostrar = "";
+            net.minecraft.world.entity.player.Player player = net.minecraft.client.Minecraft.getInstance().player;
+            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+            
+            if (player != null) {
+                if (p.tipo.equals("ESTADISTICA_SALUD")) {
+                    int hp = (int) Math.ceil(player.getHealth());
+                    int maxHp = (int) Math.ceil(player.getMaxHealth());
+                    textoMostrar = hp + " / " + maxHp;
+                } else if (p.tipo.equals("ESTADISTICA_DANO")) {
+                    double dmg = player.getAttributeBaseValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE);
+                    net.minecraft.world.item.ItemStack arma = player.getMainHandItem();
+                    if (!arma.isEmpty()) {
+                        com.google.common.collect.Multimap<net.minecraft.world.entity.ai.attributes.Attribute, net.minecraft.world.entity.ai.attributes.AttributeModifier> modificadores = arma.getAttributeModifiers(net.minecraft.world.entity.EquipmentSlot.MAINHAND);
+                        for (net.minecraft.world.entity.ai.attributes.AttributeModifier mod : modificadores.get(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE)) dmg += mod.getAmount();
+                        dmg += net.minecraft.world.item.enchantment.EnchantmentHelper.getDamageBonus(arma, net.minecraft.world.entity.MobType.UNDEFINED);
+                    }
+                    if (player.hasEffect(net.minecraft.world.effect.MobEffects.DAMAGE_BOOST)) dmg += 3.0 * (player.getEffect(net.minecraft.world.effect.MobEffects.DAMAGE_BOOST).getAmplifier() + 1);
+                    if (player.hasEffect(net.minecraft.world.effect.MobEffects.WEAKNESS)) dmg -= 4.0 * (player.getEffect(net.minecraft.world.effect.MobEffects.WEAKNESS).getAmplifier() + 1);
+                    textoMostrar = String.valueOf((int) Math.max(0, dmg));
+                } else if (p.tipo.equals("ESTADISTICA_DEFENSA")) {
+                    int armor = player.getArmorValue();
+                    textoMostrar = String.valueOf(armor);
+                } else if (p.tipo.equals("ESTADISTICA_VELOCIDAD")) {
+                    double baseSpeed = 0.10000000149011612; 
+                    double currentSpeed = player.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED);
+                    int percent = (int) Math.round((currentSpeed / baseSpeed) * 100);
+                    textoMostrar = percent + "%";
+                } else {
+                    int[] extras = obtenerStatsExtrasCached(mc);
+                    if (p.tipo.equals("ESTADISTICA_KILLS")) {
+                        textoMostrar = String.valueOf(extras[0]);
+                    } else if (p.tipo.equals("ESTADISTICA_MINADOS")) {
+                        textoMostrar = String.valueOf(extras[1]);
+                    } else if (p.tipo.equals("ESTADISTICA_DISTANCIA")) {
+                        int metros = extras[2] / 100;
+                        if (metros >= 1000) {
+                            textoMostrar = String.format("%.1fkm", metros / 1000.0f).replace(".0", "");
+                        } else {
+                            textoMostrar = metros + "m";
+                        }
+                    } else if (p.tipo.equals("ESTADISTICA_MUERTES")) {
+                        textoMostrar = String.valueOf(extras[3]);
+                    } else if (p.tipo.equals("ESTADISTICA_DANO_RECIBIDO")) {
+                        textoMostrar = String.valueOf(extras[4] / 10); 
+                    }
+                }
+            } else if (GlobalGuiSettings.editorActivo) {
+                if (p.tipo.equals("ESTADISTICA_SALUD")) textoMostrar = "20 / 20";
+                else if (p.tipo.equals("ESTADISTICA_DANO")) textoMostrar = "5";
+                else if (p.tipo.equals("ESTADISTICA_DEFENSA")) textoMostrar = "8";
+                else if (p.tipo.equals("ESTADISTICA_VELOCIDAD")) textoMostrar = "100%";
+                else if (p.tipo.equals("ESTADISTICA_KILLS")) textoMostrar = "1250";
+                else if (p.tipo.equals("ESTADISTICA_MINADOS")) textoMostrar = "8420";
+                else if (p.tipo.equals("ESTADISTICA_DISTANCIA")) textoMostrar = "2.5km";
+                else if (p.tipo.equals("ESTADISTICA_MUERTES")) textoMostrar = "12";
+                else if (p.tipo.equals("ESTADISTICA_DANO_RECIBIDO")) textoMostrar = "350";
+            }
+
+            net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
+            float scale = p.escalaTexto; 
+            // Centrado perfecto dentro de tu marco
+            float tX = p.x + (p.ancho - (font.width(textoMostrar) * scale)) / 2 + p.offsetXTexto;
+            float tY = p.y + (p.alto - (font.lineHeight * scale)) / 2 + p.offsetYTexto;
+
+            g.pose().pushPose();
+            g.pose().translate(tX, tY, 0);
+            g.pose().scale(scale, scale, 1.0f);
+            
+            net.minecraft.network.chat.Style estilo = net.minecraft.network.chat.Style.EMPTY
+                .withBold(p.negrita).withItalic(p.cursiva).withUnderlined(p.subrayado).withStrikethrough(p.tachado);
+            
+            g.drawString(font, net.minecraft.network.chat.Component.literal(textoMostrar).setStyle(estilo), 0, 0, p.colorTexto, p.sombra);
+            g.pose().popPose();
+
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF00DECA);
+            return;
+        }
+
+        // ─── RENDERING DE LA HOTBAR (ACCESO RÁPIDO CARRUSEL) ───
+        if ("HOTBAR".equals(p.tipo)) {
+            int slotSize = p.slotSize;
+            int gap = p.gap;
+            
+            // Dibuja el fondo libremente con el tamaño que elijas en el editor
+            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
+
+            // Centrado automático de los slots dentro del fondo
+            int totalW = p.isVertical ? slotSize : (p.visibleSlots * slotSize) + ((p.visibleSlots - 1) * gap);
+            int totalH = p.isVertical ? (p.visibleSlots * slotSize) + ((p.visibleSlots - 1) * gap) : slotSize;
+            int startX = p.x + (p.ancho - totalW) / 2;
+            int startY = p.y + (p.alto - totalH) / 2;
+
+            Player player = Minecraft.getInstance().player;
+            for (int i = 0; i < p.visibleSlots; i++) {
+                int realIndex = p.scrollIndex + i;
+                if (realIndex >= 9) break;
+
+                int slotX = startX + (p.isVertical ? 0 : i * (slotSize + gap));
+                int slotY = startY + (p.isVertical ? i * (slotSize + gap) : 0);
+
+                g.fill(slotX, slotY, slotX + slotSize, slotY + slotSize, p.colorSlotBg);
+                g.fill(slotX, slotY, slotX + slotSize - 1, slotY + 1, p.colorSlotDark);
+                g.fill(slotX, slotY, slotX + 1, slotY + slotSize - 1, p.colorSlotDark);
+                g.fill(slotX + 1, slotY + slotSize - 1, slotX + slotSize, slotY + slotSize, p.colorSlotLight);
+                g.fill(slotX + slotSize - 1, slotY + 1, slotX + slotSize, slotY + slotSize, p.colorSlotLight);
+
+                if (player != null) {
+                    net.minecraft.world.item.ItemStack item = player.getInventory().items.get(realIndex);
+                    if (!item.isEmpty()) {
+                        g.pose().pushPose();
+                        float scaleFactor = (float)slotSize / 18.0f;
+                        float iconOffset = (slotSize - (16 * scaleFactor)) / 2.0f;
+                        g.pose().translate(slotX + iconOffset, slotY + iconOffset, 0);
+                        g.pose().scale(scaleFactor, scaleFactor, 1.0f);
+                        g.renderFakeItem(item, 0, 0);
+                        g.renderItemDecorations(Minecraft.getInstance().font, item, 0, 0);
+                        g.pose().popPose();
+                    } else if (GlobalGuiSettings.editorActivo) {
+                        String num = String.valueOf(realIndex + 1);
+                        int nw = Minecraft.getInstance().font.width(num);
+                        g.drawString(Minecraft.getInstance().font, num, slotX + (slotSize - nw)/2, slotY + (slotSize - 8)/2, 0x55FFFFFF, false);
+                    }
+                }
+            }
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF00DECA);
+            return;
+        }
+
+        // ─── RENDERING DEL INVENTARIO CUADRÍCULA ───
+        if ("INVENTORY_GRID".equals(p.tipo)) {
+            int slotSize = p.slotSize;
+            int gap = p.gap;
+            Player player = Minecraft.getInstance().player;
+            int totalInvSlots = 27; 
+            int columnas = p.columnas > 0 ? p.columnas : 9;
+            int filas = (int) Math.ceil((double)totalInvSlots / columnas);
+            
+            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB); 
+
+            // Centrado de la cuadrícula
+            int totalW = (columnas * slotSize) + ((columnas - 1) * gap);
+            int totalH = (filas * slotSize) + ((filas - 1) * gap);
+            int startX = p.x + (p.ancho - totalW) / 2;
+            int startY = p.y + (p.alto - totalH) / 2;
+            
+            for (int i = 0; i < totalInvSlots; i++) {
+                int col = i % columnas;
+                int fil = i / columnas;
+                int slotX = startX + col * (slotSize + gap);
+                int slotY = startY + fil * (slotSize + gap);
+                
+                g.fill(slotX, slotY, slotX + slotSize, slotY + slotSize, p.colorSlotBg);
+                g.fill(slotX, slotY, slotX + slotSize - 1, slotY + 1, p.colorSlotDark);
+                g.fill(slotX, slotY, slotX + 1, slotY + slotSize - 1, p.colorSlotDark);
+                g.fill(slotX + 1, slotY + slotSize - 1, slotX + slotSize, slotY + slotSize, p.colorSlotLight);
+                g.fill(slotX + slotSize - 1, slotY + 1, slotX + slotSize, slotY + slotSize, p.colorSlotLight);
+                
+                if (player != null) {
+                    int realIndex = i + 9; 
+                    if (realIndex < player.getInventory().items.size()) {
+                        net.minecraft.world.item.ItemStack item = player.getInventory().items.get(realIndex);
+                        if (!item.isEmpty()) {
+                            g.pose().pushPose();
+                            float scaleFactor = (float)slotSize / 18.0f;
+                            float iconOffset = (slotSize - (16 * scaleFactor)) / 2.0f;
+                            g.pose().translate(slotX + iconOffset, slotY + iconOffset, 0);
+                            g.pose().scale(scaleFactor, scaleFactor, 1.0f);
+                            g.renderFakeItem(item, 0, 0);
+                            g.renderItemDecorations(Minecraft.getInstance().font, item, 0, 0);
+                            g.pose().popPose();
+                        }
+                    }
+                }
+            }
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF00DECA);
+            return;
+        }
+
+        // ─── RENDERING DEL SLOT DE INVENTARIO RPG (DINÁMICO) ───
+        if (p.tipo != null && p.tipo.startsWith("SLOT")) {
+            // Fondo general del slot (por si le quieres dar un recuadro oscuro de fondo)
+            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
+            
+            int slotSize = p.slotSize;
+            int slotX = p.x + (p.ancho - slotSize) / 2;
+            int slotY = p.y + (p.alto - slotSize) / 2;
+            
+            g.fill(slotX, slotY, slotX + slotSize, slotY + slotSize, p.colorSlotBg);
+            g.fill(slotX, slotY, slotX + slotSize - 1, slotY + 1, p.colorSlotDark);
+            g.fill(slotX, slotY, slotX + 1, slotY + slotSize - 1, p.colorSlotDark);
+            g.fill(slotX + 1, slotY + slotSize - 1, slotX + slotSize, slotY + slotSize, p.colorSlotLight);
+            g.fill(slotX + slotSize - 1, slotY + 1, slotX + slotSize, slotY + slotSize, p.colorSlotLight);
+
+            float scaleFactor = (float)slotSize / 18.0f;
+            float iconOffset = (slotSize - (16 * scaleFactor)) / 2.0f;
+            
+            net.minecraft.world.item.ItemStack renderItem = net.minecraft.world.item.ItemStack.EMPTY;
+            net.minecraft.resources.ResourceLocation watermark = null;
+            net.minecraft.world.entity.player.Player player = net.minecraft.client.Minecraft.getInstance().player;
+
+            if (player != null) {
+                switch (p.tipo) {
+                    case "SLOT_CASCO":   
+                        renderItem = player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.HEAD);
+                        if (renderItem.isEmpty()) watermark = net.minecraft.resources.ResourceLocation.parse("minecraft:textures/item/empty_armor_slot_helmet.png");
+                        break;
+                    case "SLOT_PECHERA": 
+                        renderItem = player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.CHEST);
+                        if (renderItem.isEmpty()) watermark = net.minecraft.resources.ResourceLocation.parse("minecraft:textures/item/empty_armor_slot_chestplate.png");
+                        break;
+                    case "SLOT_PANTALON":
+                        renderItem = player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.LEGS);
+                        if (renderItem.isEmpty()) watermark = net.minecraft.resources.ResourceLocation.parse("minecraft:textures/item/empty_armor_slot_leggings.png");
+                        break;
+                    case "SLOT_BOTAS":   
+                        renderItem = player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.FEET);
+                        if (renderItem.isEmpty()) watermark = net.minecraft.resources.ResourceLocation.parse("minecraft:textures/item/empty_armor_slot_boots.png");
+                        break;
+                    case "SLOT_ESCUDO":  
+                        renderItem = player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.OFFHAND);
+                        if (renderItem.isEmpty()) watermark = net.minecraft.resources.ResourceLocation.parse("minecraft:textures/item/empty_armor_slot_shield.png");
+                        break;
+                }
+            }
+
+            g.pose().pushPose();
+            g.pose().translate(slotX + iconOffset, slotY + iconOffset, 0);
+            g.pose().scale(scaleFactor, scaleFactor, 1.0f);
+
+            if (!renderItem.isEmpty()) {
+                g.renderFakeItem(renderItem, 0, 0);
+                g.renderItemDecorations(net.minecraft.client.Minecraft.getInstance().font, renderItem, 0, 0);
+            } else if (watermark != null) {
+                com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+                com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 0.6f);
+                g.blit(watermark, 0, 0, 0, 0, 16, 16, 16, 16);
+                com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+                com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+            }
+            g.pose().popPose();
+
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF00DECA);
+            return; 
+        }
+
+        if ("LISTA_LOGROS".equals(p.tipo)) {
+            int r = p.redondezBorde;
+            if (r < 0) r = 0;
+            if (r > 5) r = 5;
+
+            // --- ELIMINADO EL DIBUJADO DEL FONDO Y BORDE PRINCIPAL ---
+            // Ahora los logros son "Tarjetas Flotantes"
+            
+            // Usamos todo el ancho de la caja (sin restarle márgenes de padding)
+            int padding = 0; 
+            
+            // El scissor ahora cubre exactamente el área delimitadora del panel
+            g.enableScissor(p.x, p.y, p.x + p.ancho, p.y + p.alto);
+            g.pose().pushPose();
+            g.pose().translate(0, -p.scrollY, 0);
+            
+            float eIcon = p.escalaIcono > 0.1f ? p.escalaIcono : 1.0f;
+            float eText = p.escalaTexto > 0.1f ? p.escalaTexto : 1.0f;
+            float eDesc = p.escalaDesc > 0.1f ? p.escalaDesc : (eText * 0.85f);
+            float eItem = p.escalaItem > 0.1f ? p.escalaItem : 1.0f;
+            
+            // 1. ALTURA DINÁMICA (C+ y C- vuelven a escalar toda la tarjeta globalmente)
+            int rowH = (int)(36 * eIcon); 
+            int curY = p.y;
+            
+            long currentTime = System.currentTimeMillis();
+            if (cacheLogrosLista == null || currentTime - ultimoTiempoCache > 5000) {
+                java.util.List<LogroInfo> logTemp = obtenerListaLogrosCached(net.minecraft.client.Minecraft.getInstance());
+                cacheLogrosLista = new java.util.ArrayList<>(logTemp);
+                
+                if (cacheLogrosLista.isEmpty() && GlobalGuiSettings.editorActivo) {
+                    for(int i=0; i<6; i++) {
+                        LogroInfo dummy = new LogroInfo();
+                        dummy.titulo = "Logro Ejemplar " + (i+1);
+                        dummy.descripcion = "Completa esta tarea para avanzar.";
+                        dummy.icono = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_SWORD);
+                        dummy.completado = i % 2 == 0;
+                        dummy.progresoTxt = dummy.completado ? "" : "4/10";
+                        if (i == 3) dummy.progresoTxt = "";
+                        cacheLogrosLista.add(dummy);
+                    }
+                }
+                
+                cacheLogrosLista.sort((a, b) -> {
+                    if (a.completado && !b.completado) return -1;
+                    if (!a.completado && b.completado) return 1;
+                    return a.titulo.compareToIgnoreCase(b.titulo);
+                });
+                
+                ultimoTiempoCache = currentTime;
+            }
+            
+            java.util.List<LogroInfo> renderLogros = cacheLogrosLista;
+            
+            net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
+            
+            for (LogroInfo info : renderLogros) {
+                // --- 1. CULLING (OPTIMIZACIÓN ANTI-LAG EXTREMA) ---
+                // Si el logro actual está fuera del área visible del scroll (arriba o abajo),
+                // saltamos su dibujado para ahorrar cientos de Draw Calls a la tarjeta gráfica.
+                int actualY = curY - p.scrollY;
+                if (actualY + rowH < p.y || actualY > p.y + p.alto) {
+                    curY += rowH + 1;
+                    continue; 
+                }
+                // --------------------------------------------------
+
+                int cFondoIcono = (p.colorFondoCabecera != 0) ? p.colorFondoCabecera : 0xFF151515;
+                int cBordeIcono = (p.colorBordeCabecera != 0) ? p.colorBordeCabecera : 0xFF2A2A2A;
+                
+                int cFondoMarco = (p.colorFondoBarra != 0) ? p.colorFondoBarra : 0xFF222222;
+                int cBordeMarco = (p.colorBarraLleno != 0) ? p.colorBarraLleno : 0xFF444444; 
+                
+                int cFondoTexto = (p.colorFondoMision != 0) ? p.colorFondoMision : 0xFF181818;
+                int cBordeTexto = (p.colorBordeMision != 0) ? p.colorBordeMision : 0xFF2A2A2A;
+                
+                int cFondoCheck = (p.colorFondoCheck != 0) ? p.colorFondoCheck : 0xFF111111;
+                int cBordeCheck = (p.colorBordeCheckInterno != 0) ? p.colorBordeCheckInterno : 0xFF2A2A2A;
+                
+                int colorT = (p.colorTexto != 0) ? p.colorTexto : 0xFFFFFFFF;
+                int colorDesc = (p.colorSlotBg != 0) ? p.colorSlotBg : 0xFFAAAAAA;
+
+                // 2. CAJA DEL ÍCONO INDEPENDIENTE (Solo esta caja reacciona a C+ y C-)
+                int iconBoxSize = (int)(36 * eIcon);
+                int iconCellX = p.x;
+                // Se centra verticalmente de forma automática dentro de la tarjeta de 36px
+                int iconCellY = curY + (rowH - iconBoxSize) / 2; 
+                
+                drawRoundedBox(g, iconCellX, iconCellY, iconBoxSize, iconBoxSize, r, cFondoIcono, cBordeIcono);
+                
+                float eMarco = p.escalaMarco > 0.1f ? p.escalaMarco : 1.0f;
+                int baseInnerSize = iconBoxSize - 6; 
+                int innerBoxSize = (int)(baseInnerSize * eMarco);
+                
+                if (innerBoxSize > 2) {
+                    int innerBoxX = iconCellX + (iconBoxSize - innerBoxSize) / 2;
+                    int innerBoxY = iconCellY + (iconBoxSize - innerBoxSize) / 2;
+                    drawRoundedBox(g, innerBoxX, innerBoxY, innerBoxSize, innerBoxSize, r, cFondoMarco, cBordeMarco);
+                }
+                
+                if (info.icono != null) {
+                    g.pose().pushPose();
+                    float scaleF = eIcon * 1.5f * eItem; 
+                    float offsetItemX = (iconBoxSize - (16 * scaleF)) / 2.0f;
+                    float offsetItemY = (iconBoxSize - (16 * scaleF)) / 2.0f;
+                    g.pose().translate(iconCellX + offsetItemX, iconCellY + offsetItemY, 0);
+                    g.pose().scale(scaleF, scaleF, 1.0f);
+                    g.renderFakeItem(info.icono, 0, 0);
+                    g.pose().popPose();
+                }
+                
+                // 3. CAJA DE TEXTO PRINCIPAL (Fija y protegida de la escala del ícono)
+                int textCellX = iconCellX + iconBoxSize + 1;
+                int textCellW = p.ancho - iconBoxSize - 1;
+                
+                if (textCellW > 10) {
+                    drawRoundedBox(g, textCellX, curY, textCellW, rowH, r, cFondoTexto, cBordeTexto);
+                    
+                    float eCheck = p.escalaCheck > 0.1f ? p.escalaCheck : 1.0f;
+                    int checkSize = (int)(16 * eIcon * eCheck); 
+                    
+                    // 1. REPOSICIONAMIENTO DEL CHECK (12 píxeles más a la izquierda)
+                    int checkMarginRight = 12;
+                    int checkX = textCellX + textCellW - checkMarginRight - checkSize;
+                    
+                    String dateTxt = info.progresoTxt;
+                    boolean hasProgreso = (dateTxt != null && !dateTxt.isEmpty());
+                    
+                    // Si hay progreso, subimos el check unos píxeles para que junto al texto queden centrados
+                    int checkY = curY + (rowH - checkSize) / 2 - (hasProgreso ? (int)(4 * eDesc) : 0);
+                    
+                    int cBCh = info.completado ? 0xFF00B01B : cBordeCheck;
+                    drawRoundedBox(g, checkX, checkY, checkSize, checkSize, r, cFondoCheck, cBCh);
+                    
+                    if (info.completado) {
+                        g.pose().pushPose();
+                        g.pose().translate(checkX, checkY, 0); 
+                        g.pose().scale(eIcon * eCheck, eIcon * eCheck, 1.0f);
+
+                        int checkColor = 0xFF00B01B;
+                        g.fill(3, 8, 5, 10, checkColor);  
+                        g.fill(5, 10, 8, 13, checkColor); 
+                        g.fill(8, 8, 10, 10, checkColor); 
+                        g.fill(10, 6, 12, 8, checkColor); 
+                        g.fill(12, 4, 14, 6, checkColor); 
+                        
+                        g.pose().popPose();
+                    }
+                    
+                    // 2. TEXTO DE PROGRESO DEBAJO DEL CHECK (Centrado perfectamente)
+                    if (hasProgreso) {
+                        float progressTextW = font.width(dateTxt) * eDesc; 
+                        g.pose().pushPose();
+                        float progX = checkX + (checkSize - progressTextW) / 2.0f; 
+                        float progY = checkY + checkSize + (2 * eDesc); 
+                        g.pose().translate(progX, progY, 0);
+                        g.pose().scale(eDesc, eDesc, 1.0f);
+                        g.drawString(font, dateTxt, 0, 0, colorDesc, false);
+                        g.pose().popPose();
+                    }
+                    
+                    // 3. TEXTOS PRINCIPALES (Centrado Vertical Matemático Anti-Desorganización)
+                    int maxTextW = (checkX - 8) - (textCellX + 8);
+                    if (maxTextW > 10) {
+                        String safeTitulo = font.plainSubstrByWidth(info.titulo, (int)(maxTextW / eText));
+                        if (safeTitulo.length() < info.titulo.length()) safeTitulo += "...";
+                        
+                        String safeDesc = font.plainSubstrByWidth(info.descripcion, (int)(maxTextW / eDesc));
+                        if (safeDesc.length() < info.descripcion.length()) safeDesc += "...";
+
+                        // Matemática que centra el texto sin importar qué tan grande o pequeño sea el recuadro global
+                        float titleH = 9 * eText;
+                        float descH = 9 * eDesc;
+                        float gap = 2 * eDesc; // Espacio entre título y descripción
+                        float totalTextH = titleH + gap + descH;
+                        
+                        // Centramos todo el bloque de texto justo a la mitad de la altura de la tarjeta (rowH)
+                        float startY = curY + (rowH - totalTextH) / 2.0f;
+
+                        g.pose().pushPose();
+                        g.pose().translate(textCellX + 8, startY, 0);
+                        g.pose().scale(eText, eText, 1.0f);
+                        g.drawString(font, safeTitulo, 0, 0, colorT, false);
+                        g.pose().popPose();
+                        
+                        g.pose().pushPose();
+                        g.pose().translate(textCellX + 8, startY + titleH + gap, 0);
+                        g.pose().scale(eDesc, eDesc, 1.0f); 
+                        g.drawString(font, safeDesc, 0, 0, colorDesc, false); 
+                        g.pose().popPose();
+                    }
+                }
+                curY += rowH + 1;
+            }
+            
+            int maxScroll = (curY - p.y) - p.alto;
+            if (maxScroll < 0) maxScroll = 0;
+            if (p.scrollY > maxScroll) p.scrollY = maxScroll;
+            if (p.scrollY < 0) p.scrollY = 0;
+            
+            g.pose().popPose();
+            g.disableScissor();
+            
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF00DECA);
+            return;
+        }
+
+        if (p.tipo.equals("LINEA")) {
+            if (p.x2 != 0 || p.y2 != 0) {
+                drawLineThick(g, p.x, p.y, p.x2, p.y2, p.colorARGB, p.grosor);
+            }
+        } else if (p.tipo.equals("LINEA")) {
+            if (p.x2 != 0 || p.y2 != 0) {
+                drawLineThick(g, p.x, p.y, p.x2, p.y2, p.colorARGB, p.grosor);
+            }
+        } else if (p.tipo.equals("CUADRADO") || p.tipo.equals("RECTANGULO") || p.tipo.equals("BOTON_PAGINA")) {
+            int r = p.tipo.equals("CUADRADO") ? p.redondezBorde : 0;
+            drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, Math.min(5, Math.max(0, r)), p.colorARGB, p.colorBorde);
+        } else if (p.tipo.equals("TRIANGULO")) {
+            int centerX = p.x + p.ancho / 2;
+            int bottomY = p.y + p.alto;
+            for (int dy = 0; dy < p.alto; dy++) {
+                int progress = dy * p.ancho / 2 / p.alto;
+                int lineStart = centerX - progress;
+                int lineEnd = centerX + progress;
+                if (lineStart < p.x) lineStart = p.x;
+                if (lineEnd > p.x + p.ancho) lineEnd = p.x + p.ancho;
+                g.fill(lineStart, bottomY - dy, lineEnd, bottomY - dy + 1, p.colorARGB);
+            }
+        } else if (p.tipo.equals("CIRCULO")) {
+            int centerX = p.x + p.ancho/2;
+            int centerY = p.y + p.alto/2;
+            int radius = Math.min(p.ancho, p.alto)/2;
+            for (int dy = -radius; dy <= radius; dy++) {
+                for (int dx = -radius; dx <= radius; dx++) {
+                    if (dx*dx + dy*dy <= radius*radius) {
+                        g.fill(centerX + dx, centerY + dy, centerX + dx + 1, centerY + dy + 1, p.colorARGB);
+                    }
+                }
+            }
+        } else if (p.tipo.equals("DETALLE_MISION")) {
+            net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
+            Config.MisionData data = null;
+
+            for (java.util.List<Config.MisionData> lista : Config.misionesCargadas.values()) {
+                for (Config.MisionData m : lista) {
+                    if (m.nombre != null && m.nombre.equals(p.textoAsociado)) { data = m; break; }
+                }
+            }
+
+            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
+            g.renderOutline(p.x, p.y, p.ancho, p.alto, p.colorBorde);
+
+            if (data == null) {
+                g.drawCenteredString(font, "Mision no seleccionada", p.x + p.ancho/2, p.y + p.alto/2, 0xFF888888);
+                return;
+            }
+
+            // --- 1. NOMBRE ---
+            g.pose().pushPose();
+            float nX = p.x + (p.ancho / 2f) - (font.width(data.nombre) * p.escalaTexto / 2f) + p.offsetXTexto;
+            float nY = p.y + 10 + p.offsetYTexto;
+            g.pose().translate(nX, nY, 0);
+            g.pose().scale(p.escalaTexto, p.escalaTexto, 1);
+            g.drawString(font, data.nombre, 0, 0, p.colorTexto, false);
+            if (GlobalGuiSettings.editorActivo && p.subElementoSel == 1) g.renderOutline(-2, -2, font.width(data.nombre) + 4, 12, 0xFFFF0000);
+            g.pose().popPose();
+
+            // --- 2. ICONO ---
+            if (data.iconoRL != null) {
+                g.pose().pushPose();
+                float iX = p.x + 10 + p.offXIcon;
+                float iY = p.y + 35 + p.offYIcon;
+                g.pose().translate(iX, iY, 0);
+                g.pose().scale(p.scaleIcon, p.scaleIcon, 1);
+                g.blit(data.iconoRL, 0, 0, 0, 0, 32, 32, 32, 32);
+                if (GlobalGuiSettings.editorActivo && p.subElementoSel == 2) g.renderOutline(-2, -2, 34, 34, 0xFFFF0000);
+                g.pose().popPose();
+            }
+
+            // --- 3. DESCRIPCIÓN ---
+            g.pose().pushPose();
+            float dX = p.x + 50 + p.offXDesc;
+            float dY = p.y + 35 + p.offYDesc;
+            g.pose().translate(dX, dY, 0);
+            g.pose().scale(p.scaleDesc, p.scaleDesc, 1);
+            g.drawWordWrap(font, net.minecraft.network.chat.Component.literal(data.descripcion), 0, 0, (int)((p.ancho - 60) / p.scaleDesc), p.colorDesc);
+            if (GlobalGuiSettings.editorActivo && p.subElementoSel == 3) g.renderOutline(-2, -2, (int)((p.ancho-60)/p.scaleDesc), 30, 0xFFFF0000);
+            g.pose().popPose();
+
+            // --- 4. OBJETIVOS (Con Checkbox y Colores) ---
+            g.pose().pushPose();
+            g.pose().translate(p.x + 10 + p.offXObj, p.y + 80 + p.offYObj, 0);
+            g.pose().scale(p.scaleObj, p.scaleObj, 1);
+            int oY = 0;
+            for (Config.Objetivo obj : data.objetivos) {
+                int cantJugador = net.minecraft.client.Minecraft.getInstance().player.getInventory().countItem(obj.itemReal);
+                boolean completado = cantJugador >= obj.cantidad;
+
+                g.fill(0, oY, p.ancho - 20, oY + 22, p.colorFondoRenglon);
+
+                g.fill(5, oY + 2, 23, oY + 20, p.colorFondoIcono);
+                g.renderOutline(5, oY + 2, 18, 18, p.colorBordeIcono);
+                if (obj.itemReal != null) g.renderFakeItem(new net.minecraft.world.item.ItemStack(obj.itemReal), 6, oY + 3);
+
+                String txtObj = (obj.texto != null && !obj.texto.isEmpty()) ? obj.texto : obj.itemReal.getDescription().getString();
+                g.drawString(font, txtObj, 28, oY + 7, p.colorObj, true);
+
+                int boxSize = 11;
+                int boxX = p.ancho - 20 - 18;
+                int boxY = oY + 5;
+
+                g.renderOutline(boxX - 1, boxY - 1, boxSize + 2, boxSize + 2, p.colorBordeCheckExterno);
+
+                g.fill(boxX, boxY, boxX + boxSize, boxY + boxSize, completado ? 0xFF00AA00 : p.colorFondoCheck);
+                g.renderOutline(boxX, boxY, boxSize, boxSize, completado ? 0xFF00FF00 : p.colorBordeCheckInterno);
+
+                if (completado) g.drawString(font, "✔", boxX + 3, boxY + 3, 0xFF00FF00, false);
+
+                g.renderOutline(0, oY, p.ancho - 20, 22, p.colorBordeRenglon);
+
+                String txtCant = cantJugador + " / " + obj.cantidad;
+                int cantWidth = font.width(txtCant);
+                g.drawString(font, (completado ? "§a" : "§c") + txtCant, boxX - 6 - cantWidth, oY + 7, 0xFFFFFFFF, true);
+
+                oY += 25;
+            }
+            g.pose().popPose();
+
+            // --- 5. RECOMPENSAS ---
+            g.pose().pushPose();
+            g.pose().translate(p.x + 10 + p.offXRec, p.y + 180 + p.offYRec, 0);
+            g.pose().scale(p.scaleRec, p.scaleRec, 1);
+            int rX = 0;
+            for (Config.Recompensa rec : data.recompensas) {
+                g.fill(rX, 0, rX + 40, 20, 0x44000000);
+                if (rec.itemReal != null) {
+                    g.renderFakeItem(new net.minecraft.world.item.ItemStack(rec.itemReal), rX + 2, 2);
+                    g.drawString(font, "x" + rec.cantidad, rX + 20, 10, p.colorRec, true);
+                }
+                rX += 45;
+            }
+            g.pose().popPose();
+        } else if (p.tipo.equals("MISION_TITULO")) {
+            net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
+            Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
+            String texto = (data != null) ? data.nombre : "Titulo (Toca una mision)";
+            if (p.mayusculas) texto = texto.toUpperCase();
+
+            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
+            g.renderOutline(p.x, p.y, p.ancho, p.alto, p.colorBorde);
+
+            net.minecraft.network.chat.Style estilo = net.minecraft.network.chat.Style.EMPTY
+                    .withBold(p.negrita).withItalic(p.cursiva).withUnderlined(p.subrayado).withStrikethrough(p.tachado);
+
+            g.pose().pushPose();
+            float nScale = p.escalaTexto;
+            float nX = p.x + (p.ancho / 2f) - (font.width(texto) * nScale / 2f) + p.offsetXTexto;
+            float nY = p.y + (p.alto / 2f) - (font.lineHeight * nScale / 2f) + p.offsetYTexto;
+            g.pose().translate(nX, nY, 0);
+            g.pose().scale(nScale, nScale, 1);
+            g.drawString(font, net.minecraft.network.chat.Component.literal(texto).setStyle(estilo), 0, 0, p.colorTexto, p.sombra);
+            g.pose().popPose();
+        } else if (p.tipo.equals("MISION_DESCRIPCION")) {
+            net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
+            Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
+            String texto = (data != null) ? data.descripcion : "Descripcion (Toca una mision)";
+            if (p.mayusculas) texto = texto.toUpperCase();
+
+            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
+            g.renderOutline(p.x, p.y, p.ancho, p.alto, p.colorBorde);
+
+            net.minecraft.network.chat.Style estilo = net.minecraft.network.chat.Style.EMPTY
+                    .withBold(p.negrita).withItalic(p.cursiva).withUnderlined(p.subrayado).withStrikethrough(p.tachado);
+
+            g.pose().pushPose();
+            g.pose().translate(p.x + 5, p.y + 5, 0);
+            g.pose().scale(p.scaleDesc, p.scaleDesc, 1);
+            g.drawWordWrap(font, net.minecraft.network.chat.Component.literal(texto).setStyle(estilo), 0, 0, (int)((p.ancho - 10) / p.scaleDesc), p.colorTexto);
+            g.pose().popPose();
+        } else if (p.tipo.equals("MISION_OBJETIVOS")) {
+            net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
+            Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
+
+            int r = p.redondezBorde;
+            drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, r, p.colorARGB, p.colorBorde);
+
+            if (data != null) {
+                float eText = p.escalaTexto > 0.1f ? p.escalaTexto : 1.0f;
+                float eItem = p.escalaItem > 0.1f ? p.escalaItem : 1.0f;
+                float eCheck = p.escalaCheck > 0.1f ? p.escalaCheck : 1.0f;
+                
+                int baseRowH = 22;
+                int rowH = (int)(baseRowH * Math.max(eText, Math.max(eItem, eCheck)));
+                int oY = p.y + 5;
+                
+                g.enableScissor(p.x + 1, p.y + 1, p.x + p.ancho - 1, p.y + p.alto - 1);
+                
+                for (Config.Objetivo obj : data.objetivos) {
+                    if (oY > p.y + p.alto) break;
+                    
+                    int cant = net.minecraft.client.Minecraft.getInstance().player.getInventory().countItem(obj.itemReal);
+                    boolean ok = cant >= obj.cantidad;
+
+                    drawRoundedBox(g, p.x + 5, oY, p.ancho - 10, rowH, r, p.colorFondoRenglon, p.colorBordeRenglon);
+
+                    int iconBoxSize = (int)(18 * eItem);
+                    int iconX = p.x + 10;
+                    int iconY = oY + (rowH - iconBoxSize) / 2;
+                    drawRoundedBox(g, iconX, iconY, iconBoxSize, iconBoxSize, r, p.colorFondoIcono, p.colorBordeIcono);
+                    
+                    if (obj.itemReal != null) {
+                        g.pose().pushPose();
+                        float scaleF = eItem;
+                        g.pose().translate(iconX + (iconBoxSize - 16 * scaleF)/2f, iconY + (iconBoxSize - 16 * scaleF)/2f, 0);
+                        g.pose().scale(scaleF, scaleF, 1.0f);
+                        g.renderFakeItem(new net.minecraft.world.item.ItemStack(obj.itemReal), 0, 0);
+                        g.pose().popPose();
+                    }
+
+                    int checkBoxSize = (int)(16 * eCheck); 
+                    int checkX = p.x + p.ancho - 10 - checkBoxSize - 5;
+                    int checkY = oY + (rowH - checkBoxSize) / 2;
+                    
+                    int checkColor = 0xFF00B01B; 
+                    int bordeActual = ok ? checkColor : p.colorBordeCheckInterno;
+                    
+                    drawRoundedBox(g, checkX, checkY, checkBoxSize, checkBoxSize, r, p.colorFondoCheck, bordeActual);
+                    
+                    if (ok) {
+                        g.pose().pushPose();
+                        g.pose().translate(checkX, checkY, 0);
+                        g.pose().scale(eCheck, eCheck, 1.0f);
+                        
+                        g.fill(3, 8, 5, 10, checkColor);  
+                        g.fill(5, 10, 8, 13, checkColor); 
+                        g.fill(8, 8, 10, 10, checkColor); 
+                        g.fill(10, 6, 12, 8, checkColor); 
+                        g.fill(12, 4, 14, 6, checkColor); 
+                        
+                        g.pose().popPose();
+                    }
+
+                    String txtObj = (obj.texto != null && !obj.texto.isEmpty()) ? obj.texto : obj.itemReal.getDescription().getString();
+                    g.pose().pushPose();
+                    g.pose().translate(iconX + iconBoxSize + 5, oY + (rowH - font.lineHeight * eText) / 2f, 0);
+                    g.pose().scale(eText, eText, 1.0f);
+                    g.drawString(font, txtObj, 0, 0, p.colorTexto, true);
+                    g.pose().popPose();
+
+                    String txtCant = cant + "/" + obj.cantidad;
+                    float cantWidth = font.width(txtCant) * eText;
+                    g.pose().pushPose();
+                    g.pose().translate(checkX - 5 - cantWidth, oY + (rowH - font.lineHeight * eText) / 2f, 0);
+                    g.pose().scale(eText, eText, 1.0f);
+                    g.drawString(font, (ok ? "§a" : "§c") + txtCant, 0, 0, 0xFFFFFFFF, true);
+                    g.pose().popPose();
+
+                    oY += rowH + p.gap;
+                }
+                g.disableScissor();
+            } else {
+                g.drawCenteredString(font, "Lista de Objetivos", p.x + p.ancho/2, p.y + p.alto/2, 0xFF888888);
+            }
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF00DECA);
+        } else if (p.tipo.equals("MISION_ICONO")) {
+            Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
+
+            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
+            g.renderOutline(p.x, p.y, p.ancho, p.alto, p.colorBorde);
+
+            if (data != null && data.iconoRL != null) {
+                g.pose().pushPose();
+                
+                float baseIconSize = 16.0f;
+                float scale = p.escalaIcono > 0 ? p.escalaIcono : 2.0f;
+                float scaledSize = baseIconSize * scale;
+                
+                float iconX = p.x + (p.ancho - scaledSize) / 2.0f + p.offsetXIcono;
+                float iconY = p.y + (p.alto - scaledSize) / 2.0f + p.offsetYIcono;
+                
+                g.pose().translate(iconX, iconY, 0);
+                g.pose().scale(scale, scale, 1.0f);
+                
+                com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+                g.blit(data.iconoRL, 0, 0, 0, 0, (int)baseIconSize, (int)baseIconSize, (int)baseIconSize, (int)baseIconSize);
+                com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+                
+                g.pose().popPose();
+            } else {
+                net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
+                g.drawCenteredString(font, "Icono", p.x + p.ancho/2, p.y + (p.alto - font.lineHeight)/2, 0xFF888888);
+            }
+            
+            if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF00DECA);
+        } else if (p.tipo.startsWith("DESPLEGABLE")) {
+            int t = 1;
+            net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
+
+            if (p.tipo.equals("DESPLEGABLE_MAESTRO")) {
+                g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
+                g.fill(p.x, p.y + p.alto - t, p.x + p.ancho, p.y + p.alto, p.colorBorde);
+                g.fill(p.x, p.y, p.x + p.ancho, p.y + t, p.colorBorde);
+                g.fill(p.x, p.y, p.x + t, p.y + p.alto, p.colorBorde);
+                g.fill(p.x + p.ancho - t, p.y, p.x + p.ancho, p.y + p.alto, p.colorBorde);
+
+                g.enableScissor(p.x + t, p.y + t, p.x + p.ancho - t, p.y + p.alto - t);
+
+                g.pose().pushPose();
+                g.pose().translate(0, -p.scrollY, 0);
+
+                int currentY = p.y + 5;
+                int marginX = 5;
+                int cardHeight = 30;
+                int cardWidth = p.ancho - (marginX * 2);
+
+                float titleScale = p.escalaTexto;
+                float titleOffsetX = p.offsetXTexto;
+
+                g.fill(p.x + marginX, currentY, p.x + marginX + cardWidth, currentY + 15, p.colorFondoCabecera);
+                g.renderOutline(p.x + marginX, currentY, cardWidth, 15, p.colorBordeCabecera);
+
+                g.pose().pushPose();
+                g.pose().translate(p.x + marginX + 5 + titleOffsetX, currentY + (15 - font.lineHeight * titleScale) / 2, 0);
+                g.pose().scale(titleScale, titleScale, 1.0f);
+                g.drawString(font, p.tituloPrincipales, 0, 0, p.colorTexto, false);
+                if (escribiendo && EditandoMaestroTitle == 1 && (System.currentTimeMillis() % 1000 < 500)) {
+                    g.drawString(font, "|", font.width(p.tituloPrincipales) + 1, 0, p.colorTexto, false);
+                }
+                g.pose().popPose();
+
+                g.drawString(font, p.principalesAbierto ? "▼" : "▶", p.x + p.ancho - marginX - 12, currentY + 4, p.colorTexto, false);
+                currentY += 20;
+
+                if (p.principalesAbierto) {
+                    List<String> principales = p.listaPrincipales != null ? p.listaPrincipales : List.of();
+                    for (String missionName : principales) {
+                        if (missionName != null && !missionName.isEmpty()) {
+                            drawDummyMission(g, font, p, currentY, marginX, cardWidth, cardHeight, missionName);
+                            currentY += cardHeight + 5;
+                        }
+                    }
+                }
+
+                g.fill(p.x + marginX, currentY, p.x + marginX + cardWidth, currentY + 15, p.colorFondoCabecera);
+                g.renderOutline(p.x + marginX, currentY, cardWidth, 15, p.colorBordeCabecera);
+
+                g.pose().pushPose();
+                g.pose().translate(p.x + marginX + 5 + titleOffsetX, currentY + (15 - font.lineHeight * titleScale) / 2, 0);
+                g.pose().scale(titleScale, titleScale, 1.0f);
+                g.drawString(font, p.tituloSecundarias, 0, 0, p.colorTexto, false);
+                if (escribiendo && EditandoMaestroTitle == 2 && (System.currentTimeMillis() % 1000 < 500)) {
+                    g.drawString(font, "|", font.width(p.tituloSecundarias) + 1, 0, p.colorTexto, false);
+                }
+                g.pose().popPose();
+
+                g.drawString(font, p.secundariasAbierto ? "▼" : "▶", p.x + p.ancho - marginX - 12, currentY + 4, p.colorTexto, false);
+                currentY += 20;
+
+                if (p.secundariasAbierto) {
+                    List<String> secundarias = p.listaSecundarias != null ? p.listaSecundarias : List.of();
+                    for (String missionName : secundarias) {
+                        if (missionName != null && !missionName.isEmpty()) {
+                            drawDummyMission(g, font, p, currentY, marginX, cardWidth, cardHeight, missionName);
+                            currentY += cardHeight + 5;
+                        }
+                    }
+                }
+
+                g.pose().popPose();
+                g.disableScissor();
+
+                int totalContentHeight = currentY - (p.y + 5);
+                int bodyHeight = p.alto - 10;
+                if (totalContentHeight > bodyHeight) {
+                    int maxScrollY = totalContentHeight - bodyHeight;
+                    if (p.scrollY < 0) p.scrollY = 0;
+                    if (p.scrollY > maxScrollY) p.scrollY = maxScrollY;
+                } else {
+                    p.scrollY = 0;
+                }
+
+            } else {
+                int headerHeight = 20;
+                int renderHeight = p.desplegado ? p.alto : headerHeight;
+
+                g.fill(p.x, p.y, p.x + p.ancho, p.y + headerHeight, p.colorFondoCabecera);
+                g.fill(p.x, p.y, p.x + p.ancho, p.y + t, p.colorBordeCabecera);
+                g.fill(p.x, p.y + headerHeight - t, p.x + p.ancho, p.y + headerHeight, p.colorBordeCabecera);
+                g.fill(p.x, p.y, p.x + t, p.y + headerHeight, p.colorBordeCabecera);
+                g.fill(p.x + p.ancho - t, p.y, p.x + p.ancho, p.y + headerHeight, p.colorBordeCabecera);
+
+                if (p.desplegado && p.alto > headerHeight) {
+                    int bodyY = p.y + headerHeight;
+                    int bodyHeight = p.alto - headerHeight;
+                    g.fill(p.x, bodyY, p.x + p.ancho, bodyY + bodyHeight, p.colorARGB);
+                    g.fill(p.x, bodyY + bodyHeight - t, p.x + p.ancho, bodyY + bodyHeight, p.colorBorde);
+                    g.fill(p.x, bodyY, p.x + t, bodyY + bodyHeight, p.colorBorde);
+                    g.fill(p.x + p.ancho - t, bodyY, p.x + p.ancho, bodyY + bodyHeight, p.colorBorde);
+
+                    g.enableScissor(p.x + t, bodyY, p.x + p.ancho - t, bodyY + bodyHeight - t);
+                    g.pose().pushPose();
+                    g.pose().translate(0, -p.scrollY, 0);
+
+                    int currentY = bodyY + 5;
+                    int marginX = 5;
+                    int cardHeight = 30;
+                    int cardWidth = p.ancho - (marginX * 2);
+
+                    List<String> misiones = p.tipo.equals("DESPLEGABLE_PRINCIPAL")
+                            ? p.listaPrincipales
+                            : p.listaSecundarias;
+
+                    for (String missionName : misiones) {
+                        if (missionName != null && !missionName.isEmpty()) {
+                            drawDummyMission(g, font, p, currentY, marginX, cardWidth, cardHeight, missionName);
+                            currentY += cardHeight + 5;
+                        }
+                    }
+
+                    g.pose().popPose();
+                    g.disableScissor();
+
+                    int totalContentHeight = currentY - (bodyY + 5);
+                    if (totalContentHeight > bodyHeight) {
+                        int maxScrollY = totalContentHeight - bodyHeight;
+                        if (p.scrollY < 0) p.scrollY = 0;
+                        if (p.scrollY > maxScrollY) p.scrollY = maxScrollY;
+                    } else {
+                        p.scrollY = 0;
+                    }
+                }
+
+                String flecha = p.desplegado ? "▼" : "▶";
+                g.drawString(font, flecha, p.x + p.ancho - 15, p.y + 6, p.colorTexto, false);
+
+                float titleScale = p.escalaTexto;
+                float titleOffsetX = p.offsetXTexto;
+                g.pose().pushPose();
+                g.pose().translate(p.x + 5 + titleOffsetX, p.y + (20 - font.lineHeight * titleScale) / 2, 0);
+                g.pose().scale(titleScale, titleScale, 1.0f);
+                g.drawString(font, p.textoAsociado, 0, 0, p.colorTexto, false);
+                if (escribiendo && EditandoMaestroTitle == 0 && (System.currentTimeMillis() % 1000 < 500)) {
+                    g.drawString(font, "|", font.width(p.textoAsociado) + 1, 0, p.colorTexto, false);
+                }
+                g.pose().popPose();
+            }
+        } else if (!p.tipo.equals("IMAGEN_CUSTOM") && !p.tipo.equals("TEXTURA_JUEGO")) {
+            // Dibuja el fondo SOLO si no es una imagen ni una textura
+            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
+        }
+
+        if (p.textoAsociado != null && (!p.textoAsociado.isEmpty() || escribiendo) && !p.tipo.startsWith("DESPLEGABLE")) {
+            net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
+
+            float scaledTextHeight = font.lineHeight * p.escalaTexto;
+            float baseIconSize = 16;
+            float scaledIconSize = baseIconSize * p.escalaIcono;
+
+            if (p.iconoRL != null && !p.tipo.startsWith("DESPLEGABLE")) {
+                float iconBaseX = p.x + 10;
+                float iconX = iconBaseX + p.offsetXIcono;
+                float iconY = p.y + (p.alto - scaledIconSize) / 2;
+
+                g.pose().pushPose();
+                g.pose().translate(iconX, iconY, 0);
+                g.pose().scale(p.escalaIcono, p.escalaIcono, 1.0f);
+                g.blit(p.iconoRL, 0, 0, 0, 0, (int)baseIconSize, (int)baseIconSize, (int)baseIconSize, (int)baseIconSize);
+                g.pose().popPose();
+            }
+
+            float textBaseX = p.x + 35;
+            float textX = textBaseX + p.offsetXTexto;
+            float textY = p.y + (p.alto - scaledTextHeight) / 2;
+            if (p.tipo.startsWith("DESPLEGABLE")) {
+                textY = p.y + (20 - scaledTextHeight) / 2;
+            }
+
+            g.pose().pushPose();
+            g.pose().translate(textX, textY, 0);
+            g.pose().scale(p.escalaTexto, p.escalaTexto, 1.0f);
+            g.drawString(font, p.textoAsociado, 0, 0, p.colorTexto, false);
+            if (escribiendo && (System.currentTimeMillis() % 1000 < 500)) {
+                int textWidth = font.width(p.textoAsociado);
+                g.drawString(font, "|", textWidth + 1, 0, p.colorTexto, false);
+            }
+            g.pose().popPose();
+        }
+
+        // ─── RENDERING DE IMÁGENES E ÍCONOS ───
+        if ("IMAGEN_CUSTOM".equals(p.tipo)) {
+            net.minecraft.resources.ResourceLocation rl = net.minecraft.resources.ResourceLocation.tryParse(p.recursoPath);
+            if (rl != null) {
+                com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+                com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+                
+                g.setColor(1.0f, 1.0f, 1.0f, p.opacidad);
+                g.blit(rl, p.x, p.y, 0, 0, p.ancho, p.alto, p.ancho, p.alto);
+                g.setColor(1.0f, 1.0f, 1.0f, 1.0f); // Restaurar color normal
+                
+                com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+            }
+        } else if ("TEXTURA_JUEGO".equals(p.tipo)) {
+            net.minecraft.resources.ResourceLocation rl = net.minecraft.resources.ResourceLocation.tryParse(p.recursoPath);
+            if (rl != null) {
+                net.minecraft.world.item.Item item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(rl);
+                if (item != null && item != net.minecraft.world.item.Items.AIR) {
+                    net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(item);
+                    
+                    g.pose().pushPose();
+                    g.pose().translate(p.x, p.y, 0);
+                    
+                    float scaleX = (float)p.ancho / 16.0f;
+                    float scaleY = (float)p.alto / 16.0f;
+                    g.pose().scale(scaleX, scaleY, 1.0f);
+                    
+                    // --- USAMOS NUESTRO MOTOR LIMPIO SIEMPRE (100% o menos) ---
+                    g.pose().translate(8.0F, 8.0F, 150.0F); 
+                    g.pose().scale(16.0F, -16.0F, 16.0F); 
+                    
+                    net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+                    net.minecraft.client.renderer.MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
+                    net.minecraft.client.resources.model.BakedModel model = mc.getItemRenderer().getModel(stack, null, null, 0);
+                    
+                    if (model.usesBlockLight()) {
+                        com.mojang.blaze3d.platform.Lighting.setupFor3DItems();
+                    } else {
+                        com.mojang.blaze3d.platform.Lighting.setupForFlatItems();
+                    }
+                    
+                    com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+                    com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+                    com.mojang.blaze3d.systems.RenderSystem.enableDepthTest();
+                    
+                    // PASO 1: Molde invisible
+                    com.mojang.blaze3d.systems.RenderSystem.colorMask(false, false, false, false);
+                    mc.getItemRenderer().render(stack, net.minecraft.world.item.ItemDisplayContext.GUI, false, g.pose(), bufferSource, 15728880, net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY, model);
+                    bufferSource.endBatch();
+                    
+                    // PASO 2: Dibujo transparente/sólido con nuestro filtro limpio
+                    com.mojang.blaze3d.systems.RenderSystem.colorMask(true, true, true, true);
+                    net.minecraft.client.renderer.MultiBufferSource wrapper = type -> {
+                        return bufferSource.getBuffer(net.minecraft.client.renderer.RenderType.translucent());
+                    };
+                    
+                    com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, p.opacidad);
+                    mc.getItemRenderer().render(stack, net.minecraft.world.item.ItemDisplayContext.GUI, false, g.pose(), wrapper, 15728880, net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY, model);
+                    bufferSource.endBatch();
+                    
+                    // PASO 3: Restaurar estado para no romper otros menús
+                    com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+                    com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+                    com.mojang.blaze3d.platform.Lighting.setupFor3DItems();
+                    
+                    g.pose().popPose();
+                }
+            }
+        }
+
+        if (seleccionado && !p.tipo.equals("MISION_OBJETIVOS") && !p.tipo.equals("MISION_ICONO")) {
+            g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF00DECA);
+        }
+
+    }
+
+    public static boolean mouseSobreFigura(double mx, double my, GlobalGuiSettings.PanelConfig p) {
+        return mx >= p.x && mx <= p.x + p.ancho && my >= p.y && my <= p.y + p.alto;
+    }
+
+    public static boolean sobreEsquinaRedimension(double mx, double my, GlobalGuiSettings.PanelConfig p) {
+        return mx >= p.x + p.ancho - 7 && mx <= p.x + p.ancho && my >= p.y + p.alto - 7 && my <= p.y + p.alto;
+    }
+
+    public static void eliminarFigura(GlobalGuiSettings.PanelConfig p) {
+        if (p != null) {
+            GlobalGuiSettings.PANELES.remove(p);
+        }
+    }
+
+    public static void moverFiguraAlFrente(GlobalGuiSettings.PanelConfig p) {
+        if (p == null) return;
+        GlobalGuiSettings.PANELES.remove(p);
+        GlobalGuiSettings.PANELES.add(p);
+    }
+
+    public static void moverFiguraAlFondo(GlobalGuiSettings.PanelConfig p) {
+        if (p == null) return;
+        GlobalGuiSettings.PANELES.remove(p);
+        GlobalGuiSettings.PANELES.add(0, p);
+    }
+
+    public static void moverFiguraAdelante(GlobalGuiSettings.PanelConfig p) {
+        if (p == null) return;
+        int idx = GlobalGuiSettings.PANELES.indexOf(p);
+        if (idx > -1 && idx < GlobalGuiSettings.PANELES.size() - 1) {
+            Collections.swap(GlobalGuiSettings.PANELES, idx, idx + 1);
+        }
+    }
+
+    public static void moverFiguraAtras(GlobalGuiSettings.PanelConfig p) {
+        if (p == null) return;
+        int idx = GlobalGuiSettings.PANELES.indexOf(p);
+        if (idx > 0) {
+            Collections.swap(GlobalGuiSettings.PANELES, idx, idx - 1);
+        }
+    }
+
+    public static void drawStringCustom(GuiGraphics g, net.minecraft.client.gui.Font font, String text, float x, float y, int color, float spacing) {
+        float curX = x;
+        for (char c : text.toCharArray()) {
+            String s = String.valueOf(c);
+            g.drawString(font, s, (int)curX, (int)y, color, false);
+            curX += font.width(s) + spacing;
+        }
+    }
+
+    private static int getCornerInset(int dy, int h, int r) {
+        if (r <= 0 || dy < 0 || dy >= h) return 0;
+        int distY = Math.min(dy, h - 1 - dy);
+        int[][] insets = {
+            {0}, {1}, {2, 1}, {3, 1, 0}, {4, 2, 1, 0}, {5, 2, 1, 1, 0}
+        };
+        if (r < insets.length && distY < insets[r].length) return insets[r][distY];
+        return 0;
+    }
+
+    private static void drawRoundedOutline(GuiGraphics g, int x, int y, int w, int h, int r, int color) {
+        if (color == 0 || (color & 0xFF000000) == 0) return;
+        if (r <= 0) {
+            g.renderOutline(x, y, w, h, color);
+            return;
+        }
+        
+        g.fill(x, y + r, x + 1, y + h - r, color); 
+        g.fill(x + w - 1, y + r, x + w, y + h - r, color); 
+        g.fill(x + r, y, x + w - r, y + 1, color); 
+        g.fill(x + r, y + h - 1, x + w - r, y + h, color); 
+        
+        for (int dy = 0; dy < r; dy++) {
+            int currentInset = getCornerInset(dy, h, r);
+            int innerR = Math.max(0, r - 1);
+            int innerInset = (dy == 0 || innerR == 0) ? currentInset : getCornerInset(dy - 1, h - 2, innerR);
+            int endInset = innerInset + 1;
+            int prevInset = (dy == 0) ? r : getCornerInset(dy - 1, h, r);
+            endInset = Math.max(endInset, Math.max(currentInset + 1, prevInset));
+            
+            if (currentInset < endInset) {
+                g.fill(x + currentInset, y + dy, x + endInset, y + dy + 1, color); 
+                g.fill(x + w - endInset, y + dy, x + w - currentInset, y + dy + 1, color); 
+            }
+        }
+        
+        for (int dy = h - r; dy < h; dy++) {
+            int ry = h - 1 - dy; 
+            int currentInset = getCornerInset(ry, h, r);
+            int innerR = Math.max(0, r - 1);
+            int innerInset = (ry == 0 || innerR == 0) ? currentInset : getCornerInset(ry - 1, h - 2, innerR);
+            int endInset = innerInset + 1;
+            int prevInset = (ry == 0) ? r : getCornerInset(ry - 1, h, r);
+            endInset = Math.max(endInset, Math.max(currentInset + 1, prevInset));
+            
+            if (currentInset < endInset) {
+                g.fill(x + currentInset, y + dy, x + endInset, y + dy + 1, color); 
+                g.fill(x + w - endInset, y + dy, x + w - currentInset, y + dy + 1, color); 
+            }
+        }
+    }
+
+    private static void drawRoundedBox(GuiGraphics g, int x, int y, int w, int h, int r, int fillColor, int borderColor) {
+        if (fillColor != 0 && (fillColor & 0xFF000000) != 0) {
+            int innerX = x + 1;
+            int innerY = y + 1;
+            int innerW = w - 2;
+            int innerH = h - 2;
+            int innerR = Math.max(0, r - 1);
+            
+            if (innerR <= 0) {
+                g.fill(innerX, innerY, innerX + innerW, innerY + innerH, fillColor);
+            } else {
+                g.fill(innerX, innerY + innerR, innerX + innerW, innerY + innerH - innerR, fillColor);
+                for (int dy = 0; dy < innerR; dy++) {
+                    int inset = getCornerInset(dy, innerH, innerR);
+                    g.fill(innerX + inset, innerY + dy, innerX + innerW - inset, innerY + dy + 1, fillColor);
+                }
+                for (int dy = innerH - innerR; dy < innerH; dy++) {
+                    int ry = innerH - 1 - dy;
+                    int inset = getCornerInset(ry, innerH, innerR);
+                    g.fill(innerX + inset, innerY + dy, innerX + innerW - inset, innerY + dy + 1, fillColor);
+                }
+            }
+        }
+        drawRoundedOutline(g, x, y, w, h, r, borderColor);
+    }
+
+    private static long ultimoChequeoStatsExtras = 0;
+    private static long ultimaPeticionStats = 0;
+    private static int[] cacheStatsExtras = new int[]{-1, -1, -1, -1, -1};
+
+    private static int[] obtenerStatsExtrasCached(net.minecraft.client.Minecraft mc) {
+        if (mc.player == null) return new int[]{0, 0, 0, 0, 0}; 
+        
+        long ahora = System.currentTimeMillis();
+        
+        if (ahora - ultimaPeticionStats > 5000) {
+            mc.player.connection.send(new net.minecraft.network.protocol.game.ServerboundClientCommandPacket(net.minecraft.network.protocol.game.ServerboundClientCommandPacket.Action.REQUEST_STATS));
+            ultimaPeticionStats = ahora;
+        }
+
+        if (cacheStatsExtras[0] != -1 && ahora - ultimoChequeoStatsExtras < 250) { 
+            return cacheStatsExtras;
+        }
+        ultimoChequeoStatsExtras = ahora;
+        
+        net.minecraft.stats.StatsCounter stats = mc.player.getStats();
+        
+        int kills = stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.MOB_KILLS));
+        int muertes = stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.DEATHS));
+        int dano = stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.DAMAGE_TAKEN));
+        
+        int dist = 0;
+        dist += stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.WALK_ONE_CM));
+        dist += stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.SPRINT_ONE_CM));
+        dist += stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.SWIM_ONE_CM));
+        dist += stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.CROUCH_ONE_CM));
+        dist += stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.FLY_ONE_CM));
+        dist += stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.AVIATE_ONE_CM));
+        dist += stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.MINECART_ONE_CM));
+        dist += stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.BOAT_ONE_CM));
+        dist += stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.HORSE_ONE_CM));
+        dist += stats.getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.PIG_ONE_CM));
+
+        int minados = 0;
+        for (net.minecraft.world.level.block.Block block : net.minecraftforge.registries.ForgeRegistries.BLOCKS) {
+            minados += stats.getValue(net.minecraft.stats.Stats.BLOCK_MINED.get(block));
+        }
+
+        cacheStatsExtras = new int[]{kills, minados, dist, muertes, dano};
+        return cacheStatsExtras;
+    }
+
+    private static java.lang.reflect.Field advancementsProgressField = null;
+    private static long ultimoChequeoLogros = 0;
+    private static int[] cacheLogros = new int[]{0, 114, 0, 53};
+    private static final java.util.Set<String> biomasDescubiertos = new java.util.HashSet<>();
+
+    private static int[] obtenerLogrosYBiomasCached(net.minecraft.client.Minecraft mc) {
+        if (mc.player == null || mc.level == null) return new int[]{0, 1, biomasDescubiertos.size(), 53}; 
+        
+        net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> currentBiome = mc.level.getBiome(mc.player.blockPosition());
+        currentBiome.unwrapKey().ifPresent(key -> biomasDescubiertos.add(key.location().toString()));
+        
+        int maxBiomas = mc.level.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.BIOME).keySet().size();
+        if (maxBiomas == 0) maxBiomas = 53;
+        int biomasVisitados = biomasDescubiertos.size();
+
+        long ahora = System.currentTimeMillis();
+        if (ahora - ultimoChequeoLogros < 2000) { 
+            cacheLogros[2] = biomasVisitados;
+            cacheLogros[3] = maxBiomas;
+            return cacheLogros;
+        }
+        ultimoChequeoLogros = ahora;
+        
+        int logrosCompletados = 0;
+        int logrosTotales = 0;
+        
+        if (mc.getSingleplayerServer() != null) {
+            for (net.minecraft.advancements.Advancement adv : mc.getSingleplayerServer().getAdvancements().getAllAdvancements()) {
+                if (adv.getDisplay() != null) {
+                    logrosTotales++;
+                }
+            }
+        }
+        
+        net.minecraft.client.multiplayer.ClientAdvancements mgr = mc.player.connection.getAdvancements();
+        try {
+            if (advancementsProgressField == null) {
+                for (java.lang.reflect.Field f : mgr.getClass().getDeclaredFields()) {
+                    if (java.util.Map.class.isAssignableFrom(f.getType())) {
+                        f.setAccessible(true);
+                        advancementsProgressField = f;
+                        break; 
+                    }
+                }
+            }
+            if (advancementsProgressField != null) {
+                java.util.Map<?, ?> map = (java.util.Map<?, ?>) advancementsProgressField.get(mgr);
+                if (map != null) {
+                    int descubiertosCliente = 0;
+                    for (java.util.Map.Entry<?, ?> entry : map.entrySet()) {
+                        if (entry.getKey() instanceof net.minecraft.advancements.Advancement adv && 
+                            entry.getValue() instanceof net.minecraft.advancements.AdvancementProgress prog) {
+                            
+                            if (adv.getDisplay() != null) {
+                                descubiertosCliente++;
+                                if (prog.isDone()) logrosCompletados++;
+                            }
+                        }
+                    }
+                    if (logrosTotales == 0) {
+                        logrosTotales = descubiertosCliente;
+                    }
+                }
+            }
+        } catch (Exception e) {}
+        
+        if (logrosTotales == 0) logrosTotales = 1;
+        
+        cacheLogros = new int[]{logrosCompletados, logrosTotales, biomasVisitados, maxBiomas};
+        return cacheLogros;
+    }
+
+    static class LogroInfo {
+        String id;
+        net.minecraft.world.item.ItemStack icono;
+        String titulo;
+        String descripcion;
+        boolean completado;
+        String progresoTxt;
+    }
+    
+    private static long ultimoChequeoListaLogros = 0;
+    private static java.util.List<LogroInfo> cacheListaLogros = new java.util.ArrayList<>();
+    
+    private static java.util.List<LogroInfo> obtenerListaLogrosCached(net.minecraft.client.Minecraft mc) {
+        long ahora = System.currentTimeMillis();
+        if (ahora - ultimoChequeoListaLogros < 2000) return cacheListaLogros;
+        ultimoChequeoListaLogros = ahora;
+        
+        cacheListaLogros.clear();
+        if (mc.player == null) return cacheListaLogros;
+        
+        java.util.Map<String, LogroInfo> mapa = new java.util.LinkedHashMap<>();
+        net.minecraft.client.multiplayer.ClientAdvancements mgr = mc.player.connection.getAdvancements();
+        
+        try {
+            if (advancementsProgressField == null) {
+                for (java.lang.reflect.Field f : mgr.getClass().getDeclaredFields()) {
+                    if (java.util.Map.class.isAssignableFrom(f.getType())) {
+                        f.setAccessible(true);
+                        advancementsProgressField = f;
+                        break; 
+                    }
+                }
+            }
+            
+            if (advancementsProgressField != null) {
+                java.util.Map<?, ?> map = (java.util.Map<?, ?>) advancementsProgressField.get(mgr);
+                if (map != null) {
+                    for (java.util.Map.Entry<?, ?> entry : map.entrySet()) {
+                        if (entry.getKey() instanceof net.minecraft.advancements.Advancement adv && 
+                            entry.getValue() instanceof net.minecraft.advancements.AdvancementProgress prog) {
+                            
+                            if (!adv.getId().getPath().startsWith("recipes/") && adv.getDisplay() != null) {
+                                LogroInfo info = new LogroInfo();
+                                info.id = adv.getId().toString();
+                                info.icono = adv.getDisplay().getIcon();
+                                info.titulo = adv.getDisplay().getTitle().getString();
+                                info.descripcion = adv.getDisplay().getDescription().getString();
+                                info.completado = prog.isDone();
+                                
+                                int count = 0;
+                                for(String c : prog.getCompletedCriteria()) count++;
+                                int total = adv.getCriteria().size();
+                                
+                                if (info.completado) {
+                                    info.progresoTxt = ""; // Sin texto, el Check verde ya habla por sí solo
+                                } else if (total > 1) {
+                                    info.progresoTxt = count + "/" + total;
+                                } else {
+                                    info.progresoTxt = "";
+                                }
+                                mapa.put(info.id, info);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {}
+        
+        if (mc.getSingleplayerServer() != null) {
+            for (net.minecraft.advancements.Advancement adv : mc.getSingleplayerServer().getAdvancements().getAllAdvancements()) {
+                if (!adv.getId().getPath().startsWith("recipes/") && adv.getDisplay() != null) {
+                    String id = adv.getId().toString();
+                    if (!mapa.containsKey(id)) {
+                        LogroInfo info = new LogroInfo();
+                        info.id = id;
+                        info.icono = adv.getDisplay().getIcon();
+                        info.titulo = adv.getDisplay().getTitle().getString();
+                        info.descripcion = adv.getDisplay().getDescription().getString();
+                        info.completado = false;
+                        int total = adv.getCriteria().size();
+                        info.progresoTxt = (total > 1) ? "0/" + total : "";
+                        mapa.put(id, info);
+                    }
+                }
+            }
+        }
+        
+        cacheListaLogros.addAll(mapa.values());
+        return cacheListaLogros;
+    }
+}

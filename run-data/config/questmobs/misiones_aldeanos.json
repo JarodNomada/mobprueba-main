@@ -1,0 +1,152 @@
+[
+  {
+    "nombre": "Misión Principal 1",
+    "descripcion": "Primera misión principal del juego",
+    "mob": "minecraft:villager",
+    "profession": "farmer",
+    "type": "plains",
+    "textura": "minecraft:textures/item/map.png",
+    "esPrimaria": true,
+    "objetivos": [
+      {
+        "item": "minecraft:wheat",
+        "cantidad": 10
+      }
+    ],
+    "recompensas": [
+      {
+        "item": "minecraft:emerald",
+        "cantidad": 5
+      }
+    ],
+    "frases": [
+      "¡Hola viajero!",
+      "¿Podrías ayudarme?"
+    ]
+  },
+  {
+    "nombre": "Misión Principal 2",
+    "descripcion": "Segunda misión principal del juego",
+    "mob": "minecraft:villager",
+    "profession": "librarian",
+    "type": "desert",
+    "textura": "minecraft:textures/item/map.png",
+    "esPrimaria": true,
+    "objetivos": [
+      {
+        "item": "minecraft:paper",
+        "cantidad": 5
+      }
+    ],
+    "recompensas": [
+      {
+        "item": "minecraft:emerald",
+        "cantidad": 5
+      }
+    ],
+    "frases": [
+      "¡Necesito unos libros!",
+      "¿Tienes papel?"
+    ]
+  },
+  {
+    "nombre": "Misión Principal 3",
+    "descripcion": "Tercera misión principal del juego",
+    "mob": "minecraft:villager",
+    "profession": "blacksmith",
+    "type": "savanna",
+    "textura": "minecraft:textures/item/map.png",
+    "esPrimaria": true,
+    "objetivos": [
+      {
+        "item": "minecraft:iron_ingot",
+        "cantidad": 3
+      }
+    ],
+    "recompensas": [
+      {
+        "item": "minecraft:diamond",
+        "cantidad": 1
+      }
+    ],
+    "frases": [
+      "¡Forja nuevas herramientas!",
+      "¿Trae barras de hierro?"
+    ]
+  },
+  {
+    "nombre": "Misión Secundaria 1",
+    "descripcion": "Primera misión secundaria del juego",
+    "mob": "minecraft:villager",
+    "profession": "butcher",
+    "type": "plains",
+    "textura": "minecraft:textures/item/map.png",
+    "esPrimaria": false,
+    "objetivos": [
+      {
+        "item": "minecraft:beef",
+        "cantidad": 5
+      }
+    ],
+    "recompensas": [
+      {
+        "item": "minecraft:emerald",
+        "cantidad": 2
+      }
+    ],
+    "frases": [
+      "¡Necesito carne fresca!",
+      "¿Tienes bistec?"
+    ]
+  },
+  {
+    "nombre": "Misión Secundaria 2",
+    "descripcion": "Segunda misión secundaria del juego",
+    "mob": "minecraft:villager",
+    "profession": "fisherman",
+    "type": "river",
+    "textura": "minecraft:textures/item/map.png",
+    "esPrimaria": false,
+    "objetivos": [
+      {
+        "item": "minecraft:cod",
+        "cantidad": 5
+      }
+    ],
+    "recompensas": [
+      {
+        "item": "minecraft:emerald",
+        "cantidad": 2
+      }
+    ],
+    "frases": [
+      "¡Dame algunos peces!",
+      "¿Crees pescar algo?"
+    ]
+  },
+  {
+    "nombre": "Misión Secundaria 3",
+    "descripcion": "Tercera misión secundaria del juego",
+    "mob": "minecraft:villager",
+    "profession": "shepherd",
+    "type": "plains",
+    "textura": "minecraft:textures/item/map.png",
+    "esPrimaria": false,
+    "objetivos": [
+      {
+        "item": "minecraft:wool",
+        "cantidad": 8
+      }
+    ],
+    "recompensas": [
+      {
+        "item": "minecraft:emerald",
+        "cantidad": 2
+      }
+    ],
+    "frases": [
+      "¡Necesito lana para tejer!",
+      "¿Tienes lana?"
+    ]
+  }
+]

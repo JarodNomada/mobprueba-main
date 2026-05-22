@@ -1,0 +1,86 @@
+[
+  {
+    "nombre": "Documentos Antiguos",
+    "descripcion": "El bibliotecario necesita pergaminos para sus escritos",
+    "mob": "minecraft:villager",
+    "profession": "librarian",
+    "type": "plains",
+    "textura": "minecraft:textures/entity/villager.png",
+    "esPrimaria": true,
+    "objetivos": [
+      {
+        "item": "minecraft:paper",
+        "cantidad": 10
+      }
+    ],
+    "recompensas": [
+      {
+        "item": "minecraft:emerald",
+        "cantidad": 5
+      }
+    ],
+    "frases": [
+      "¡Viajero!",
+      "¿Podrías traerme pergaminos?"
+    ],
+    "recordatorio": "¿Trajiste los pergaminos?",
+    "error": "Aún necesito más pergaminos.",
+    "agradecimiento": "¡Gracias por los pergaminos!"
+  },
+  {
+    "nombre": "El Herrero",
+    "descripcion": "El herrero necesita herramientas de calidad",
+    "mob": "minecraft:villager",
+    "profession": "blacksmith",
+    "type": "desert",
+    "textura": "minecraft:textures/entity/villager.png",
+    "esPrimaria": true,
+    "objetivos": [
+      {
+        "item": "minecraft:iron_ingot",
+        "cantidad": 5
+      }
+    ],
+    "recompensas": [
+      {
+        "item": "minecraft:diamond",
+        "cantidad": 1
+      }
+    ],
+    "frases": [
+      "¡Necesito forjar!",
+      "¿Tienes hierro?"
+    ],
+    "recordatorio": "¿Trajiste el hierro?",
+    "error": "Aún necesito más hierro.",
+    "agradecimiento": "¡Perfecto para forjar!"
+  },
+  {
+    "nombre": "Negocios del Pueblo",
+    "descripcion": "Comercia con el aldeano",
+    "mob": "minecraft:villager",
+    "profession": "farmer",
+    "type": "plains",
+    "textura": "minecraft:textures/entity/villager.png",
+    "esPrimaria": true,
+    "objetivos": [
+      {
+        "item": "minecraft:wheat",
+        "cantidad": 20
+      }
+    ],
+    "recompensas": [
+      {
+        "item": "minecraft:emerald",
+        "cantidad": 3
+      }
+    ],
+    "frases": [
+      "¡Tengo productos en venta!",
+      "¿Qué offrirás?"
+    ],
+    "recordatorio": "¿Tienes el trigo?",
+    "error": "Aún necesito más trigo.",
+    "agradecimiento": "¡Buen negocio!"
+  }
+]
