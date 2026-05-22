@@ -976,7 +976,13 @@ this.inputColor.setResponder(s -> {
         int topBarHeight = TopBar.getHeight();
         int visualY = 10;
 
-        if (TopBar.isVisible() && my >= visualY && my <= visualY + topBarHeight) {
+        // NUEVO: Calculamos el ancho exacto de la barra y su posición real en X
+        int topBarW = TopBar.getWidth();
+        int barInicioX = barX + (this.width - barX - topBarW) / 2;
+        boolean clicEnLaBarra = mx >= barInicioX && mx <= barInicioX + topBarW;
+
+        // AÑADIDO '&& clicEnLaBarra' para que solo bloquee si el clic ocurre DENTRO de la barra visual
+        if (TopBar.isVisible() && my >= visualY && my <= visualY + topBarHeight && clicEnLaBarra) {
             
             // Revisar si tocó el Slider de Opacidad de la Imagen
             if (pSel != null && (pSel.tipo.equals("IMAGEN_CUSTOM") || pSel.tipo.equals("TEXTURA_JUEGO"))) {
@@ -1003,13 +1009,18 @@ this.inputColor.setResponder(s -> {
                 return true; // Terminamos aquí, el modal ya está abierto
             }
 
-            // Si hizo clic en la barra pero no en un color, dejamos que los botones (+, -) actúen
-            return super.mouseClicked(mx, my, btn);
+            // Si hizo clic en la barra pero no en un color, comprobamos si tocó un botón (+, -).
+            if (super.mouseClicked(mx, my, btn)) return true;
+            
+            // Si llegó hasta aquí, hizo clic en un espacio vacío pero DENTRO de la barra, consumimos el clic.
+            return true; 
         }
 
         // Iniciar dibujo con herramientas de dibujo (solo si no estamos en el panel de Config. Pincel)
         boolean enPanelBrush = LeftSidebar.selectedModule == 1 && LeftSidebar.showBrushThickness;
-        if (my > visualY + topBarHeight && mx > barX && !enPanelBrush) {
+        boolean tocarBarra = TopBar.isVisible() && my >= visualY && my <= visualY + topBarHeight && clicEnLaBarra;
+        
+        if (!tocarBarra && mx > barX && !enPanelBrush) {
             if (LeftSidebar.selectedTool == 3) {
                 drawingLine = true;
                 lineStartX = (int)mx;
@@ -1204,7 +1215,10 @@ this.inputColor.setResponder(s -> {
         }
 
         // Deselección al hacer clic en el fondo
-        if (my > 10 + TopBar.getHeight() && !inputColor.isMouseOver(mx, my)) {
+        // NUEVO: Verificamos que realmente hayamos tocado la barra visual, no solo el "aire" al lado de ella
+        boolean sobreTopBar = TopBar.isVisible() && my >= visualY && my <= visualY + topBarHeight && clicEnLaBarra;
+
+        if (!sobreTopBar && !inputColor.isMouseOver(mx, my)) {
             tSel = null; pSel = null; escribiendoTexto = false; escribiendoTextoPanel = false;
             menuVisible = false; TextoEdit.editandoColor = false; LeftSidebar.selectedModule = -1;
             inputColor.setFocused(false); inputColor.visible = false;
