@@ -353,23 +353,25 @@ public class TopBar {
         if (textTools || esMisionTexto || esEstadistica) {
             int w = 4; w += esMisionTexto ? 38 : 18; w += 2; 
             w += esEstadistica ? 80 : 100; // 80px para Estadísticas, 100px para Textos/Misiones
+            if (esMisionTexto) w += 29; // CORRECCIÓN: Botones B+/B- en fila de 2 (20 btn + 9 sep)
             w += 4;
             return w;
         } else if (drawTools && pSel != null) {
             if (pSel.tipo.equals("DETALLE_MISION")) return 244;
-            else if (pSel.tipo.equals("MISION_OBJETIVOS")) return 214; // 4 + 96 + 4(gap) + 1(sep) + 7(gap) + 98(btns) + 4
+            else if (pSel.tipo.equals("MISION_OBJETIVOS")) return 214; 
             else if (pSel.tipo.equals("BOTON_PAGINA")) return 96;
             else if (pSel.tipo.startsWith("DESPLEGABLE")) {
                 int w = 4 + 76; // Pad(4) + 4Colores(76)
                 if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
-                    w += 4 + 1 + 4 + 38; // Gap(4)+Sep(1)+Gap(4)+Btn(38) = 47
-                    w += 4 + 1 + 4 + 38; // = 47
-                    w += 4 + 1 + 4 + 38; // = 47
+                    w += 29; // CORRECCIÓN: Botones B+/B- en vertical (20 btn + 9 sep)
+                    w += 47; // Grupo T
+                    w += 47; // Grupo TM
+                    w += 47; // Grupo I
                 }
-                w += 4; // Pad final
+                w += 4; 
                 return w; 
             } else if (pSel.tipo.equals("MANIQUI") || pSel.tipo.equals("MISION_ICONO")) {
-                return 94; // 4 + 36 + 4(gap) + 1(sep) + 7(gap) + 38 + 4
+                return 94 + 47; // CORRECCIÓN: Botones escala(38) + Separador(9)
             }
             else if (pSel.tipo.equals("HOTBAR") || pSel.tipo.equals("INVENTORY_GRID")) return 119;
             else if (pSel.tipo.startsWith("SLOT")) return 96;
@@ -419,10 +421,14 @@ public class TopBar {
 
         if (esMisionTexto) {
             int swatch2X = startX + 20; // 16px ancho + 4px gap
-            int rowY2 = y + 24; // CORRECCIÓN: Fila 2 perfectamente alineada (4 pad + 16 obj + 4 gap)
+            int rowY2 = y + 24; 
             drawColorSwatch(g, pSel.colorARGB, startX, rowY);
             drawColorSwatch(g, pSel.colorBorde, swatch2X, rowY);
             drawColorSwatch(g, pSel.colorTexto, startX, rowY2);
+            
+            // Dibujar la línea separadora para los botones de Borde apilados
+            int curX = barStartX + 144;
+            curX += 4; drawVerticalSeparator(g, curX, y + 4, 36);
         } else if (esEstadistica) {
             int rowY2 = y + 24; 
             drawColorSwatch(g, pSel.colorARGB, startX, rowY);
@@ -545,14 +551,17 @@ public class TopBar {
             curX += 16;
 
             if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
-                curX += 4; drawVerticalSeparator(g, curX, y + 4, 36); curX += 5; // 4px + 1px + 4px
-                curX += 38; // Espacio para el grupo 1
+                curX += 4; drawVerticalSeparator(g, curX, y + 4, 36); curX += 5; 
+                curX += 20; // Espacio para botones Borde (B+/B- en vertical)
+
+                curX += 4; drawVerticalSeparator(g, curX, y + 4, 36); curX += 5; 
+                curX += 38; // Espacio para el grupo T
                 
                 curX += 4; drawVerticalSeparator(g, curX, y + 4, 36); curX += 5;
-                curX += 38; // Espacio para el grupo 2
+                curX += 38; // Espacio para el grupo TM
                 
                 curX += 4; drawVerticalSeparator(g, curX, y + 4, 36); curX += 5;
-                // Grupo 3
+                // Grupo I
             }
         } else if (pSel.tipo.equals("MANIQUI") || pSel.tipo.equals("MISION_ICONO")) {
             int curX = barStartX + 4;
@@ -562,6 +571,8 @@ public class TopBar {
             drawColorSwatch(g, pSel.colorBorde, curX, boxY);
             curX += 16;
             
+            curX += 4; drawVerticalSeparator(g, curX, y + 4, 16); curX += 5;
+            curX += 38; // Espacio para botones de Escala (+/-)
             curX += 4; drawVerticalSeparator(g, curX, y + 4, 16); curX += 5;
         } else if (pSel.tipo.equals("PROGRESO")) {
             int curX = barStartX + 6;
@@ -806,7 +817,8 @@ public class TopBar {
     }
 
     public static void inicializarBotonesMision(int guiWidth, int y, Consumer<Button> adder, GlobalGuiSettings.PanelConfig pSel) {
-        if (pSel == null || pSel.textoAsociado == null || pSel.textoAsociado.isEmpty()) return;
+        if (pSel == null) return;
+        if (!pSel.tipo.startsWith("DESPLEGABLE") && (pSel.textoAsociado == null || pSel.textoAsociado.isEmpty())) return;
         int barX = LeftSidebar.getSidebarWidth();
         int expectedBarW = calculateBarWidth(false, true, null, pSel);
         int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
@@ -815,7 +827,14 @@ public class TopBar {
         if (pSel.tipo.startsWith("DESPLEGABLE")) {
             int btnY1 = y + 3;  
             int btnY2 = y + 23; 
-            int curX = barStartX + 80 + 9; // Pad(4)+Colores(76) + Línea(9)
+            
+            int curX = barStartX + 80 + 9; // Pad(4) + Colores(76) + Línea(9)
+            
+            // Botones de borde apilados en vertical (fila de 2)
+            adder.accept(Button.builder(Component.literal("B+"), b -> pSel.redondezBorde = Math.min(5, pSel.redondezBorde + 1)).bounds(curX, btnY1, btnSize, btnSize).build());
+            adder.accept(Button.builder(Component.literal("B-"), b -> pSel.redondezBorde = Math.max(0, pSel.redondezBorde - 1)).bounds(curX, btnY2, btnSize, btnSize).build());
+
+            curX += 20 + 9; // Botón(20) + Línea(9)
 
             adder.accept(Button.builder(Component.literal("←"), b -> pSel.offsetXTexto -= 2.0f).bounds(curX, btnY1, btnSize, btnSize).build());
             adder.accept(Button.builder(Component.literal("→"), b -> pSel.offsetXTexto += 2.0f).bounds(curX + 20, btnY1, btnSize, btnSize).build());
@@ -894,10 +913,15 @@ public class TopBar {
         int btnSize = 18;
 
         int curX = barStartX + 49; // Pad(4) + Colores(36) + Línea(9)
-        int btnY = y + 3; // CORRECCIÓN
+        int btnY = y + 3; 
         
         adder.accept(Button.builder(Component.literal("-"), b -> { pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f); }).bounds(curX, btnY, 18, btnSize).build());
         adder.accept(Button.builder(Component.literal("+"), b -> { pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f); }).bounds(curX + 20, btnY, 18, btnSize).build());
+        
+        curX += 38 + 9; // BotonesEscala(38) + Línea(9)
+        
+        adder.accept(Button.builder(Component.literal("B+"), b -> { pSel.redondezBorde = Math.min(5, pSel.redondezBorde + 1); }).bounds(curX, btnY, 18, btnSize).build());
+        adder.accept(Button.builder(Component.literal("B-"), b -> { pSel.redondezBorde = Math.max(0, pSel.redondezBorde - 1); }).bounds(curX + 20, btnY, 18, btnSize).build());
     }
 
     public static void inicializarBotonesSlot(int guiWidth, int y, Consumer<Button> adder, GlobalGuiSettings.PanelConfig pSel) {

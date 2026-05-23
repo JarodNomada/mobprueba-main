@@ -205,6 +205,13 @@ this.inputColor.setResponder(s -> {
                         spacingPanelY = (int)Minecraft.getInstance().mouseHandler.ypos();
                     }
             );
+            // NUEVO: Inyectar botones B+/B- en la sección de herramientas de Texto para misiones (Fila de 2)
+            if (pSel != null && (pSel.tipo.equals("MISION_TITULO") || pSel.tipo.equals("MISION_DESCRIPCION"))) {
+                int barStartX = LeftSidebar.getSidebarWidth() + (this.width - LeftSidebar.getSidebarWidth() - TopBar.calculateBarWidth(true, false, tSel, pSel)) / 2;
+                int curX = barStartX + 144 + 9; // Espacio herramientas(144) + Línea separadora(9)
+                this.addRenderableWidget(Button.builder(Component.literal("B+"), b -> pSel.redondezBorde = Math.min(5, pSel.redondezBorde + 1)).bounds(curX, buttonY + 3, 18, 18).build());
+                this.addRenderableWidget(Button.builder(Component.literal("B-"), b -> pSel.redondezBorde = Math.max(0, pSel.redondezBorde - 1)).bounds(curX, buttonY + 23, 18, 18).build());
+            }
         }
 
         if (TopBar.isDrawingToolsVisible() && pSel != null) {

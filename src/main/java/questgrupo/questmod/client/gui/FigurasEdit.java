@@ -159,8 +159,7 @@ public static void crearBotonPagina(int numPagina) {
     }
 
     private static void drawDummyMission(GuiGraphics g, net.minecraft.client.gui.Font font, GlobalGuiSettings.PanelConfig p, int cardY, int marginX, int cardWidth, int cardHeight, String text) {
-        g.fill(p.x + marginX, cardY, p.x + marginX + cardWidth, cardY + cardHeight, p.colorFondoMision);
-        g.renderOutline(p.x + marginX, cardY, cardWidth, cardHeight, p.colorBordeMision);
+        drawRoundedBox(g, p.x + marginX, cardY, cardWidth, cardHeight, p.redondezBorde, p.colorFondoMision, p.colorBordeMision);
         float textX = p.x + marginX + 5;
         
         // BUSCAMOS LA MISIÓN ESPECÍFICA PARA OBTENER SU ÍCONO PERSONALIZADO
@@ -195,12 +194,11 @@ public static void crearBotonPagina(int numPagina) {
 
     public static void renderizar(GuiGraphics g, GlobalGuiSettings.PanelConfig p, boolean seleccionado, boolean escribiendo) {
         // ─── RENDERING EN 3D DEL MANIQUÍ RPG ───
-        if ("MANIQUI".equals(p.tipo)) {
+            if ("MANIQUI".equals(p.tipo)) {
             Player player = Minecraft.getInstance().player;
             if (player != null) {
                 // 1. Fondo y borde editables desde la TopBar
-                g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
-                g.renderOutline(p.x, p.y, p.ancho, p.alto, seleccionado ? 0xFF00DECA : p.colorBorde);
+                drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, p.redondezBorde, p.colorARGB, seleccionado ? 0xFF00DECA : p.colorBorde);
 
                 // 2. Calculamos el centro y aplicamos la escala independiente (usando escalaIcono como multiplicador)
                 int centroX = p.x + (p.ancho / 2);
@@ -962,8 +960,7 @@ public static void crearBotonPagina(int numPagina) {
             String texto = (data != null) ? data.nombre : "Titulo (Toca una mision)";
             if (p.mayusculas) texto = texto.toUpperCase();
 
-            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
-            g.renderOutline(p.x, p.y, p.ancho, p.alto, p.colorBorde);
+            drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, p.redondezBorde, p.colorARGB, p.colorBorde);
 
             net.minecraft.network.chat.Style estilo = net.minecraft.network.chat.Style.EMPTY
                     .withBold(p.negrita).withItalic(p.cursiva).withUnderlined(p.subrayado).withStrikethrough(p.tachado);
@@ -982,8 +979,7 @@ public static void crearBotonPagina(int numPagina) {
             String texto = (data != null) ? data.descripcion : "Descripcion (Toca una mision)";
             if (p.mayusculas) texto = texto.toUpperCase();
 
-            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
-            g.renderOutline(p.x, p.y, p.ancho, p.alto, p.colorBorde);
+            drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, p.redondezBorde, p.colorARGB, p.colorBorde);
 
             net.minecraft.network.chat.Style estilo = net.minecraft.network.chat.Style.EMPTY
                     .withBold(p.negrita).withItalic(p.cursiva).withUnderlined(p.subrayado).withStrikethrough(p.tachado);
@@ -1100,8 +1096,7 @@ public static void crearBotonPagina(int numPagina) {
         } else if (p.tipo.equals("MISION_ICONO")) {
             Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
 
-            g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
-            g.renderOutline(p.x, p.y, p.ancho, p.alto, p.colorBorde);
+            drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, p.redondezBorde, p.colorARGB, p.colorBorde);
 
             if (data != null && data.iconoRL != null) {
                 g.pose().pushPose();
@@ -1132,11 +1127,7 @@ public static void crearBotonPagina(int numPagina) {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
 
             if (p.tipo.equals("DESPLEGABLE_MAESTRO")) {
-                g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
-                g.fill(p.x, p.y + p.alto - t, p.x + p.ancho, p.y + p.alto, p.colorBorde);
-                g.fill(p.x, p.y, p.x + p.ancho, p.y + t, p.colorBorde);
-                g.fill(p.x, p.y, p.x + t, p.y + p.alto, p.colorBorde);
-                g.fill(p.x + p.ancho - t, p.y, p.x + p.ancho, p.y + p.alto, p.colorBorde);
+                drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, p.redondezBorde, p.colorARGB, p.colorBorde);
 
                 g.enableScissor(p.x + t, p.y + t, p.x + p.ancho - t, p.y + p.alto - t);
 
@@ -1151,8 +1142,7 @@ public static void crearBotonPagina(int numPagina) {
                 float titleScale = p.escalaTexto;
                 float titleOffsetX = p.offsetXTexto;
 
-                g.fill(p.x + marginX, currentY, p.x + marginX + cardWidth, currentY + 15, p.colorFondoCabecera);
-                g.renderOutline(p.x + marginX, currentY, cardWidth, 15, p.colorBordeCabecera);
+                drawRoundedBox(g, p.x + marginX, currentY, cardWidth, 15, p.redondezBorde, p.colorFondoCabecera, p.colorBordeCabecera);
 
                 g.pose().pushPose();
                 g.pose().translate(p.x + marginX + 5 + titleOffsetX, currentY + (15 - font.lineHeight * titleScale) / 2, 0);
@@ -1176,8 +1166,7 @@ public static void crearBotonPagina(int numPagina) {
                     }
                 }
 
-                g.fill(p.x + marginX, currentY, p.x + marginX + cardWidth, currentY + 15, p.colorFondoCabecera);
-                g.renderOutline(p.x + marginX, currentY, cardWidth, 15, p.colorBordeCabecera);
+                drawRoundedBox(g, p.x + marginX, currentY, cardWidth, 15, p.redondezBorde, p.colorFondoCabecera, p.colorBordeCabecera);
 
                 g.pose().pushPose();
                 g.pose().translate(p.x + marginX + 5 + titleOffsetX, currentY + (15 - font.lineHeight * titleScale) / 2, 0);
@@ -1218,19 +1207,12 @@ public static void crearBotonPagina(int numPagina) {
                 int headerHeight = 20;
                 int renderHeight = p.desplegado ? p.alto : headerHeight;
 
-                g.fill(p.x, p.y, p.x + p.ancho, p.y + headerHeight, p.colorFondoCabecera);
-                g.fill(p.x, p.y, p.x + p.ancho, p.y + t, p.colorBordeCabecera);
-                g.fill(p.x, p.y + headerHeight - t, p.x + p.ancho, p.y + headerHeight, p.colorBordeCabecera);
-                g.fill(p.x, p.y, p.x + t, p.y + headerHeight, p.colorBordeCabecera);
-                g.fill(p.x + p.ancho - t, p.y, p.x + p.ancho, p.y + headerHeight, p.colorBordeCabecera);
+                drawRoundedBox(g, p.x, p.y, p.ancho, headerHeight, p.redondezBorde, p.colorFondoCabecera, p.colorBordeCabecera);
 
                 if (p.desplegado && p.alto > headerHeight) {
                     int bodyY = p.y + headerHeight;
                     int bodyHeight = p.alto - headerHeight;
-                    g.fill(p.x, bodyY, p.x + p.ancho, bodyY + bodyHeight, p.colorARGB);
-                    g.fill(p.x, bodyY + bodyHeight - t, p.x + p.ancho, bodyY + bodyHeight, p.colorBorde);
-                    g.fill(p.x, bodyY, p.x + t, bodyY + bodyHeight, p.colorBorde);
-                    g.fill(p.x + p.ancho - t, bodyY, p.x + p.ancho, bodyY + bodyHeight, p.colorBorde);
+                    drawRoundedBox(g, p.x, bodyY, p.ancho, bodyHeight, p.redondezBorde, p.colorARGB, p.colorBorde);
 
                     g.enableScissor(p.x + t, bodyY, p.x + p.ancho - t, bodyY + bodyHeight - t);
                     g.pose().pushPose();
