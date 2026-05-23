@@ -159,7 +159,11 @@ public static void crearBotonPagina(int numPagina) {
     }
 
     private static void drawDummyMission(GuiGraphics g, net.minecraft.client.gui.Font font, GlobalGuiSettings.PanelConfig p, int cardY, int marginX, int cardWidth, int cardHeight, String text) {
-        drawRoundedBox(g, p.x + marginX, cardY, cardWidth, cardHeight, p.redondezBorde, p.colorFondoMision, p.colorBordeMision);
+        int borderColor = p.colorBordeMision;
+        if (!GlobalGuiSettings.editorActivo && text.equals(GlobalGuiSettings.misionSeleccionadaGlobal)) {
+            borderColor = 0xFFCFCA59;
+        }
+        drawRoundedBox(g, p.x + marginX, cardY, cardWidth, cardHeight, p.redondezBorde, p.colorFondoMision, borderColor);
         float textX = p.x + marginX + 5;
         
         // BUSCAMOS LA MISIÓN ESPECÍFICA PARA OBTENER SU ÍCONO PERSONALIZADO

@@ -60,14 +60,14 @@ public class DownBar {
             boolean active = (i == GlobalGuiSettings.paginaActual);
             drawVanillaButton(g, font, currentX, y, TAB_WIDTH, TAB_HEIGHT, String.valueOf(i), active, false);
 
-            if (active && GlobalGuiSettings.totalPaginas > 1) {
+            if (active && GlobalGuiSettings.totalPaginas > 1 && GlobalGuiSettings.editorActivo) {
                 g.fill(currentX + TAB_WIDTH - 8, y - 4, currentX + TAB_WIDTH + 4, y + 8, 0xFFFF3333);
                 g.renderOutline(currentX + TAB_WIDTH - 8, y - 4, 12, 12, 0xFF000000);
                 g.drawString(font, "x", currentX + TAB_WIDTH - 3, y - 2, 0xFFFFFFFF, false);
             }
             currentX += TAB_WIDTH + TAB_GAP;
         }
-        if (GlobalGuiSettings.totalPaginas < MAX_PAGES) {
+        if (GlobalGuiSettings.totalPaginas < MAX_PAGES && GlobalGuiSettings.editorActivo) {
             drawVanillaButton(g, font, currentX, y, TAB_WIDTH, TAB_HEIGHT, "+", false, true);
         }
     }
@@ -86,7 +86,7 @@ public class DownBar {
         for (int i = 1; i <= tabsToDraw; i++) {
             boolean active = (i == GlobalGuiSettings.paginaActual);
 
-            if (active && GlobalGuiSettings.totalPaginas > 1) {
+            if (active && GlobalGuiSettings.totalPaginas > 1 && GlobalGuiSettings.editorActivo) {
                 if (mx >= currentX + TAB_WIDTH - 8 && mx <= currentX + TAB_WIDTH + 4 && my >= y - 4 && my <= y + 8) {
                     deletePage(i);
                     return true;
@@ -104,7 +104,7 @@ public class DownBar {
             currentX += TAB_WIDTH + TAB_GAP;
         }
 
-        if (GlobalGuiSettings.totalPaginas < MAX_PAGES) {
+        if (GlobalGuiSettings.totalPaginas < MAX_PAGES && GlobalGuiSettings.editorActivo) {
             if (mx >= currentX && mx <= currentX + TAB_WIDTH) {
                 GlobalGuiSettings.totalPaginas++;
                 GlobalGuiSettings.paginaActual = GlobalGuiSettings.totalPaginas;

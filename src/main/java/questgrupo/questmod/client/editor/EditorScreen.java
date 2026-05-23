@@ -893,7 +893,7 @@ this.inputColor.setResponder(s -> {
 
     @Override
     public boolean mouseClicked(double mx, double my, int btn) {
-        if (DownBar.handleClick(mx, my, this.width, this.height)) return true;
+        if (GlobalGuiSettings.editorActivo && DownBar.handleClick(mx, my, this.width, this.height)) return true;
         if (RightBar.handleClick(mx, my, this.width, this.height)) {
             this.pSel = GlobalGuiSettings.panelSeleccionado;
             this.tSel = GlobalGuiSettings.textoSeleccionado;
@@ -1048,67 +1048,94 @@ this.inputColor.setResponder(s -> {
         if (!GlobalGuiSettings.editorActivo) {
             for (int i = GlobalGuiSettings.PANELES.size() - 1; i >= 0; i--) {
                 GlobalGuiSettings.PanelConfig p = GlobalGuiSettings.PANELES.get(i);
+                if (p.pagina != GlobalGuiSettings.paginaActual && p.pagina != 0) continue;
 
+                // --- NUEVO: Hacer que los recuadros creados por el "+" funcionen como botones ---
                 if (p.tipo.equals("BOTON_PAGINA")) {
-                    if (FigurasEdit.mouseSobreFigura(mx, my, p)) {
+                    if (mx >= p.x && mx <= p.x + p.ancho && my >= p.y && my <= p.y + p.alto) {
                         try {
                             GlobalGuiSettings.paginaActual = Integer.parseInt(p.textoAsociado);
-                            return true;
-                        } catch (Exception e) {}
+                            this.init();
+                        } catch (NumberFormatException ignored) {}
+                        return true;
                     }
                 }
 
-                if (!p.tipo.startsWith("DESPLEGABLE")) continue;
+                // --- NUEVO: Recuperar funcionalidad de las tarjetas rectangulares sueltas ---
+                if (p.tipo.equals("RECTANGULO") && p.textoAsociado != null && !p.textoAsociado.isEmpty() && p.iconoRL != null) {
+                    if (mx >= p.x && mx <= p.x + p.ancho && my >= p.y && my <= p.y + p.alto) {
+                        GlobalGuiSettings.misionSeleccionadaGlobal = p.textoAsociado;
+                        return true;
+                    }
+                }
 
-                boolean isOver = FigurasEdit.mouseSobreFigura(mx, my, p);
-                if (!p.desplegado) isOver = mx >= p.x && mx <= p.x + p.ancho && my >= p.y && my <= p.y + 20;
-                if (!isOver) continue;
+                if (p.tipo.equals("DESPLEGABLE_MAESTRO")) {
+                    if (mx >= p.x && mx <= p.x + p.ancho && my >= p.y && my <= p.y + p.alto) {
+                        int currentY = p.y + 5;
+                        int marginX = 5;
+                        int cardWidth = p.ancho - (marginX * 2);
 
-                if (p.desplegado) {
-                    int bodyY = p.tipo.equals("DESPLEGABLE_MAESTRO") ? p.y : p.y + 20;
-                    if (p.tipo.equals("DESPLEGABLE_MAESTRO")) {
-                        int relY = (int)(my - p.y + p.scrollY);
-                        int currentY = 5;
-
-                        if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 15) {
-                            p.principalesAbierto = !p.principalesAbierto; return true;
+                        if (mx >= p.x + marginX && mx <= p.x + marginX + cardWidth && my >= currentY - p.scrollY && my <= currentY + 15 - p.scrollY) {
+                            p.principalesAbierto = !p.principalesAbierto;
+                            return true;
                         }
                         currentY += 20;
+
                         if (p.principalesAbierto) {
-                            for (String mName : p.listaPrincipales) {
-                                if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 30) {
-                                    vincularMisionADetalle(mName); return true;
+                            for (String s : p.listaPrincipales) {
+                                if (s != null && !s.isEmpty()) {
+                                    if (mx >= p.x + marginX && mx <= p.x + marginX + cardWidth && my >= currentY - p.scrollY && my <= currentY + 30 - p.scrollY) {
+                                        GlobalGuiSettings.misionSeleccionadaGlobal = s;
+                                        return true;
+                                    }
+                                    currentY += 35;
                                 }
-                                currentY += 35;
                             }
                         }
 
-                        if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 15) {
-                            p.secundariasAbierto = !p.secundariasAbierto; return true;
+                        if (mx >= p.x + marginX && mx <= p.x + marginX + cardWidth && my >= currentY - p.scrollY && my <= currentY + 15 - p.scrollY) {
+                            p.secundariasAbierto = !p.secundariasAbierto;
+                            return true;
                         }
                         currentY += 20;
+
                         if (p.secundariasAbierto) {
-                            for (String mName : p.listaSecundarias) {
-                                if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 30) {
-                                    vincularMisionADetalle(mName); return true;
+                            for (String s : p.listaSecundarias) {
+                                if (s != null && !s.isEmpty()) {
+                                    if (mx >= p.x + marginX && mx <= p.x + marginX + cardWidth && my >= currentY - p.scrollY && my <= currentY + 30 - p.scrollY) {
+                                        GlobalGuiSettings.misionSeleccionadaGlobal = s;
+                                        return true;
+                                    }
+                                    currentY += 35;
+                                }
+                            }
+                        }
+                        return true;
+                    }
+                } else if (p.tipo.startsWith("DESPLEGABLE")) {
+                    if (mx >= p.x && mx <= p.x + p.ancho && my >= p.y && my <= p.y + 20) {
+                        p.desplegado = !p.desplegado;
+                        return true;
+                    }
+                    if (p.desplegado && mx >= p.x && mx <= p.x + p.ancho && my >= p.y + 20 && my <= p.y + p.alto) {
+                        int bodyY = p.y + 20;
+                        int currentY = bodyY + 5;
+                        int marginX = 5;
+                        int cardWidth = p.ancho - (marginX * 2);
+                        java.util.List<String> misiones = p.tipo.equals("DESPLEGABLE_PRINCIPAL") ? p.listaPrincipales : p.listaSecundarias;
+                        for (String s : misiones) {
+                            if (s != null && !s.isEmpty()) {
+                                if (mx >= p.x + marginX && mx <= p.x + marginX + cardWidth && my >= currentY - p.scrollY && my <= currentY + 30 - p.scrollY) {
+                                    GlobalGuiSettings.misionSeleccionadaGlobal = s;
+                                    return true;
                                 }
                                 currentY += 35;
                             }
                         }
-                    } else {
-                        int rY = (int)(my - bodyY + p.scrollY);
-                        int curY = 5;
-                        List<String> misiones = p.tipo.equals("DESPLEGABLE_PRINCIPAL") ? p.listaPrincipales : p.listaSecundarias;
-                        for (String mName : misiones) {
-                            if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && rY >= curY && rY <= curY + 30) {
-                                vincularMisionADetalle(mName); return true;
-                            }
-                            curY += 35;
-                        }
+                        return true;
                     }
                 }
             }
-            return super.mouseClicked(mx, my, btn);
         }
 
         // 4. Interacción en MODO ON (Editor activo)
@@ -1137,89 +1164,90 @@ this.inputColor.setResponder(s -> {
                 }
                 return true;
             }
-        }
 
-        // --- NUEVA LÓGICA DE CAPAS PARA CLICS ---
-        for (int i = GlobalGuiSettings.CAPAS_UI.size() - 1; i >= 0; i--) {
-            GlobalGuiSettings.Capa capa = GlobalGuiSettings.CAPAS_UI.get(i);
+            // --- NUEVO: Movemos toda la lógica de capas DENTRO de este 'if' ---
+            // --- NUEVA LÓGICA DE CAPAS PARA CLICS ---
+            for (int i = GlobalGuiSettings.CAPAS_UI.size() - 1; i >= 0; i--) {
+                GlobalGuiSettings.Capa capa = GlobalGuiSettings.CAPAS_UI.get(i);
 
-            if (!capa.visible || capa.bloqueado) continue;
-            if (capa.pagina != GlobalGuiSettings.paginaActual && capa.pagina != 0) continue;
+                if (!capa.visible || capa.bloqueado) continue;
+                if (capa.pagina != GlobalGuiSettings.paginaActual && capa.pagina != 0) continue;
 
-            if (capa.panel != null) {
-                GlobalGuiSettings.PanelConfig p = capa.panel;
-                boolean isMouseOver = FigurasEdit.mouseSobreFigura(mx, my, p);
-                if (p.tipo.startsWith("DESPLEGABLE") && !p.desplegado) {
-                    isMouseOver = mx >= p.x && mx <= p.x + p.ancho && my >= p.y && my <= p.y + 20;
-                }
-
-                if (isMouseOver) {
-                    if (pSel != p) { pSel = p; tSel = null; this.init(); }
-
-                    if (p.tipo.startsWith("DESPLEGABLE")) {
-                        if (mx >= p.x + p.ancho - 20 && mx <= p.x + p.ancho && my >= p.y && my <= p.y + 20) {
-                            p.desplegado = !p.desplegado; return true;
-                        }
-                        if (p.desplegado && p.tipo.equals("DESPLEGABLE_MAESTRO")) {
-                            int relY = (int)(my - p.y + p.scrollY);
-                            int currentY = 5;
-                            boolean doble = FigurasEdit.esDobleClic(p);
-                            if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 15) {
-                                if (doble) { FigurasEdit.EditandoMaestroTitle = 1; escribiendoTextoPanel = true; arrastrando = false; }
-                                else p.principalesAbierto = !p.principalesAbierto;
-                                return true;
-                            }
-                            currentY += 20;
-                            if (p.principalesAbierto) {
-                                for (String mName : p.listaPrincipales) {
-                                    if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 30) {
-                                        vincularMisionADetalle(mName); return true;
-                                    }
-                                    currentY += 35;
-                                }
-                            }
-                            if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 15) {
-                                if (doble) { FigurasEdit.EditandoMaestroTitle = 2; escribiendoTextoPanel = true; arrastrando = false; }
-                                else p.secundariasAbierto = !p.secundariasAbierto;
-                                return true;
-                            }
-                            currentY += 20;
-                            if (p.secundariasAbierto) {
-                                for (String mName : p.listaSecundarias) {
-                                    if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 30) {
-                                        vincularMisionADetalle(mName); return true;
-                                    }
-                                    currentY += 35;
-                                }
-                            }
-                        }
-                        if (!p.tipo.equals("DESPLEGABLE_MAESTRO") && p.desplegado) {
-                            int rY = (int)(my - (p.y + 20) + p.scrollY);
-                            int curY = 5;
-                            List<String> misiones = p.tipo.equals("DESPLEGABLE_PRINCIPAL") ? p.listaPrincipales : p.listaSecundarias;
-                            for (String mName : misiones) {
-                                if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && rY >= curY && rY <= curY + 30) {
-                                    vincularMisionADetalle(mName); return true;
-                                }
-                                curY += 35;
-                            }
-                        }
+                if (capa.panel != null) {
+                    GlobalGuiSettings.PanelConfig p = capa.panel;
+                    boolean isMouseOver = FigurasEdit.mouseSobreFigura(mx, my, p);
+                    if (p.tipo.startsWith("DESPLEGABLE") && !p.desplegado) {
+                        isMouseOver = mx >= p.x && mx <= p.x + p.ancho && my >= p.y && my <= p.y + 20;
                     }
 
-                    if (FigurasEdit.sobreEsquinaRedimension(mx, my, p) && (!p.tipo.startsWith("DESPLEGABLE") || p.desplegado)) redimensionando = true;
-                    else { arrastrando = true; dragX = mx - p.x; dragY = my - p.y; }
-                    return true;
-                }
-            } else if (capa.texto != null) {
-                GlobalGuiSettings.TextConfig t = capa.texto;
-                if (TextoEdit.mouseSobreTexto(mx, my, t, Minecraft.getInstance().font)) {
-                    if (tSel != t) { tSel = t; pSel = null; this.init(); }
-                    if (TextoEdit.esDobleClic(t)) { escribiendoTexto = true; arrastrando = false; }
-                    else { arrastrando = true; dragX = mx - t.x; dragY = my - t.y; escribiendoTexto = false; }
-                    return true;
+                    if (isMouseOver) {
+                        if (pSel != p) { pSel = p; tSel = null; this.init(); }
+
+                        if (p.tipo.startsWith("DESPLEGABLE")) {
+                            if (mx >= p.x + p.ancho - 20 && mx <= p.x + p.ancho && my >= p.y && my <= p.y + 20) {
+                                p.desplegado = !p.desplegado; return true;
+                            }
+                            if (p.desplegado && p.tipo.equals("DESPLEGABLE_MAESTRO")) {
+                                int relY = (int)(my - p.y + p.scrollY);
+                                int currentY = 5;
+                                boolean doble = FigurasEdit.esDobleClic(p);
+                                if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 15) {
+                                    if (doble) { FigurasEdit.EditandoMaestroTitle = 1; escribiendoTextoPanel = true; arrastrando = false; }
+                                    else p.principalesAbierto = !p.principalesAbierto;
+                                    return true;
+                                }
+                                currentY += 20;
+                                if (p.principalesAbierto) {
+                                    for (String mName : p.listaPrincipales) {
+                                        if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 30) {
+                                            vincularMisionADetalle(mName); return true;
+                                        }
+                                        currentY += 35;
+                                    }
+                                }
+                                if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 15) {
+                                    if (doble) { FigurasEdit.EditandoMaestroTitle = 2; escribiendoTextoPanel = true; arrastrando = false; }
+                                    else p.secundariasAbierto = !p.secundariasAbierto;
+                                    return true;
+                                }
+                                currentY += 20;
+                                if (p.secundariasAbierto) {
+                                    for (String mName : p.listaSecundarias) {
+                                        if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 30) {
+                                            vincularMisionADetalle(mName); return true;
+                                        }
+                                        currentY += 35;
+                                    }
+                                }
+                            }
+                            if (!p.tipo.equals("DESPLEGABLE_MAESTRO") && p.desplegado) {
+                                int rY = (int)(my - (p.y + 20) + p.scrollY);
+                                int curY = 5;
+                                List<String> misiones = p.tipo.equals("DESPLEGABLE_PRINCIPAL") ? p.listaPrincipales : p.listaSecundarias;
+                                for (String mName : misiones) {
+                                    if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && rY >= curY && rY <= curY + 30) {
+                                        vincularMisionADetalle(mName); return true;
+                                    }
+                                    curY += 35;
+                                }
+                            }
+                        }
+
+                        if (FigurasEdit.sobreEsquinaRedimension(mx, my, p) && (!p.tipo.startsWith("DESPLEGABLE") || p.desplegado)) redimensionando = true;
+                        else { arrastrando = true; dragX = mx - p.x; dragY = my - p.y; }
+                        return true;
+                    }
+                } else if (capa.texto != null) {
+                    GlobalGuiSettings.TextConfig t = capa.texto;
+                    if (TextoEdit.mouseSobreTexto(mx, my, t, Minecraft.getInstance().font)) {
+                        if (tSel != t) { tSel = t; pSel = null; this.init(); }
+                        if (TextoEdit.esDobleClic(t)) { escribiendoTexto = true; arrastrando = false; }
+                        else { arrastrando = true; dragX = mx - t.x; dragY = my - t.y; escribiendoTexto = false; }
+                        return true;
+                    }
                 }
             }
-        }
+        } // --- FIN DEL IF DE MODO ON ---
 
         // Deselección al hacer clic en el fondo
         // NUEVO: Verificamos que realmente hayamos tocado la barra visual, no solo el "aire" al lado de ella
