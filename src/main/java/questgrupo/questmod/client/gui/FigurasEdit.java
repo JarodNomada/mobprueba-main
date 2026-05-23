@@ -809,7 +809,27 @@ public static void crearBotonPagina(int numPagina) {
             }
         } else if (p.tipo.equals("CUADRADO") || p.tipo.equals("RECTANGULO") || p.tipo.equals("BOTON_PAGINA")) {
             int r = p.tipo.equals("CUADRADO") ? p.redondezBorde : 0;
-            drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, Math.min(5, Math.max(0, r)), p.colorARGB, p.colorBorde);
+            int cFondo = p.colorARGB;
+            int cBorde = p.colorBorde;
+            boolean hoverBrillo = false;
+
+            // EFECTOS HOVER Y FOCUS (SOLO PARA BOTONES DE PÁGINA)
+            if (!GlobalGuiSettings.editorActivo && p.tipo.equals("BOTON_PAGINA")) {
+                double mouseX = Minecraft.getInstance().mouseHandler.xpos() * (double) g.guiWidth() / (double) Minecraft.getInstance().getWindow().getScreenWidth();
+                double mouseY = Minecraft.getInstance().mouseHandler.ypos() * (double) g.guiHeight() / (double) Minecraft.getInstance().getWindow().getScreenHeight();
+                boolean hovered = (mouseX >= p.x && mouseX <= p.x + p.ancho && mouseY >= p.y && mouseY <= p.y + p.alto);
+                
+                if (hovered) {
+                    cBorde = 0xFFFFFFFF; // Borde blanco (Hover)
+                    hoverBrillo = true;
+                }
+            }
+
+            drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, Math.min(5, Math.max(0, r)), cFondo, cBorde);
+            
+            if (hoverBrillo) {
+                drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, Math.min(5, Math.max(0, r)), 0x33FFFFFF, 0); 
+            }
         } else if (p.tipo.equals("TRIANGULO")) {
             int centerX = p.x + p.ancho / 2;
             int bottomY = p.y + p.alto;
