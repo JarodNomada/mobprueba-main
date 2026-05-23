@@ -819,9 +819,10 @@ public static void crearBotonPagina(int numPagina) {
                 double mouseY = Minecraft.getInstance().mouseHandler.ypos() * (double) g.guiHeight() / (double) Minecraft.getInstance().getWindow().getScreenHeight();
                 boolean hovered = (mouseX >= p.x && mouseX <= p.x + p.ancho && mouseY >= p.y && mouseY <= p.y + p.alto);
                 
-                if (hovered) {
-                    cBorde = 0xFFFFFFFF; // Borde blanco (Hover)
-                    hoverBrillo = true;
+                boolean focused = (p.textoAsociado != null && p.textoAsociado.equals(String.valueOf(GlobalGuiSettings.paginaActual)));
+
+                if (focused || hovered) {
+                    hoverBrillo = true;  // Activa solo el brillo interno, manteniendo tu color de borde intacto
                 }
             }
 
