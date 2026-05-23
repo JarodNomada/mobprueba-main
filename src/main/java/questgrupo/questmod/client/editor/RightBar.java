@@ -23,6 +23,12 @@ public class RightBar {
 
     private static int scrollOffset = 0;
      
+    public static boolean isDraggingWindow = false;
+    private static double dragOffsetX = 0;
+    private static double dragOffsetY = 0;
+    public static int windowX = -1; // -1 significa que aún no se ha posicionado
+    public static int windowY = MARGIN_TOP;
+
     public static GlobalGuiSettings.Capa capaArrastrada = null;
     public static double mouseDragY = 0;
     
@@ -39,9 +45,10 @@ public class RightBar {
     public static void render(GuiGraphics g, int screenWidth, int screenHeight, int mouseX, int mouseY) {
         if (!isVisible || !GlobalGuiSettings.editorActivo) return;
 
-        int x0    = screenWidth - WIDTH - MARGIN_RIGHT;
-        int x1    = screenWidth - MARGIN_RIGHT;
-        int yBase = MARGIN_TOP;
+        if (windowX == -1) windowX = screenWidth - WIDTH - MARGIN_RIGHT;
+        int x0    = windowX;
+        int x1    = windowX + WIDTH;
+        int yBase = windowY;
 
         Font font = Minecraft.getInstance().font;
 
@@ -270,9 +277,10 @@ public class RightBar {
 
     public static boolean handleScroll(double mx, double my, double delta, int screenWidth, int screenHeight) {
         if (!isVisible || !GlobalGuiSettings.editorActivo) return false;
-        int x0     = screenWidth - WIDTH - MARGIN_RIGHT;
-        int x1     = screenWidth - MARGIN_RIGHT;
-        int listY0 = MARGIN_TOP + HEADER_H + 1;
+        if (windowX == -1) windowX = screenWidth - WIDTH - MARGIN_RIGHT;
+        int x0     = windowX;
+        int x1     = windowX + WIDTH;
+        int listY0 = windowY + HEADER_H + 1;
 
         if (mx < x0 || mx > x1) return false;
         if (my < listY0 || my > listY0 + LIST_H) return false;
@@ -285,15 +293,24 @@ public class RightBar {
 
     public static boolean handleClick(double mx, double my, int screenWidth, int screenHeight) {
         if (!isVisible || !GlobalGuiSettings.editorActivo) return false;
-        int x0    = screenWidth - WIDTH - MARGIN_RIGHT;
-        int x1    = screenWidth - MARGIN_RIGHT;
-        int yBase = MARGIN_TOP;
+        if (windowX == -1) windowX = screenWidth - WIDTH - MARGIN_RIGHT;
+        int x0    = windowX;
+        int x1    = windowX + WIDTH;
+        int yBase = windowY;
 
         if (mx < x0 || mx > x1 || my < yBase || my > yBase + PANEL_H) return false;
 
         int plusX = x1 - 19;
         if (my >= yBase + 2 && my <= yBase + 20 && mx >= plusX) {
             accionNuevaCapa();
+            return true;
+        }
+
+        // Lógica para arrastrar ventana (Clic en el header, pero NO en el botón +)
+        if (my >= yBase && my <= yBase + HEADER_H) {
+            isDraggingWindow = true;
+            dragOffsetX = mx - windowX;
+            dragOffsetY = my - windowY;
             return true;
         }
 
@@ -454,10 +471,20 @@ public class RightBar {
     }
 
     public static boolean handleMouseDragged(double mx, double my, int button, int screenWidth, int screenHeight) {
-        if (!isVisible || capaArrastrada == null) return false;
+        if (!isVisible) return false;
+        
+        // Si estamos arrastrando todo el panel
+        if (isDraggingWindow) {
+            windowX = (int) (mx - dragOffsetX);
+            windowY = (int) (my - dragOffsetY);
+            return true;
+        }
+        
+        // Lógica original de arrastrar capas individuales
+        if (capaArrastrada == null) return false;
         mouseDragY = my;
 
-        int listY0 = MARGIN_TOP + HEADER_H;
+        int listY0 = windowY + HEADER_H;
         int slotActual = (int) ((my - listY0) / ITEM_H) + scrollOffset;
         
         java.util.List<GlobalGuiSettings.Capa> capas = capasDePageActual();
@@ -478,6 +505,10 @@ public class RightBar {
     }
 
     public static boolean handleMouseReleased(double mx, double my, int button) {
+        if (isDraggingWindow) {
+            isDraggingWindow = false;
+            return true;
+        }
         if (capaArrastrada != null) {
             capaArrastrada = null; 
             

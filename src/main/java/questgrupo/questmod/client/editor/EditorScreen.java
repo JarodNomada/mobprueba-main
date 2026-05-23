@@ -1469,6 +1469,10 @@ this.inputColor.setResponder(s -> {
                 this.init();
                 return true;
             }
+            if (keyCode == InputConstants.KEY_L) {
+                questgrupo.questmod.client.editor.RightBar.isVisible = !questgrupo.questmod.client.editor.RightBar.isVisible;
+                return true;
+            }
         }
 
         // Manejo de input de color
