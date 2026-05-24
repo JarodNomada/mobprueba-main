@@ -50,6 +50,7 @@ public class GlobalGuiSettings {
         public float escalaMarco = 1.0f;
         public int grosorBorde = 1;
         public int redondezBorde = 1;
+        public int redondezBordeInferior = 1;
         public float offsetXTexto = 0.0f;
         public float offsetYTexto = 0.0f;
         public float escalaTextoMision = 1.0f;

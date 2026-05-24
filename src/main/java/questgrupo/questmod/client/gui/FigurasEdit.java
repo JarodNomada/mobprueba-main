@@ -808,7 +808,12 @@ public static void crearBotonPagina(int numPagina) {
                 drawLineThick(g, p.x, p.y, p.x2, p.y2, p.colorARGB, p.grosor);
             }
         } else if (p.tipo.equals("CUADRADO") || p.tipo.equals("RECTANGULO") || p.tipo.equals("BOTON_PAGINA")) {
-            int r = p.tipo.equals("CUADRADO") ? p.redondezBorde : 0;
+            int rTop = (p.tipo.equals("CUADRADO") || p.tipo.equals("BOTON_PAGINA")) ? p.redondezBorde : 0;
+            int rBottom = p.tipo.equals("BOTON_PAGINA") ? p.redondezBordeInferior : rTop;
+            
+            rTop = Math.min(5, Math.max(0, rTop));
+            rBottom = Math.min(5, Math.max(0, rBottom));
+
             int cFondo = p.colorARGB;
             int cBorde = p.colorBorde;
             boolean hoverBrillo = false;
@@ -826,10 +831,10 @@ public static void crearBotonPagina(int numPagina) {
                 }
             }
 
-            drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, Math.min(5, Math.max(0, r)), cFondo, cBorde);
+            drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, rTop, rBottom, cFondo, cBorde);
             
             if (hoverBrillo) {
-                drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, Math.min(5, Math.max(0, r)), 0x33FFFFFF, 0); 
+                drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, rTop, rBottom, 0x33FFFFFF, 0); 
             }
         } else if (p.tipo.equals("TRIANGULO")) {
             int centerX = p.x + p.ancho / 2;
@@ -1466,23 +1471,27 @@ public static void crearBotonPagina(int numPagina) {
     }
 
     private static void drawRoundedOutline(GuiGraphics g, int x, int y, int w, int h, int r, int color) {
+        drawRoundedOutline(g, x, y, w, h, r, r, color);
+    }
+
+    private static void drawRoundedOutline(GuiGraphics g, int x, int y, int w, int h, int rTop, int rBottom, int color) {
         if (color == 0 || (color & 0xFF000000) == 0) return;
-        if (r <= 0) {
+        if (rTop <= 0 && rBottom <= 0) {
             g.renderOutline(x, y, w, h, color);
             return;
         }
         
-        g.fill(x, y + r, x + 1, y + h - r, color); 
-        g.fill(x + w - 1, y + r, x + w, y + h - r, color); 
-        g.fill(x + r, y, x + w - r, y + 1, color); 
-        g.fill(x + r, y + h - 1, x + w - r, y + h, color); 
+        g.fill(x, y + rTop, x + 1, y + h - rBottom, color); 
+        g.fill(x + w - 1, y + rTop, x + w, y + h - rBottom, color); 
+        g.fill(x + rTop, y, x + w - rTop, y + 1, color); 
+        g.fill(x + rBottom, y + h - 1, x + w - rBottom, y + h, color); 
         
-        for (int dy = 0; dy < r; dy++) {
-            int currentInset = getCornerInset(dy, h, r);
-            int innerR = Math.max(0, r - 1);
+        for (int dy = 0; dy < rTop; dy++) {
+            int currentInset = getCornerInset(dy, h, rTop);
+            int innerR = Math.max(0, rTop - 1);
             int innerInset = (dy == 0 || innerR == 0) ? currentInset : getCornerInset(dy - 1, h - 2, innerR);
             int endInset = innerInset + 1;
-            int prevInset = (dy == 0) ? r : getCornerInset(dy - 1, h, r);
+            int prevInset = (dy == 0) ? rTop : getCornerInset(dy - 1, h, rTop);
             endInset = Math.max(endInset, Math.max(currentInset + 1, prevInset));
             
             if (currentInset < endInset) {
@@ -1491,13 +1500,13 @@ public static void crearBotonPagina(int numPagina) {
             }
         }
         
-        for (int dy = h - r; dy < h; dy++) {
+        for (int dy = h - rBottom; dy < h; dy++) {
             int ry = h - 1 - dy; 
-            int currentInset = getCornerInset(ry, h, r);
-            int innerR = Math.max(0, r - 1);
+            int currentInset = getCornerInset(ry, h, rBottom);
+            int innerR = Math.max(0, rBottom - 1);
             int innerInset = (ry == 0 || innerR == 0) ? currentInset : getCornerInset(ry - 1, h - 2, innerR);
             int endInset = innerInset + 1;
-            int prevInset = (ry == 0) ? r : getCornerInset(ry - 1, h, r);
+            int prevInset = (ry == 0) ? rBottom : getCornerInset(ry - 1, h, rBottom);
             endInset = Math.max(endInset, Math.max(currentInset + 1, prevInset));
             
             if (currentInset < endInset) {
@@ -1508,29 +1517,34 @@ public static void crearBotonPagina(int numPagina) {
     }
 
     private static void drawRoundedBox(GuiGraphics g, int x, int y, int w, int h, int r, int fillColor, int borderColor) {
+        drawRoundedBox(g, x, y, w, h, r, r, fillColor, borderColor);
+    }
+
+    private static void drawRoundedBox(GuiGraphics g, int x, int y, int w, int h, int rTop, int rBottom, int fillColor, int borderColor) {
         if (fillColor != 0 && (fillColor & 0xFF000000) != 0) {
             int innerX = x + 1;
             int innerY = y + 1;
             int innerW = w - 2;
             int innerH = h - 2;
-            int innerR = Math.max(0, r - 1);
+            int innerRTop = Math.max(0, rTop - 1);
+            int innerRBottom = Math.max(0, rBottom - 1);
             
-            if (innerR <= 0) {
+            if (innerRTop <= 0 && innerRBottom <= 0) {
                 g.fill(innerX, innerY, innerX + innerW, innerY + innerH, fillColor);
             } else {
-                g.fill(innerX, innerY + innerR, innerX + innerW, innerY + innerH - innerR, fillColor);
-                for (int dy = 0; dy < innerR; dy++) {
-                    int inset = getCornerInset(dy, innerH, innerR);
+                g.fill(innerX, innerY + innerRTop, innerX + innerW, innerY + innerH - innerRBottom, fillColor);
+                for (int dy = 0; dy < innerRTop; dy++) {
+                    int inset = getCornerInset(dy, innerH, innerRTop);
                     g.fill(innerX + inset, innerY + dy, innerX + innerW - inset, innerY + dy + 1, fillColor);
                 }
-                for (int dy = innerH - innerR; dy < innerH; dy++) {
+                for (int dy = innerH - innerRBottom; dy < innerH; dy++) {
                     int ry = innerH - 1 - dy;
-                    int inset = getCornerInset(ry, innerH, innerR);
+                    int inset = getCornerInset(ry, innerH, innerRBottom);
                     g.fill(innerX + inset, innerY + dy, innerX + innerW - inset, innerY + dy + 1, fillColor);
                 }
             }
         }
-        drawRoundedOutline(g, x, y, w, h, r, borderColor);
+        drawRoundedOutline(g, x, y, w, h, rTop, rBottom, borderColor);
     }
 
     private static long ultimoChequeoStatsExtras = 0;

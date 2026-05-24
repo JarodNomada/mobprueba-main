@@ -359,7 +359,7 @@ public class TopBar {
         } else if (drawTools && pSel != null) {
             if (pSel.tipo.equals("DETALLE_MISION")) return 244;
             else if (pSel.tipo.equals("MISION_OBJETIVOS")) return 214; 
-            else if (pSel.tipo.equals("BOTON_PAGINA")) return 96;
+            else if (pSel.tipo.equals("BOTON_PAGINA")) return 118; // 4 + Colores(20) + Sep(9) + Bordes(38) + Sep(9) + T(38)
             else if (pSel.tipo.startsWith("DESPLEGABLE")) {
                 int w = 4 + 76; // Pad(4) + 4Colores(76)
                 if (pSel.textoAsociado != null && !pSel.textoAsociado.isEmpty()) {
@@ -463,6 +463,8 @@ public class TopBar {
         } else if (tSel != null) {
             int cY = y + 14;
             if (mx >= startX && mx <= startX + swatchSize && my >= cY && my <= cY + swatchSize) return BTN_TEXT_COLOR;
+        } else if (pSel != null && pSel.tipo.equals("BOTON_PAGINA")) {
+            return -1; 
         } else {
             int currentX = barStartX + 4;
             int boxY = y + 4;
@@ -470,7 +472,7 @@ public class TopBar {
                 if (mx >= currentX && mx <= currentX + 16) return BTN_FILL_COLOR;
                 currentX += 16;
 
-                if (!pSel.tipo.equals("LINEA") && !pSel.tipo.equals("TRIANGULO")) {
+                if (pSel != null && !pSel.tipo.equals("LINEA") && !pSel.tipo.equals("TRIANGULO")) {
                     currentX += 4;
                     if (mx >= currentX && mx <= currentX + 16) return BTN_BORDER_COLOR;
                 }
@@ -497,16 +499,20 @@ public class TopBar {
         Font font = Minecraft.getInstance().font;
 
         if (pSel.tipo.equals("BOTON_PAGINA")) {
-            int rowY = y + 14;
-            int curX = barStartX + 6;
-            drawSectionTitle(g, font, "F", curX, y + 2, 38);
-            drawColorSwatch(g, pSel.colorARGB, curX + 5, rowY);
-            drawColorSwatch(g, pSel.colorBorde, curX + 23, rowY);
+            int curX = barStartX + 4;
+            int row1Y = y + 4;
+            int row2Y = y + 24;
 
-            curX += 42;
-            drawVerticalSeparator(g, curX, y + 4, 26);
-            curX += 4;
-            drawSectionTitle(g, font, "T", curX, y + 2, 38);
+            // Colores organizados verticalmente (Fila de 2)
+            drawColorSwatch(g, pSel.colorARGB, curX, row1Y);
+            drawColorSwatch(g, pSel.colorBorde, curX, row2Y);
+            
+            curX += 16 + 4; 
+            drawVerticalSeparator(g, curX, y + 4, 36);
+            
+            curX += 5 + 38; 
+            curX += 4; 
+            drawVerticalSeparator(g, curX, y + 4, 36);
             return;
         } else if (pSel.tipo.equals("MISION_OBJETIVOS")) {
             int curX = barStartX + 4;
@@ -684,19 +690,20 @@ public class TopBar {
         int expectedBarW = calculateBarWidth(false, true, null, pSel);
         int barStartX = barX + (guiWidth - barX - expectedBarW) / 2;
 
-        if (pSel.tipo.equals("DETALLE_MISION")) {
+        if (pSel.tipo.equals("BOTON_PAGINA")) {
+            int curX = barStartX + 4;
+            if (mx >= curX && mx <= curX + 16) {
+                if (my >= y + 4 && my <= y + 20) return BTN_FILL_COLOR;
+                if (my >= y + 24 && my <= y + 40) return BTN_BORDER_COLOR;
+            }
+            return -1;
+        } else if (pSel.tipo.equals("DETALLE_MISION")) {
             int rowY = y + 14;
             int curX = barStartX + 6;
             int sectionWidth = 46;
             int sectionCWidth = 90;
             int swatchOffset = (sectionWidth - 36) / 2;
             int cSwatchOffset = 10;
-
-            if (pSel.tipo.equals("BOTON_PAGINA")) {
-                if (mx >= curX + 5 && mx <= curX + 21) return BTN_FILL_COLOR;
-                if (mx >= curX + 23 && mx <= curX + 39) return BTN_BORDER_COLOR;
-                return -1;
-            }
 
             if (mx >= curX + swatchOffset && mx <= curX + swatchOffset + 16) return BTN_FILL_COLOR;
             if (mx >= curX + swatchOffset + 20 && mx <= curX + swatchOffset + 36) return BTN_BORDER_COLOR;
@@ -853,11 +860,21 @@ public class TopBar {
             adder.accept(Button.builder(Component.literal("-"), b -> pSel.escalaIcono = Math.max(0.1f, pSel.escalaIcono - 0.1f)).bounds(curX, btnY2, btnSize, btnSize).build());
             adder.accept(Button.builder(Component.literal("+"), b -> pSel.escalaIcono = Math.min(10.0f, pSel.escalaIcono + 0.1f)).bounds(curX + 20, btnY2, btnSize, btnSize).build());
         } else {
-            int btnY1 = y + 3;  // CORRECCIÓN: Fila 1
-            int btnY2 = y + 23; // CORRECCIÓN: Fila 2
-            // Pad(4) + Relleno(16) + (20 si hay borde) + Linea(9)
+            int btnY1 = y + 3;  
+            int btnY2 = y + 23; 
             int curX = barStartX + 20 + (pSel.tipo.equals("LINEA") || pSel.tipo.equals("TRIANGULO") ? 0 : 20) + 9;
             if (pSel.tipo.equals("CUADRADO")) curX += 42; 
+            if (pSel.tipo.equals("BOTON_PAGINA")) curX = barStartX + 4 + 20 + 5; // Posición exacta (barStartX + 29)
+            
+            if (pSel.tipo.equals("BOTON_PAGINA")) {
+                adder.accept(Button.builder(Component.literal("BS+"), b -> pSel.redondezBorde = Math.min(5, pSel.redondezBorde + 1)).bounds(curX, btnY1, btnSize, btnSize).build());
+                adder.accept(Button.builder(Component.literal("BS-"), b -> pSel.redondezBorde = Math.max(0, pSel.redondezBorde - 1)).bounds(curX, btnY2, btnSize, btnSize).build());
+                
+                adder.accept(Button.builder(Component.literal("BI+"), b -> pSel.redondezBordeInferior = Math.min(5, pSel.redondezBordeInferior + 1)).bounds(curX + 20, btnY1, btnSize, btnSize).build());
+                adder.accept(Button.builder(Component.literal("BI-"), b -> pSel.redondezBordeInferior = Math.max(0, pSel.redondezBordeInferior - 1)).bounds(curX + 20, btnY2, btnSize, btnSize).build());
+                
+                curX += 38 + 9; // 38px width + 9px separator
+            }
 
             adder.accept(Button.builder(Component.literal("←"), b -> pSel.offsetXTexto -= 2.0f).bounds(curX, btnY1, btnSize, btnSize).build());
             adder.accept(Button.builder(Component.literal("→"), b -> pSel.offsetXTexto += 2.0f).bounds(curX + 20, btnY1, btnSize, btnSize).build());
