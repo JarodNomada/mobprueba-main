@@ -8,6 +8,7 @@ public class GlobalGuiSettings {
     public static boolean editorActivo = false;
     
     public static java.util.Set<String> misionesAceptadasCliente = new java.util.HashSet<>();
+    public static java.util.Set<String> misionesFinalizadasCliente = new java.util.HashSet<>();
     public static java.util.Map<String, Integer> progresoMuertesCliente = new java.util.HashMap<>();
     public static String misionSeleccionadaGlobal = "";
 

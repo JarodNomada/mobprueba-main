@@ -27,10 +27,7 @@ public class PacketAceptarMision {
         context.enqueueWork(() -> {
             ServerPlayer player = context.getSender();
             if (player != null) {
-                // Primero registra que se aceptó (si no estaba aceptada)
                 ClickAldeano.registrarAceptacion(player, entityUUID);
-                // Luego procesa la entrega (si tiene los items)
-                ClickAldeano.procesarEntregaMision(player, entityUUID);
             }
         });
         return true;

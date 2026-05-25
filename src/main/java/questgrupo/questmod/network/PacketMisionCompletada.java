@@ -16,7 +16,6 @@ public class PacketMisionCompletada {
         NetworkEvent.Context context = supplier.get();
         context.enqueueWork(() -> {
             if (Minecraft.getInstance().screen instanceof QuestScreen screen) {
-                screen.mostrarAgradecimiento();
             }
         });
         return true;

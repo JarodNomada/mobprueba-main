@@ -16,7 +16,6 @@ import questgrupo.questmod.Config;
 import questgrupo.questmod.client.GlobalGuiSettings;
 import questgrupo.questmod.client.QuestScreen;
 import questgrupo.questmod.network.Messages;
-import questgrupo.questmod.network.PacketMisionCompletada;
 import questgrupo.questmod.network.PacketMisionesSync;
 import questgrupo.questmod.network.PacketSyncProgresoMuertes;
 
@@ -34,13 +33,22 @@ public class ClickAldeano {
     public static boolean esMisionFinalizada(String key) { return misionesFinalizadas.contains(key); }
     public static int getMisionesCompletadasCount() { return misionesFinalizadas.size(); }
     public static Set<String> getMisionesAceptadasCopia() { return new HashSet<>(misionesAceptadas); }
-    
-    public static void recibirMisionesSync(Set<String> missionsFromServer) {
-        if (missionsFromServer != null) {
-            misionesAceptadas.addAll(missionsFromServer);
-            GlobalGuiSettings.PANELES.clear();
-            questgrupo.questmod.Config.inyectarMisionesEnEditor();
+
+    public static void recibirMisionesSync(Set<String> accepted, Set<String> finalized) {
+        if (accepted != null) {
+            misionesAceptadas.clear();
+            misionesAceptadas.addAll(accepted);
         }
+        if (finalized != null) {
+            misionesFinalizadas.clear();
+            misionesFinalizadas.addAll(finalized);
+        }
+        GlobalGuiSettings.misionesAceptadasCliente.clear();
+        GlobalGuiSettings.misionesAceptadasCliente.addAll(misionesAceptadas);
+        GlobalGuiSettings.misionesFinalizadasCliente.clear();
+        GlobalGuiSettings.misionesFinalizadasCliente.addAll(misionesFinalizadas);
+        GlobalGuiSettings.PANELES.clear();
+        Config.inyectarMisionesEnEditor();
     }
 
     public static void registrarMirada(Entity entidad, Entity jugador) {
@@ -119,9 +127,12 @@ public class ClickAldeano {
             if (misionActual != null) {
                 String questKey = generarQuestKey(player, target, misionActual);
                 if (!misionesFinalizadas.contains(questKey)) {
-                    misionesAceptadas.add(questKey);
-                    Messages.sendToPlayer(new PacketMisionesSync(new HashSet<>(misionesAceptadas)), player);
-                    procesarEntregaMision(player, targetUUID);
+                    if (!misionesAceptadas.contains(questKey)) {
+                        misionesAceptadas.add(questKey);
+                        Messages.sendToPlayer(new PacketMisionesSync(new HashSet<>(misionesAceptadas), new HashSet<>(misionesFinalizadas)), player);
+                    } else {
+                        procesarEntregaMision(player, targetUUID);
+                    }
                 }
             }
         }
@@ -138,52 +149,44 @@ public class ClickAldeano {
         if (misionFinal != null) {
             String questKey = generarQuestKey(player, entidad, misionFinal);
 
-            // VERIFICAR TODOS LOS OBJETIVOS
             boolean tieneTodo = true;
             for (Config.Objetivo obj : misionFinal.objetivos) {
                 if (obj.entidad != null && !obj.entidad.isEmpty()) {
                     String progressKey = player.getUUID().toString() + "_" + questKey + "_" + obj.entidad;
                     if (progresoMuertes.getOrDefault(progressKey, 0) < obj.cantidad) {
-                        tieneTodo = false;
-                        break;
+                        tieneTodo = false; break;
                     }
                 } else if (obj.itemReal != null) {
                     if (player.getInventory().countItem(obj.itemReal) < obj.cantidad) {
-                        tieneTodo = false;
-                        break;
+                        tieneTodo = false; break;
                     }
                 }
             }
 
             if (tieneTodo) {
-                // QUITAR TODOS LOS ITEMS
                 for (Config.Objetivo obj : misionFinal.objetivos) {
                     if (obj.itemReal != null) {
                         player.getInventory().clearOrCountMatchingItems(p -> p.getItem() == obj.itemReal, obj.cantidad, player.inventoryMenu.getCraftSlots());
                     }
                 }
-
-                // DAR TODAS LAS RECOMPENSAS
                 for (Config.Recompensa rec : misionFinal.recompensas) {
-                    player.addItem(new ItemStack(rec.itemReal, rec.cantidad));
+                    if (rec.itemReal != null) {
+                        player.addItem(new ItemStack(rec.itemReal, rec.cantidad));
+                    }
                 }
-
                 misionesAceptadas.remove(questKey);
                 misionesFinalizadas.add(questKey);
 
-                // Limpiar progreso de muertes liberando memoria
                 for (Config.Objetivo obj : misionFinal.objetivos) {
                     if (obj.entidad != null && !obj.entidad.isEmpty()) {
                         progresoMuertes.remove(player.getUUID().toString() + "_" + questKey + "_" + obj.entidad);
                     }
                 }
-
-                Messages.sendToPlayer(new PacketMisionCompletada(), player);
+                Messages.sendToPlayer(new PacketMisionesSync(new HashSet<>(misionesAceptadas), new HashSet<>(misionesFinalizadas)), player);
             }
         }
     }
 
-    // EVENTO NUEVO PARA CONTAR LAS MUERTES
     @SubscribeEvent
     public static void onEntityDeath(net.minecraftforge.event.entity.living.LivingDeathEvent event) {
         if (event.getSource().getEntity() instanceof ServerPlayer player) {
@@ -229,7 +232,6 @@ public class ClickAldeano {
             String type = net.minecraft.core.registries.BuiltInRegistries.VILLAGER_TYPE.getKey(villager.getVillagerData().getType()).getPath();
             detalles = "_" + prof + "_" + type;
         }
-        // CAMBIO: Usamos el nombre para el ID ya que itemPedido no existe
         String misionId = mision != null ? "_" + mision.nombre.replace(" ", "_") : "";
         return jugador.getUUID().toString() + "_" + mobId + detalles + misionId;
     }
@@ -239,6 +241,25 @@ public class ClickAldeano {
         for (Config.MisionData m : misiones) {
             String questKey = generarQuestKey(jugador, entidad, m);
             if (misionesFinalizadas.contains(questKey)) continue;
+
+            boolean cumpleRequisitos = true;
+            if (m.requisitos != null && m.requisitos.misiones_completadas != null) {
+                for (String reqId : m.requisitos.misiones_completadas) {
+                    boolean found = false;
+                    for (String qk : misionesFinalizadas) {
+                        Config.MisionData completedMision = obtenerMisionPorQuestKey(qk);
+                        if (completedMision != null && reqId.equals(completedMision.id)) {
+                            found = true; break;
+                        }
+                    }
+                    if (!found) {
+                        cumpleRequisitos = false;
+                        break;
+                    }
+                }
+            }
+            if (!cumpleRequisitos) continue;
+
             if (entidad instanceof Villager villager) {
                 String prof = ForgeRegistries.VILLAGER_PROFESSIONS.getKey(villager.getVillagerData().getProfession()).getPath();
                 String type = net.minecraft.core.registries.BuiltInRegistries.VILLAGER_TYPE.getKey(villager.getVillagerData().getType()).getPath();

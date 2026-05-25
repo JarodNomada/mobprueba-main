@@ -2,272 +2,303 @@ package questgrupo.questmod;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.mojang.logging.LogUtils;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
 import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.registries.ForgeRegistries;
-import org.slf4j.Logger;
-import questgrupo.questmod.client.GlobalGuiSettings;
-
-
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
-
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Config {
-    private static final Logger LOGGER = LogUtils.getLogger();
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final File CONFIG_FILE = new File(FMLPaths.CONFIGDIR.get().toFile(), "questnomas_misiones.json");
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
-    // Rutas y Constantes
-    private static final Path CARPETA_QUESTS = FMLPaths.CONFIGDIR.get().resolve("questmobs");
-    private static final Path ARCHIVO_VISUAL = CARPETA_QUESTS.resolve("apariencia.json");
-    private static final int LIMITE_MISIONES = 30;
+    public static QuestConfig questConfig = new QuestConfig();
+    public static Map<String, List<MisionData>> misionesCargadas = new HashMap<>();
 
-    // Datos en Memoria
-    public static final Map<String, List<MisionData>> misionesCargadas = new HashMap<>();
-    public static VisualConfig apariencia = new VisualConfig();
-
-    // --- CLASES INTERNAS DE CONFIGURACIÓN ---
-
-    public static class VisualConfig {
-        public String colorMarco = "FFFFFF";
-        public int opacidadMarco = 68;
-        public String colorPaneles = "050505";
-        public int opacidadPaneles = 221;
-        public int opacidadBordeFino = 68;
-        public int anchoDiario = 600;
-        public boolean estirarDerecha = true;
-
-        public int getColorMarcoARGB() {
-            return (opacidadMarco << 24) | (Integer.parseInt(colorMarco, 16) & 0xFFFFFF);
-        }
-
-        public int getColorPanelesARGB() {
-            return (opacidadPaneles << 24) | (Integer.parseInt(colorPaneles, 16) & 0xFFFFFF);
-        }
-
-        public int getColorBordeFino() {
-            int colorBase = Integer.parseInt(colorMarco, 16) & 0xFFFFFF;
-            return (opacidadBordeFino << 24) | colorBase;
-        }
-    }
-
-    public static class Objetivo {
-        public String item;
-        public int cantidad;
-        public String texto;
-        public transient Item itemReal;
-        public String entidad;
-        public String textura;
-        public transient ResourceLocation iconoRL;
-    }
-
-    public static class Recompensa {
-        public String item;
-        public int cantidad;
-        public transient Item itemReal;
-    }
-
-    public static class MisionData {
-        public String nombre;
-        public String descripcion;
-        public String mob;
-        public String profession;
-        public String type;
-        public String textura;
-        public boolean esPrimaria = true;
-
-        public List<Objetivo> objetivos = new ArrayList<>();
-        public List<Recompensa> recompensas = new ArrayList<>();
-        public List<String> frases;
-
-        public String recordatorio;
-        public String error;
-        public String agradecimiento;
-
-        public transient ResourceLocation iconoRL;
-    }
-
-    public static MisionData getMisionPorNombre(String nombre) {
-        if (nombre == null || nombre.isEmpty()) return null;
-        for (List<MisionData> lista : misionesCargadas.values()) {
-            for (MisionData m : lista) {
-                if (nombre.equals(m.nombre)) return m;
+    public static void load() {
+        if (CONFIG_FILE.exists()) {
+            try (FileReader reader = new FileReader(CONFIG_FILE)) {
+                questConfig = GSON.fromJson(reader, QuestConfig.class);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+        } else {
+            crearMisionesPorDefecto();
+            save();
         }
-        return null;
     }
 
-    // --- MÉTODOS DE CARGA Y GUARDADO ---
-
-    public static void guardarVisual() {
-        try (Writer writer = new FileWriter(ARCHIVO_VISUAL.toFile())) {
-            GSON.toJson(apariencia, writer);
-        } catch (IOException e) {
-            LOGGER.error("Error al guardar apariencia", e);
+    public static void save() {
+        try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
+            GSON.toJson(questConfig, writer);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
     public static void cargarMisionesAhora() {
+        load();
         misionesCargadas.clear();
-        try {
-            if (!Files.exists(CARPETA_QUESTS)) {
-                Files.createDirectories(CARPETA_QUESTS);
+        for (MisionData m : questConfig.misiones) {
+            if (m.textura != null && !m.textura.isEmpty()) {
+                m.iconoRL = net.minecraft.resources.ResourceLocation.tryParse(m.textura);
             }
-
-            // 1. Cargar Configuración Visual
-            if (Files.exists(ARCHIVO_VISUAL)) {
-                try (Reader reader = new FileReader(ARCHIVO_VISUAL.toFile())) {
-                    VisualConfig cargada = GSON.fromJson(reader, VisualConfig.class);
-                    if (cargada != null) apariencia = cargada;
+            for (Objetivo obj : m.objetivos) {
+                if (obj.item != null && !obj.item.isEmpty()) {
+                    obj.itemReal = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(net.minecraft.resources.ResourceLocation.tryParse(obj.item));
                 }
-            } else {
-                guardarVisual();
-            }
-
-            // 2. Cargar Misiones JSON
-            File[] archivos = CARPETA_QUESTS.toFile().listFiles((dir, name) ->
-                    name.endsWith(".json") && !name.equals("apariencia.json")
-            );
-
-            if (archivos == null || archivos.length == 0) {
-                crearEjemplo();
-                archivos = CARPETA_QUESTS.toFile().listFiles((dir, name) ->
-                        name.endsWith(".json") && !name.equals("apariencia.json")
-                );
-            }
-
-            if (archivos != null) {
-                for (File archivo : archivos) {
-                    try (Reader reader = new FileReader(archivo)) {
-                        MisionData[] arrayMisiones = GSON.fromJson(reader, MisionData[].class);
-                        if (arrayMisiones == null) continue;
-
-                        for (MisionData m : arrayMisiones) {
-                            if (m.mob == null) continue;
-
-                            List<MisionData> listaActual = misionesCargadas.computeIfAbsent(m.mob, k -> new ArrayList<>());
-
-                            if (listaActual.size() < LIMITE_MISIONES) {
-                                // Registrar Ítems de Objetivos
-                                if (m.objetivos != null) {
-                                    for (Objetivo obj : m.objetivos) {
-                                        if (obj.item != null && !obj.item.isEmpty()) {
-                                            obj.itemReal = ForgeRegistries.ITEMS.getValue(ResourceLocation.tryParse(obj.item));
-                                        }
-                                        if (obj.textura != null && !obj.textura.isEmpty()) {
-                                            obj.iconoRL = ResourceLocation.tryParse(obj.textura);
-                                        }
-                                    }
-                                }
-
-                                // Registrar Ítems de Recompensas
-                                if (m.recompensas != null) {
-                                    for (Recompensa rec : m.recompensas) {
-                                        rec.itemReal = ForgeRegistries.ITEMS.getValue(ResourceLocation.tryParse(rec.item));
-                                    }
-                                }
-
-                                // Configurar Textura/Icono
-                                String rutaTex = (m.textura != null && !m.textura.isEmpty()) ? m.textura : "minecraft:textures/item/paper.png";
-                                m.iconoRL = ResourceLocation.parse(rutaTex);
-
-                                listaActual.add(m);
-                            }
-                        }
-                    }
+                if (obj.textura != null && !obj.textura.isEmpty()) {
+                    obj.iconoRL = net.minecraft.resources.ResourceLocation.tryParse(obj.textura);
                 }
             }
-        } catch (Exception e) {
-            LOGGER.error("Error crítico al cargar la configuración de misiones", e);
+            for (Recompensa rec : m.recompensas) {
+                if (rec.item != null && !rec.item.isEmpty()) {
+                    rec.itemReal = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(net.minecraft.resources.ResourceLocation.tryParse(rec.item));
+                }
+            }
+            if (m.mob != null && !m.mob.isEmpty()) {
+                misionesCargadas.computeIfAbsent(m.mob, k -> new ArrayList<>()).add(m);
+            }
         }
+    }
+
+    public static void inyectarMisionesEnEditor() {}
+
+    public static MisionData getMisionPorNombre(String nombre) {
+        if (nombre == null) return null;
+        for (MisionData m : questConfig.misiones) {
+            if (nombre.equals(m.nombre)) return m;
+        }
+        return null;
+    }
+
+    private static void crearMisionesPorDefecto() {
+        questConfig.misiones = new ArrayList<>();
+
+        MisionData g1 = new MisionData();
+        g1.id = "granja_1_cosecha";
+        g1.nombre = "Problemas de Espalda";
+        g1.descripcion = "El granjero Bob necesita ayuda con su cosecha de trigo.";
+        g1.mob = "minecraft:villager";
+        g1.profession = "farmer";
+        g1.type = "plains";
+        g1.textura = "minecraft:textures/item/wheat.png";
+        g1.esPrimaria = true;
+
+        Objetivo objG1 = new Objetivo(); 
+        objG1.item = "minecraft:wheat"; 
+        objG1.cantidad = 10; 
+        objG1.texto = "Trigo fresco"; 
+        g1.objetivos.add(objG1);
         
-        inyectarMisionesEnEditor();
+        Recompensa recG1 = new Recompensa(); 
+        recG1.item = "minecraft:emerald"; 
+        recG1.cantidad = 2; 
+        g1.recompensas.add(recG1);
+
+        g1.puntos_de_entrada.put("sin_aceptar", "nodo_inicio");
+        g1.puntos_de_entrada.put("en_progreso", "nodo_espera");
+
+        g1.nodos.put("nodo_inicio", new NodoDialogo(
+            List.of(
+                "¡Uf, mi espalda! ¿Podrías traerme 10 de trigo? No me puedo ni agachar.",
+                "Ay, mi lumbalgia... Oye, forastero, ¿me echas una mano con la cosecha?",
+                "El sol quema y mis huesos crujen. ¿Me traes 10 de trigo del huerto?"
+            ),
+            List.of(
+                new OpcionDialogo(List.of("Claro, yo te ayudo.", "Cuenta conmigo, abuelo."), "ACEPTAR_MISION", "nodo_aceptacion"),
+                new OpcionDialogo(List.of("¿Y si te ayudo, me das algo a cambio?"), "NADA", "nodo_negociacion"),
+                new OpcionDialogo(List.of("¿Por qué no le pides a otro?"), "NADA", "nodo_queja"),
+                new OpcionDialogo(List.of("No tengo tiempo, viejo."), "NADA", "nodo_despedida_brusca")
+            )
+        ));
+
+        g1.nodos.put("nodo_despedida_brusca", new NodoDialogo(
+            List.of(
+                "Bah, jóvenes sin corazón. Vete, no necesito tu ayuda.",
+                "Está bien, ya encontraré a alguien más. Buenos días."
+            ),
+            null
+        ));
+
+        g1.nodos.put("nodo_negociacion", new NodoDialogo(
+            List.of(
+                "¡Ja! Si traes el trigo rápido, te doy dos hogazas encima. ¿Trato?",
+                "Listo para regatear, ¿eh? Trigo rápido, pan gratis. ¿Cerrado?"
+            ),
+            List.of(
+                new OpcionDialogo(List.of("Acepto el trato."), "ACEPTAR_MISION", "nodo_aceptacion"),
+                new OpcionDialogo(List.of("Prefiero solo las esmeraldas."), "ACEPTAR_MISION", "nodo_aceptacion")
+            )
+        ));
+
+        g1.nodos.put("nodo_queja", new NodoDialogo(
+            List.of(
+                "¡Porque los jóvenes de hoy ya no respetan a sus mayores! ¿Vas a ayudarme o no?",
+                "El resto está ocupado. Tú eres el único que no parece tener prisa. ¿Y bien?"
+            ),
+            List.of(
+                new OpcionDialogo(List.of("Está bien, lo haré."), "ACEPTAR_MISION", "nodo_aceptacion"),
+                new OpcionDialogo(List.of("Sigue quejándote, me voy."), "NADA", "nodo_historia_inicio")
+            )
+        ));
+
+        g1.nodos.put("nodo_historia_inicio", new NodoDialogo(
+            List.of(
+                "Tenía una familia... esposa, un hijo. Cuando la guerra llegó, lo perdí todo.",
+                "Mi hijo soñaba con ser granjero como yo. Ahora solo tengo recuerdos..."
+            ),
+            List.of(
+                new OpcionDialogo(List.of("¿Qué pasó con ellos?"), "NADA", "nodo_historia_cont"),
+                new OpcionDialogo(List.of("Lo siento, no sabía..."), "NADA", "nodo_historia_final")
+            )
+        ));
+
+        g1.nodos.put("nodo_historia_cont", new NodoDialogo(
+            List.of(
+                "Los esqueletos llegaron una noche fría. Prendieron fuego a todo.",
+                "El humo, los gritos... todavía los escucho en mis pesadillas."
+            ),
+            List.of(
+                new OpcionDialogo(List.of("Te ayudaré con la cosecha. Por ellos."), "ACEPTAR_MISION", "nodo_aceptacion"),
+                new OpcionDialogo(List.of("No sé qué decir..."), "NADA", "nodo_historia_final")
+            )
+        ));
+
+        g1.nodos.put("nodo_historia_final", new NodoDialogo(
+            List.of(
+                "No hace falta que digas nada. El silencio a veces es la mejor compañía.",
+                "Basta de charla. Si quieres ayudar, el trigo no se cosecha solo."
+            ),
+            List.of(
+                new OpcionDialogo(List.of("Está bien, iré a cosechar."), "ACEPTAR_MISION", "nodo_aceptacion"),
+                new OpcionDialogo(List.of("Solo quería escuchar. Adiós."), "CERRAR", "")
+            )
+        ));
+
+        g1.nodos.put("nodo_aceptacion", new NodoDialogo(
+            List.of(
+                "¡Gracias a los cielos! La cosecha está al este. Tráemelo rápido.",
+                "Dios te lo pague. El huerto está al este, donde la tierra se agrieta.",
+                "Gracias, muchacho. Ve al este y cuida con los lobos."
+            ),
+            List.of(
+                new OpcionDialogo(List.of("Entendido, voy ahora mismo."), "NADA", "nodo_agradecimiento")
+            )
+        ));
+
+        g1.nodos.put("nodo_agradecimiento", new NodoDialogo(
+            List.of(
+                "¡Muchas gracias, muchacho! Eres todo un héroe.",
+                "Dios te bendiga, viajero. Vuelve cuando tengas el trigo.",
+                "Te lo agradezco de corazón. Ten cuidado por el camino."
+            ),
+            null
+        ));
+
+        g1.nodos.put("nodo_espera", new NodoDialogo(
+            List.of(
+                "¿Aún sin el trigo? El pan no se hace solo.",
+                "¿Sigues dando vueltas? Los tallos se secan.",
+                "No me hagas suplicar. El campo necesita manos, no promesas."
+            ),
+            List.of(
+                new OpcionDialogo(List.of("Toma, ya lo tengo.", "Aquí tienes tu trigo."), "COMPROBAR_ENTREGA", "nodo_entrega", "nodo_mentira"),
+                new OpcionDialogo(List.of("Sigo en ello, ya casi."), "CERRAR", "")
+            )
+        ));
+
+        g1.nodos.put("nodo_mentira", new NodoDialogo(
+            List.of(
+                "¿Te crees muy gracioso? Tienes las manos vacías. ¡Ve a buscar el trigo!",
+                "No veo ningún trigo por aquí. No me hagas perder el tiempo, forastero.",
+                "¿Me estás viendo cara de tonto? Vuelve cuando tengas los materiales."
+            ),
+            null
+        ));
+
+        g1.nodos.put("nodo_entrega", new NodoDialogo(
+            List.of(
+                "¡Buen chico! Se ve sano y dorado. Justo lo que necesitaba para el molino.",
+                "Lo has traído a tiempo. El molino no para gracias a ti.",
+                "Dorado como el sol. Eres de fiar, muchacho."
+            ),
+            null
+        ));
+
+        g1.nodos.put("nodo_despedida", new NodoDialogo(
+            List.of(
+                "Vuelve luego. Puede que necesite ayuda con otra cosa. Que la tierra te sea fértil.",
+                "Si pasas por aquí, mi puerta estará abierta. Cuida esa espalda.",
+                "Gracias de nuevo. Los tiempos son duros, pero la gente buena aún queda."
+            ),
+            null
+        ));
+
+        questConfig.misiones.add(g1);
     }
 
-    public static void inyectarMisionesEnEditor() {
-        GlobalGuiSettings.PanelConfig maestro = null;
-        GlobalGuiSettings.PanelConfig soloPrincipal = null;
-        GlobalGuiSettings.PanelConfig soloSecundaria = null;
+    public static class QuestConfig { public List<MisionData> misiones = new ArrayList<>(); }
 
-        // Buscamos si ya existen en la lista para no duplicarlos
-        for (GlobalGuiSettings.PanelConfig p : GlobalGuiSettings.PANELES) {
-            if (p.tipo.equals("DESPLEGABLE_MAESTRO")) {
-                maestro = p;
-                maestro.listaPrincipales.clear();
-                maestro.listaSecundarias.clear();
-            } else if (p.tipo.equals("DESPLEGABLE_PRINCIPAL")) {
-                soloPrincipal = p;
-                soloPrincipal.listaPrincipales.clear();
-            } else if (p.tipo.equals("DESPLEGABLE_SECUNDARIA")) {
-                soloSecundaria = p;
-                soloSecundaria.listaSecundarias.clear();
-            }
-        }
+    public static class MisionData {
+        public String id; public String nombre; public String descripcion;
+        public String mob; public String profession; public String type; public String textura;
+        public boolean esPrimaria;
+        
+        public transient net.minecraft.resources.ResourceLocation iconoRL;
 
-        // Si no los has creado tú manualmente, no hacemos nada (Evita que aparezcan solos)
-        if (maestro == null && soloPrincipal == null && soloSecundaria == null) {
-            return;
-        }
+        public RequisitosData requisitos = new RequisitosData();
+        public List<Objetivo> objetivos = new ArrayList<>();
+        public List<Recompensa> recompensas = new ArrayList<>();
 
-        java.util.Set<String> aceptadasDelCliente = new java.util.HashSet<>(GlobalGuiSettings.misionesAceptadasCliente);
+        public Map<String, String> puntos_de_entrada = new HashMap<>();
+        public Map<String, NodoDialogo> nodos = new HashMap<>();
+    }
 
-        for (java.util.Map.Entry<String, java.util.List<MisionData>> entry : misionesCargadas.entrySet()) {
-            for (MisionData m : entry.getValue()) {
-                String nombreMision = m.nombre;
-                boolean estaAceptada = false;
-                for (String keyAceptada : aceptadasDelCliente) {
-                    if (keyAceptada.contains(nombreMision.replace(" ", "_"))) {
-                        estaAceptada = true;
-                        break;
-                    }
-                }
-                if (!estaAceptada) continue;
+    public static class RequisitosData { public List<String> misiones_completadas = new ArrayList<>(); }
 
-                if (m.esPrimaria) {
-                    if (maestro != null) maestro.listaPrincipales.add(nombreMision);
-                    if (soloPrincipal != null) soloPrincipal.listaPrincipales.add(nombreMision);
-                } else {
-                    if (maestro != null) maestro.listaSecundarias.add(nombreMision);
-                    if (soloSecundaria != null) soloSecundaria.listaSecundarias.add(nombreMision);
-                }
-            }
+    public static class NodoDialogo {
+        public List<String> textoNPC = new ArrayList<>();
+        public List<OpcionDialogo> opciones = new ArrayList<>();
+        
+        public NodoDialogo() {}
+        public NodoDialogo(List<String> textoNPC, List<OpcionDialogo> opciones) { 
+            this.textoNPC = textoNPC; 
+            this.opciones = opciones != null ? opciones : new ArrayList<>(); 
         }
     }
 
-    private static void crearEjemplo() throws IOException {
-        File fileAldeanos = CARPETA_QUESTS.resolve("misiones_aldeanos.json").toFile();
-        List<MisionData> listaAldeanos = new ArrayList<>();
-
-        MisionData a1 = new MisionData();
-        a1.nombre = "Kit del Desierto";
-        a1.descripcion = "El bibliotecario necesita papel y algo de cuero para sus nuevos libros.";
-        a1.mob = "minecraft:villager";
-        a1.profession = "librarian";
-        a1.type = "desert";
-        a1.textura = "minecraft:textures/item/map.png";
-        a1.esPrimaria = true;
-
-        Objetivo obj1 = new Objetivo(); obj1.item = "minecraft:paper"; obj1.cantidad = 10; obj1.texto = "Papel antiguo";
-        Objetivo obj2 = new Objetivo(); obj2.item = "minecraft:leather"; obj2.cantidad = 2; obj2.texto = "Cuero resistente";
-        Objetivo obj3 = new Objetivo(); obj3.entidad = "minecraft:zombie"; obj3.cantidad = 5; obj3.texto = "Zombies Asesinados"; obj3.textura = "minecraft:textures/item/rotten_flesh.png";
-        a1.objetivos = List.of(obj1, obj2, obj3);
-
-        Recompensa rec1 = new Recompensa(); rec1.item = "minecraft:emerald"; rec1.cantidad = 2;
-        a1.recompensas = List.of(rec1);
-
-        a1.frases = List.of("¡Viajero!", "¿Podrías traerme materiales?");
-        a1.recordatorio = "¿Tienes las cosas?";
-        a1.error = "Aún te faltan materiales.";
-        a1.agradecimiento = "¡Excelente!";
-
-        listaAldeanos.add(a1);
-
-        try (Writer writerA = new FileWriter(fileAldeanos)) {
-            GSON.toJson(listaAldeanos, writerA);
+    public static class OpcionDialogo {
+        public List<String> texto = new ArrayList<>();
+        public String accion; 
+        public String destino;
+        public String destino_fallo;
+        
+        public OpcionDialogo() {}
+        public OpcionDialogo(List<String> texto, String accion, String destino) { 
+            this.texto = texto; 
+            this.accion = accion; 
+            this.destino = destino; 
         }
+        public OpcionDialogo(List<String> texto, String accion, String destino, String destino_fallo) { 
+            this.texto = texto; 
+            this.accion = accion; 
+            this.destino = destino; 
+            this.destino_fallo = destino_fallo;
+        }
+    }
+
+    public static class Objetivo {
+        public String entidad; public String item; public int cantidad; public String texto; public String textura;
+        public transient net.minecraft.world.item.Item itemReal;
+        public transient net.minecraft.resources.ResourceLocation iconoRL;
+    }
+
+    public static class Recompensa {
+        public String item; public int cantidad;
+        public transient net.minecraft.world.item.Item itemReal;
     }
 }
