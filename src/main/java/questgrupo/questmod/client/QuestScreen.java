@@ -27,6 +27,12 @@ public class QuestScreen extends Screen {
     private String textoNPCSeleccionado = "...";
     private final List<String> textosOpcionesSeleccionados = new ArrayList<>();
     
+    private final List<Integer> textScrollOffsets = new ArrayList<>();
+    private final List<Integer> scrollPauseTicks = new ArrayList<>();
+    private static final int SCROLL_SPEED = 2;
+    private static final int SCROLL_PAUSE = 60;
+    private static final int INITIAL_SCROLL_PAUSE = 30;
+    
     private int caracteresVisibles = 0;
     private int ticksTranscurridos = 0;
     private static final int VELOCIDAD_TEXTO = 1;
@@ -87,6 +93,12 @@ public class QuestScreen extends Screen {
             }
         } else {
             textoNPCSeleccionado = "...";
+        }
+        textScrollOffsets.clear();
+        scrollPauseTicks.clear();
+        for (int i = 0; i < textosOpcionesSeleccionados.size(); i++) {
+            textScrollOffsets.add(0);
+            scrollPauseTicks.add(INITIAL_SCROLL_PAUSE);
         }
     }
 
@@ -170,8 +182,17 @@ public class QuestScreen extends Screen {
             g.fill(bX + bW - 1, bY, bX + bW, bY + btnH, cDark);
 
             String texto = getTextoOpcion(i);
-            int textX = bX + (bW - this.font.width(texto)) / 2;
-            g.drawString(this.font, texto, textX, bY + (btnH - 8) / 2, C_BTN_TEXT, false);
+            int textFullWidth = this.font.width(texto);
+            int maxTextW = bW - 8;
+            if (textFullWidth > maxTextW) {
+                int offset = i < textScrollOffsets.size() ? textScrollOffsets.get(i) : 0;
+                g.enableScissor(bX, bY, bX + bW, bY + btnH);
+                g.drawString(this.font, texto, bX + 4 - offset, bY + (btnH - 8) / 2, C_BTN_TEXT, false);
+                g.disableScissor();
+            } else {
+                int textX = bX + (bW - textFullWidth) / 2;
+                g.drawString(this.font, texto, textX, bY + (btnH - 8) / 2, C_BTN_TEXT, false);
+            }
         }
     }
 
@@ -182,7 +203,7 @@ public class QuestScreen extends Screen {
 
     private String getTextoOpcion(int i) {
         if (i < textosOpcionesSeleccionados.size()) {
-            return (i + 1) + ". " + textosOpcionesSeleccionados.get(i);
+            return textosOpcionesSeleccionados.get(i);
         }
         return "";
     }
@@ -197,12 +218,12 @@ public class QuestScreen extends Screen {
                 if (!verificarObjetivos()) {
                     sigDestino = (opcion.destino_fallo != null && !opcion.destino_fallo.isEmpty()) ? opcion.destino_fallo : "CERRAR";
                 } else {
-                    Messages.sendToServer(new PacketAceptarMision(this.entidadUUID));
+                    Messages.sendToServer(new PacketAceptarMision(this.entidadUUID, this.mision.nombre));
                 }
             }
             
             if ("ACEPTAR_MISION".equals(opcion.accion)) {
-                Messages.sendToServer(new PacketAceptarMision(this.entidadUUID));
+                Messages.sendToServer(new PacketAceptarMision(this.entidadUUID, this.mision.nombre));
             }
             
             if ("CERRAR".equals(sigDestino) || "ACEPTAR_Y_CERRAR".equals(opcion.accion)) {
@@ -249,6 +270,32 @@ public class QuestScreen extends Screen {
         super.tick();
         if (caracteresVisibles < getTextoActual().length()) {
             if (++ticksTranscurridos >= VELOCIDAD_TEXTO) { caracteresVisibles++; ticksTranscurridos = 0; }
+        }
+        if (caracteresVisibles >= getTextoActual().length()) {
+            int numOps = getCantidadOpciones();
+            if (numOps == 0) return;
+            int pad = 12; int gap = 6;
+            int halfW = (BOX_W - pad * 2 - gap) / 2;
+            for (int i = 0; i < numOps && i < textScrollOffsets.size(); i++) {
+                String texto = getTextoOpcion(i);
+                int bW = (numOps == 1) ? (BOX_W - pad * 2) : halfW;
+                int maxTextW = bW - 8;
+                if (font.width(texto) > maxTextW) {
+                    int pause = scrollPauseTicks.get(i);
+                    if (pause > 0) {
+                        scrollPauseTicks.set(i, pause - 1);
+                    } else {
+                        int offset = textScrollOffsets.get(i) + SCROLL_SPEED;
+                        int fullWidth = font.width(texto) + 8;
+                        int maxOffset = fullWidth - maxTextW;
+                        if (offset >= maxOffset) {
+                            offset = 0;
+                            scrollPauseTicks.set(i, SCROLL_PAUSE);
+                        }
+                        textScrollOffsets.set(i, offset);
+                    }
+                }
+            }
         }
     }
 

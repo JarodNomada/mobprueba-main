@@ -904,6 +904,28 @@ this.inputColor.setResponder(s -> {
         // ¡ESTO ES CLAVE!: Si el clic ocurre en el lienzo (fuera de la RightBar), liberamos el teclado
         RightBar.capaEditandoNombre = null;
 
+        // GENERAR LISTAS DINÁMICAS PARA CLICS (Igual que en el renderizado visual)
+        java.util.List<String> misionesPrincipalesDyn = new java.util.ArrayList<>();
+        java.util.List<String> misionesSecundariasDyn = new java.util.ArrayList<>();
+        if (Config.questConfig != null && Config.questConfig.misiones != null) {
+            for (Config.MisionData m : Config.questConfig.misiones) {
+                if (m.nombre != null) {
+                    boolean estaAceptada = false;
+                    String mIdSufijo = "_" + m.nombre.replace(" ", "_");
+                    for (String questKey : GlobalGuiSettings.misionesAceptadasCliente) {
+                        if (questKey.endsWith(mIdSufijo)) {
+                            estaAceptada = true;
+                            break;
+                        }
+                    }
+                    if (estaAceptada) {
+                        if (m.esPrimaria) misionesPrincipalesDyn.add(m.nombre);
+                        else misionesSecundariasDyn.add(m.nombre);
+                    }
+                }
+            }
+        }
+
         // --- 1. ESCUDO Y MANEJO DEL MODAL DE COLOR ---
         if (TopBar.colorPickerVisible) {
             if (super.mouseClicked(mx, my, btn)) return true;
@@ -1069,70 +1091,72 @@ this.inputColor.setResponder(s -> {
                     }
                 }
 
-                if (p.tipo.equals("DESPLEGABLE_MAESTRO")) {
-                    if (mx >= p.x && mx <= p.x + p.ancho && my >= p.y && my <= p.y + p.alto) {
-                        int currentY = p.y + 5;
-                        int marginX = 5;
-                        int cardWidth = p.ancho - (marginX * 2);
+                if (p.tipo.startsWith("DESPLEGABLE")) {
+                    if (p.tipo.equals("DESPLEGABLE_MAESTRO")) {
+                        if (mx >= p.x && mx <= p.x + p.ancho && my >= p.y && my <= p.y + p.alto) {
+                            int currentY = p.y + 5 - p.scrollY;
+                            int marginX = 5;
+                            int cardWidth = p.ancho - (marginX * 2);
+                            int cardHeight = 30;
 
-                        if (mx >= p.x + marginX && mx <= p.x + marginX + cardWidth && my >= currentY - p.scrollY && my <= currentY + 15 - p.scrollY) {
-                            p.principalesAbierto = !p.principalesAbierto;
-                            return true;
-                        }
-                        currentY += 20;
+                            // 1. Cabecera de Principales
+                            if (mx >= p.x + marginX && mx <= p.x + marginX + cardWidth && my >= currentY && my <= currentY + 15) {
+                                p.principalesAbierto = !p.principalesAbierto;
+                                return true;
+                            }
+                            currentY += 20;
 
-                        if (p.principalesAbierto) {
-                            for (String s : p.listaPrincipales) {
-                                if (s != null && !s.isEmpty()) {
-                                    if (mx >= p.x + marginX && mx <= p.x + marginX + cardWidth && my >= currentY - p.scrollY && my <= currentY + 30 - p.scrollY) {
-                                        GlobalGuiSettings.misionSeleccionadaGlobal = s;
+                            // Misiones Principales
+                            if (p.principalesAbierto) {
+                                for (String missionName : misionesPrincipalesDyn) {
+                                    if (mx >= p.x + marginX && mx <= p.x + marginX + cardWidth && my >= currentY && my <= currentY + cardHeight) {
+                                        GlobalGuiSettings.misionSeleccionadaGlobal = missionName;
                                         return true;
                                     }
-                                    currentY += 35;
+                                    currentY += cardHeight + 5;
                                 }
                             }
-                        }
 
-                        if (mx >= p.x + marginX && mx <= p.x + marginX + cardWidth && my >= currentY - p.scrollY && my <= currentY + 15 - p.scrollY) {
-                            p.secundariasAbierto = !p.secundariasAbierto;
-                            return true;
-                        }
-                        currentY += 20;
+                            // 2. Cabecera de Secundarias
+                            if (mx >= p.x + marginX && mx <= p.x + marginX + cardWidth && my >= currentY && my <= currentY + 15) {
+                                p.secundariasAbierto = !p.secundariasAbierto;
+                                return true;
+                            }
+                            currentY += 20;
 
-                        if (p.secundariasAbierto) {
-                            for (String s : p.listaSecundarias) {
-                                if (s != null && !s.isEmpty()) {
-                                    if (mx >= p.x + marginX && mx <= p.x + marginX + cardWidth && my >= currentY - p.scrollY && my <= currentY + 30 - p.scrollY) {
-                                        GlobalGuiSettings.misionSeleccionadaGlobal = s;
+                            // Misiones Secundarias
+                            if (p.secundariasAbierto) {
+                                for (String missionName : misionesSecundariasDyn) {
+                                    if (mx >= p.x + marginX && mx <= p.x + marginX + cardWidth && my >= currentY && my <= currentY + cardHeight) {
+                                        GlobalGuiSettings.misionSeleccionadaGlobal = missionName;
                                         return true;
                                     }
-                                    currentY += 35;
+                                    currentY += cardHeight + 5;
                                 }
                             }
+                            return true;
                         }
-                        return true;
-                    }
-                } else if (p.tipo.startsWith("DESPLEGABLE")) {
-                    if (mx >= p.x && mx <= p.x + p.ancho && my >= p.y && my <= p.y + 20) {
-                        p.desplegado = !p.desplegado;
-                        return true;
-                    }
-                    if (p.desplegado && mx >= p.x && mx <= p.x + p.ancho && my >= p.y + 20 && my <= p.y + p.alto) {
-                        int bodyY = p.y + 20;
-                        int currentY = bodyY + 5;
-                        int marginX = 5;
-                        int cardWidth = p.ancho - (marginX * 2);
-                        java.util.List<String> misiones = p.tipo.equals("DESPLEGABLE_PRINCIPAL") ? p.listaPrincipales : p.listaSecundarias;
-                        for (String s : misiones) {
-                            if (s != null && !s.isEmpty()) {
-                                if (mx >= p.x + marginX && mx <= p.x + marginX + cardWidth && my >= currentY - p.scrollY && my <= currentY + 30 - p.scrollY) {
+                    } else {
+                        int headerHeight = 20;
+                        if (mx >= p.x && mx <= p.x + p.ancho && my >= p.y && my <= p.y + headerHeight) {
+                            p.desplegado = !p.desplegado;
+                            return true;
+                        }
+                        if (p.desplegado && mx >= p.x && mx <= p.x + p.ancho && my >= p.y + headerHeight && my <= p.y + p.alto) {
+                            int bodyY = p.y + headerHeight;
+                            int currentY = bodyY + 5 - p.scrollY;
+                            int marginX = 5;
+                            int cardWidth = p.ancho - (marginX * 2);
+                            java.util.List<String> misiones = p.tipo.equals("DESPLEGABLE_PRINCIPAL") ? misionesPrincipalesDyn : misionesSecundariasDyn;
+                            for (String s : misiones) {
+                                if (mx >= p.x + marginX && mx <= p.x + marginX + cardWidth && my >= currentY && my <= currentY + 30) {
                                     GlobalGuiSettings.misionSeleccionadaGlobal = s;
                                     return true;
                                 }
                                 currentY += 35;
                             }
+                            return true;
                         }
-                        return true;
                     }
                 }
             }
@@ -1198,7 +1222,7 @@ this.inputColor.setResponder(s -> {
                                 }
                                 currentY += 20;
                                 if (p.principalesAbierto) {
-                                    for (String mName : p.listaPrincipales) {
+                                    for (String mName : misionesPrincipalesDyn) {
                                         if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 30) {
                                             vincularMisionADetalle(mName); return true;
                                         }
@@ -1212,7 +1236,7 @@ this.inputColor.setResponder(s -> {
                                 }
                                 currentY += 20;
                                 if (p.secundariasAbierto) {
-                                    for (String mName : p.listaSecundarias) {
+                                    for (String mName : misionesSecundariasDyn) {
                                         if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && relY >= currentY && relY <= currentY + 30) {
                                             vincularMisionADetalle(mName); return true;
                                         }
@@ -1223,7 +1247,7 @@ this.inputColor.setResponder(s -> {
                             if (!p.tipo.equals("DESPLEGABLE_MAESTRO") && p.desplegado) {
                                 int rY = (int)(my - (p.y + 20) + p.scrollY);
                                 int curY = 5;
-                                List<String> misiones = p.tipo.equals("DESPLEGABLE_PRINCIPAL") ? p.listaPrincipales : p.listaSecundarias;
+                                List<String> misiones = p.tipo.equals("DESPLEGABLE_PRINCIPAL") ? misionesPrincipalesDyn : misionesSecundariasDyn;
                                 for (String mName : misiones) {
                                     if (mx >= p.x + 5 && mx <= p.x + p.ancho - 5 && rY >= curY && rY <= curY + 30) {
                                         vincularMisionADetalle(mName); return true;

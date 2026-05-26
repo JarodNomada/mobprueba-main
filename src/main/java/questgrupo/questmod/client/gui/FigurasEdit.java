@@ -860,13 +860,9 @@ public static void crearBotonPagina(int numPagina) {
             }
         } else if (p.tipo.equals("DETALLE_MISION")) {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
-            Config.MisionData data = null;
-
-            for (java.util.List<Config.MisionData> lista : Config.misionesCargadas.values()) {
-                for (Config.MisionData m : lista) {
-                    if (m.nombre != null && m.nombre.equals(p.textoAsociado)) { data = m; break; }
-                }
-            }
+            String target = (p.textoAsociado != null && !p.textoAsociado.trim().isEmpty() && !p.textoAsociado.equals("Selecciona una mision")) 
+                            ? p.textoAsociado : GlobalGuiSettings.misionSeleccionadaGlobal;
+            Config.MisionData data = Config.getMisionPorNombre(target);
 
             g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
             g.renderOutline(p.x, p.y, p.ancho, p.alto, p.colorBorde);
@@ -986,7 +982,8 @@ public static void crearBotonPagina(int numPagina) {
             g.pose().popPose();
         } else if (p.tipo.equals("MISION_TITULO")) {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
-            Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
+            String target = (p.textoAsociado != null && !p.textoAsociado.trim().isEmpty()) ? p.textoAsociado : GlobalGuiSettings.misionSeleccionadaGlobal;
+            Config.MisionData data = Config.getMisionPorNombre(target);
             String texto = (data != null) ? data.nombre : "Titulo (Toca una mision)";
             if (p.mayusculas) texto = texto.toUpperCase();
 
@@ -1005,7 +1002,8 @@ public static void crearBotonPagina(int numPagina) {
             g.pose().popPose();
         } else if (p.tipo.equals("MISION_DESCRIPCION")) {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
-            Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
+            String target = (p.textoAsociado != null && !p.textoAsociado.trim().isEmpty()) ? p.textoAsociado : GlobalGuiSettings.misionSeleccionadaGlobal;
+            Config.MisionData data = Config.getMisionPorNombre(target);
             String texto = (data != null) ? data.descripcion : "Descripcion (Toca una mision)";
             if (p.mayusculas) texto = texto.toUpperCase();
 
@@ -1021,7 +1019,8 @@ public static void crearBotonPagina(int numPagina) {
             g.pose().popPose();
         } else if (p.tipo.equals("MISION_OBJETIVOS")) {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
-            Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
+            String target = (p.textoAsociado != null && !p.textoAsociado.trim().isEmpty()) ? p.textoAsociado : GlobalGuiSettings.misionSeleccionadaGlobal;
+            Config.MisionData data = Config.getMisionPorNombre(target);
 
             int r = p.redondezBorde;
             drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, r, p.colorARGB, p.colorBorde);
@@ -1124,7 +1123,8 @@ public static void crearBotonPagina(int numPagina) {
             }
             if (seleccionado) g.renderOutline(p.x - 1, p.y - 1, p.ancho + 2, p.alto + 2, 0xFF00DECA);
         } else if (p.tipo.equals("MISION_ICONO")) {
-            Config.MisionData data = Config.getMisionPorNombre(GlobalGuiSettings.misionSeleccionadaGlobal);
+            String target = (p.textoAsociado != null && !p.textoAsociado.trim().isEmpty()) ? p.textoAsociado : GlobalGuiSettings.misionSeleccionadaGlobal;
+            Config.MisionData data = Config.getMisionPorNombre(target);
 
             drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, p.redondezBorde, p.colorARGB, p.colorBorde);
 
@@ -1155,6 +1155,27 @@ public static void crearBotonPagina(int numPagina) {
         } else if (p.tipo.startsWith("DESPLEGABLE")) {
             int t = 1;
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
+
+            java.util.List<String> misionesPrincipalesDyn = new java.util.ArrayList<>();
+            java.util.List<String> misionesSecundariasDyn = new java.util.ArrayList<>();
+            if (Config.questConfig != null && Config.questConfig.misiones != null) {
+                for (Config.MisionData m : Config.questConfig.misiones) {
+                    if (m.nombre != null) {
+                        boolean estaAceptada = false;
+                        String mIdSufijo = "_" + m.nombre.replace(" ", "_");
+                        for (String questKey : GlobalGuiSettings.misionesAceptadasCliente) {
+                            if (questKey.endsWith(mIdSufijo)) {
+                                estaAceptada = true;
+                                break;
+                            }
+                        }
+                        if (estaAceptada) {
+                            if (m.esPrimaria) misionesPrincipalesDyn.add(m.nombre);
+                            else misionesSecundariasDyn.add(m.nombre);
+                        }
+                    }
+                }
+            }
 
             if (p.tipo.equals("DESPLEGABLE_MAESTRO")) {
                 drawRoundedBox(g, p.x, p.y, p.ancho, p.alto, p.redondezBorde, p.colorARGB, p.colorBorde);
@@ -1187,8 +1208,7 @@ public static void crearBotonPagina(int numPagina) {
                 currentY += 20;
 
                 if (p.principalesAbierto) {
-                    List<String> principales = p.listaPrincipales != null ? p.listaPrincipales : List.of();
-                    for (String missionName : principales) {
+                    for (String missionName : misionesPrincipalesDyn) {
                         if (missionName != null && !missionName.isEmpty()) {
                             drawDummyMission(g, font, p, currentY, marginX, cardWidth, cardHeight, missionName);
                             currentY += cardHeight + 5;
@@ -1211,8 +1231,7 @@ public static void crearBotonPagina(int numPagina) {
                 currentY += 20;
 
                 if (p.secundariasAbierto) {
-                    List<String> secundarias = p.listaSecundarias != null ? p.listaSecundarias : List.of();
-                    for (String missionName : secundarias) {
+                    for (String missionName : misionesSecundariasDyn) {
                         if (missionName != null && !missionName.isEmpty()) {
                             drawDummyMission(g, font, p, currentY, marginX, cardWidth, cardHeight, missionName);
                             currentY += cardHeight + 5;
@@ -1253,9 +1272,9 @@ public static void crearBotonPagina(int numPagina) {
                     int cardHeight = 30;
                     int cardWidth = p.ancho - (marginX * 2);
 
-                    List<String> misiones = p.tipo.equals("DESPLEGABLE_PRINCIPAL")
-                            ? p.listaPrincipales
-                            : p.listaSecundarias;
+                    java.util.List<String> misiones = p.tipo.equals("DESPLEGABLE_PRINCIPAL")
+                            ? misionesPrincipalesDyn
+                            : misionesSecundariasDyn;
 
                     for (String missionName : misiones) {
                         if (missionName != null && !missionName.isEmpty()) {
@@ -1296,7 +1315,7 @@ public static void crearBotonPagina(int numPagina) {
             g.fill(p.x, p.y, p.x + p.ancho, p.y + p.alto, p.colorARGB);
         }
 
-        if (p.textoAsociado != null && (!p.textoAsociado.isEmpty() || escribiendo) && !p.tipo.startsWith("DESPLEGABLE")) {
+        if (p.textoAsociado != null && (!p.textoAsociado.isEmpty() || escribiendo) && !p.tipo.startsWith("DESPLEGABLE") && !p.tipo.startsWith("MISION_") && !p.tipo.equals("DETALLE_MISION")) {
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
 
             float scaledTextHeight = font.lineHeight * p.escalaTexto;

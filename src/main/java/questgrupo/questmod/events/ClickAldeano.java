@@ -2,6 +2,8 @@ package questgrupo.questmod.events;
 
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.item.ItemStack;
@@ -28,6 +30,9 @@ public class ClickAldeano {
     private static final Set<String> misionesFinalizadas = new HashSet<>();
     private static final Map<UUID, UUID> entidadesMirandoJugador = new HashMap<>();
     public static final Map<String, Integer> progresoMuertes = new HashMap<>();
+
+    // SISTEMA ANTI-SPAM: Previene que paquetes duplicados auto-completen misiones instantáneamente
+    private static final Map<UUID, Long> networkCooldowns = new HashMap<>();
 
     public static boolean esMisionAceptada(String key) { return misionesAceptadas.contains(key); }
     public static boolean esMisionFinalizada(String key) { return misionesFinalizadas.contains(key); }
@@ -88,7 +93,9 @@ public class ClickAldeano {
 
     @SubscribeEvent
     public static void alHacerClic(PlayerInteractEvent.EntityInteract event) {
-        if (event.getHand() != event.getEntity().getUsedItemHand()) return;
+        // CORRECCIÓN: Filtro seguro para evitar que el evento se dispare dos veces en Forge
+        if (event.getHand() == InteractionHand.OFF_HAND) return;
+
         if (Config.misionesCargadas.isEmpty()) Config.cargarMisionesAhora();
 
         ResourceLocation idEntidad = ForgeRegistries.ENTITY_TYPES.getKey(event.getTarget().getType());
@@ -100,7 +107,7 @@ public class ClickAldeano {
 
             if (misionValida != null) {
                 event.setCanceled(true);
-                event.setCancellationResult(net.minecraft.world.InteractionResult.SUCCESS);
+                event.setCancellationResult(InteractionResult.SUCCESS);
 
                 registrarMirada(event.getTarget(), event.getEntity());
 
@@ -117,73 +124,80 @@ public class ClickAldeano {
         }
     }
 
-    public static void registrarAceptacion(ServerPlayer player, UUID targetUUID) {
-        Entity target = player.serverLevel().getEntity(targetUUID);
-        if (target != null) {
-            ResourceLocation idEntidad = ForgeRegistries.ENTITY_TYPES.getKey(target.getType());
-            List<Config.MisionData> lista = Config.misionesCargadas.get(idEntidad.toString());
-            Config.MisionData misionActual = obtenerMisionParaEntidad(player, target, lista);
+    public static void registrarAceptacion(ServerPlayer player, UUID targetUUID, String missionName) {
+        // CORRECCIÓN: Evita el auto-completado por doble paquete
+        long now = System.currentTimeMillis();
+        if (now - networkCooldowns.getOrDefault(player.getUUID(), 0L) < 400) return;
+        networkCooldowns.put(player.getUUID(), now);
 
-            if (misionActual != null) {
-                String questKey = generarQuestKey(player, target, misionActual);
-                if (!misionesFinalizadas.contains(questKey)) {
-                    if (!misionesAceptadas.contains(questKey)) {
-                        misionesAceptadas.add(questKey);
-                        Messages.sendToPlayer(new PacketMisionesSync(new HashSet<>(misionesAceptadas), new HashSet<>(misionesFinalizadas)), player);
-                    } else {
-                        procesarEntregaMision(player, targetUUID);
-                    }
-                }
+        Config.MisionData misionActual = Config.getMisionPorNombre(missionName);
+        if (misionActual == null) return;
+
+        Entity target = player.serverLevel().getEntity(targetUUID);
+        if (target == null) return;
+
+        String questKey = generarQuestKey(player, target, misionActual);
+        if (!misionesFinalizadas.contains(questKey)) {
+            if (!misionesAceptadas.contains(questKey)) {
+                misionesAceptadas.add(questKey);
+                Messages.sendToPlayer(new PacketMisionesSync(new HashSet<>(misionesAceptadas), new HashSet<>(misionesFinalizadas)), player);
+            } else {
+                procesarEntregaMision(player, targetUUID, missionName);
             }
         }
     }
 
-    public static void procesarEntregaMision(ServerPlayer player, UUID targetUUID) {
+    public static void procesarEntregaMision(ServerPlayer player, UUID targetUUID, String missionName) {
+        // Actualizamos el cooldown también aquí por seguridad
+        networkCooldowns.put(player.getUUID(), System.currentTimeMillis());
+
+        Config.MisionData misionFinal = Config.getMisionPorNombre(missionName);
+        if (misionFinal == null) return;
+
         Entity entidad = player.serverLevel().getEntity(targetUUID);
         if (entidad == null) return;
 
-        ResourceLocation idEntidad = ForgeRegistries.ENTITY_TYPES.getKey(entidad.getType());
-        List<Config.MisionData> misiones = Config.misionesCargadas.get(idEntidad.toString());
-        Config.MisionData misionFinal = obtenerMisionParaEntidad(player, entidad, misiones);
+        String questKey = generarQuestKey(player, entidad, misionFinal);
 
-        if (misionFinal != null) {
-            String questKey = generarQuestKey(player, entidad, misionFinal);
-
-            boolean tieneTodo = true;
-            for (Config.Objetivo obj : misionFinal.objetivos) {
-                if (obj.entidad != null && !obj.entidad.isEmpty()) {
-                    String progressKey = player.getUUID().toString() + "_" + questKey + "_" + obj.entidad;
-                    if (progresoMuertes.getOrDefault(progressKey, 0) < obj.cantidad) {
-                        tieneTodo = false; break;
-                    }
-                } else if (obj.itemReal != null) {
+        boolean tieneTodo = true;
+        for (Config.Objetivo obj : misionFinal.objetivos) {
+            if (obj.entidad != null && !obj.entidad.isEmpty()) {
+                String progressKey = player.getUUID().toString() + "_" + questKey + "_" + obj.entidad;
+                if (progresoMuertes.getOrDefault(progressKey, 0) < obj.cantidad) {
+                    tieneTodo = false; break;
+                }
+            } else if (obj.item != null && !obj.item.isEmpty()) {
+                // CORRECCIÓN: Evitar completado automático si el ítem cargó mal
+                if (obj.itemReal != null) {
                     if (player.getInventory().countItem(obj.itemReal) < obj.cantidad) {
                         tieneTodo = false; break;
                     }
+                } else {
+                    tieneTodo = false; break;
                 }
             }
+        }
 
-            if (tieneTodo) {
-                for (Config.Objetivo obj : misionFinal.objetivos) {
-                    if (obj.itemReal != null) {
-                        player.getInventory().clearOrCountMatchingItems(p -> p.getItem() == obj.itemReal, obj.cantidad, player.inventoryMenu.getCraftSlots());
-                    }
+        if (tieneTodo) {
+            for (Config.Objetivo obj : misionFinal.objetivos) {
+                if (obj.itemReal != null) {
+                    player.getInventory().clearOrCountMatchingItems(p -> p.getItem() == obj.itemReal, obj.cantidad, player.inventoryMenu.getCraftSlots());
                 }
-                for (Config.Recompensa rec : misionFinal.recompensas) {
-                    if (rec.itemReal != null) {
-                        player.addItem(new ItemStack(rec.itemReal, rec.cantidad));
-                    }
-                }
-                misionesAceptadas.remove(questKey);
-                misionesFinalizadas.add(questKey);
-
-                for (Config.Objetivo obj : misionFinal.objetivos) {
-                    if (obj.entidad != null && !obj.entidad.isEmpty()) {
-                        progresoMuertes.remove(player.getUUID().toString() + "_" + questKey + "_" + obj.entidad);
-                    }
-                }
-                Messages.sendToPlayer(new PacketMisionesSync(new HashSet<>(misionesAceptadas), new HashSet<>(misionesFinalizadas)), player);
             }
+            for (Config.Recompensa rec : misionFinal.recompensas) {
+                if (rec.itemReal != null) {
+                    player.addItem(new ItemStack(rec.itemReal, rec.cantidad));
+                }
+            }
+            misionesAceptadas.remove(questKey);
+            misionesFinalizadas.add(questKey);
+
+            for (Config.Objetivo obj : misionFinal.objetivos) {
+                if (obj.entidad != null && !obj.entidad.isEmpty()) {
+                    progresoMuertes.remove(player.getUUID().toString() + "_" + questKey + "_" + obj.entidad);
+                }
+            }
+            Messages.sendToPlayer(new PacketMisionesSync(new HashSet<>(misionesAceptadas), new HashSet<>(misionesFinalizadas)), player);
         }
     }
 
@@ -237,13 +251,30 @@ public class ClickAldeano {
     }
 
     private static Config.MisionData obtenerMisionParaEntidad(Entity jugador, Entity entidad, List<Config.MisionData> misiones) {
-        if (misiones == null) return null;
+        if (misiones == null || misiones.isEmpty()) return null;
+
+        // CORRECCIÓN: 1° PASADA - Prioridad absoluta a la misión que ya esté en curso con este NPC.
+        for (Config.MisionData m : misiones) {
+            String questKey = generarQuestKey(jugador, entidad, m);
+            if (misionesAceptadas.contains(questKey) && !misionesFinalizadas.contains(questKey)) {
+                if (entidad instanceof Villager villager) {
+                    String prof = ForgeRegistries.VILLAGER_PROFESSIONS.getKey(villager.getVillagerData().getProfession()).getPath();
+                    String type = net.minecraft.core.registries.BuiltInRegistries.VILLAGER_TYPE.getKey(villager.getVillagerData().getType()).getPath();
+                    boolean pOk = m.profession == null || m.profession.isEmpty() || m.profession.contains(prof);
+                    boolean tOk = m.type == null || m.type.isEmpty() || m.type.contains(type);
+                    if (!pOk || !tOk) continue;
+                }
+                return m; // Devuelve la misión activa para mostrar el "nodo_espera"
+            }
+        }
+
+        // CORRECCIÓN: 2° PASADA - Si no hay ninguna activa, buscamos la primera nueva disponible.
         for (Config.MisionData m : misiones) {
             String questKey = generarQuestKey(jugador, entidad, m);
             if (misionesFinalizadas.contains(questKey)) continue;
 
             boolean cumpleRequisitos = true;
-            if (m.requisitos != null && m.requisitos.misiones_completadas != null) {
+            if (m.requisitos != null && m.requisitos.misiones_completadas != null && !m.requisitos.misiones_completadas.isEmpty()) {
                 for (String reqId : m.requisitos.misiones_completadas) {
                     boolean found = false;
                     for (String qk : misionesFinalizadas) {
@@ -263,13 +294,14 @@ public class ClickAldeano {
             if (entidad instanceof Villager villager) {
                 String prof = ForgeRegistries.VILLAGER_PROFESSIONS.getKey(villager.getVillagerData().getProfession()).getPath();
                 String type = net.minecraft.core.registries.BuiltInRegistries.VILLAGER_TYPE.getKey(villager.getVillagerData().getType()).getPath();
-                boolean pOk = m.profession == null || m.profession.isEmpty() || m.profession.equals(prof);
-                boolean tOk = m.type == null || m.type.isEmpty() || m.type.equals(type);
-                if (pOk && tOk) return m;
-            } else {
-                return m;
+                boolean pOk = m.profession == null || m.profession.isEmpty() || m.profession.contains(prof);
+                boolean tOk = m.type == null || m.type.isEmpty() || m.type.contains(type);
+                if (!pOk || !tOk) continue;
             }
+
+            return m; // Devuelve esta nueva misión
         }
+
         return null;
     }
 }

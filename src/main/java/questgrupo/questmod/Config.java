@@ -12,27 +12,42 @@ import java.util.List;
 import java.util.Map;
 
 public class Config {
-    private static final File CONFIG_FILE = new File(FMLPaths.CONFIGDIR.get().toFile(), "questnomas_misiones.json");
+    private static final File CONFIG_DIR = new File(FMLPaths.CONFIGDIR.get().toFile(), "questnomas/misiones");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
     public static QuestConfig questConfig = new QuestConfig();
     public static Map<String, List<MisionData>> misionesCargadas = new HashMap<>();
 
     public static void load() {
-        if (CONFIG_FILE.exists()) {
-            try (FileReader reader = new FileReader(CONFIG_FILE)) {
-                questConfig = GSON.fromJson(reader, QuestConfig.class);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
+        if (!CONFIG_DIR.exists()) {
+            CONFIG_DIR.mkdirs();
+        }
+        questConfig.misiones.clear();
+        File[] files = CONFIG_DIR.listFiles((dir, name) -> name.endsWith(".json"));
+        if (files == null || files.length == 0) {
             crearMisionesPorDefecto();
-            save();
+            files = CONFIG_DIR.listFiles((dir, name) -> name.endsWith(".json"));
+        }
+        if (files != null) {
+            for (File file : files) {
+                try (FileReader reader = new FileReader(file)) {
+                    QuestConfig partial = GSON.fromJson(reader, QuestConfig.class);
+                    if (partial != null && partial.misiones != null) {
+                        questConfig.misiones.addAll(partial.misiones);
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error loading " + file.getName() + ": " + e.getMessage());
+                }
+            }
         }
     }
 
     public static void save() {
-        try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
+        if (!CONFIG_DIR.exists()) {
+            CONFIG_DIR.mkdirs();
+        }
+        File saveFile = new File(CONFIG_DIR, "_autosave.json");
+        try (FileWriter writer = new FileWriter(saveFile)) {
             GSON.toJson(questConfig, writer);
         } catch (Exception e) {
             e.printStackTrace();
@@ -67,6 +82,26 @@ public class Config {
 
     public static void inyectarMisionesEnEditor() {}
 
+    public static java.util.List<String> getNombresMisionesPrincipales() {
+        java.util.List<String> result = new java.util.ArrayList<>();
+        if (questConfig != null && questConfig.misiones != null) {
+            for (MisionData m : questConfig.misiones) {
+                if (m.nombre != null && m.esPrimaria) result.add(m.nombre);
+            }
+        }
+        return result;
+    }
+
+    public static java.util.List<String> getNombresMisionesSecundarias() {
+        java.util.List<String> result = new java.util.ArrayList<>();
+        if (questConfig != null && questConfig.misiones != null) {
+            for (MisionData m : questConfig.misiones) {
+                if (m.nombre != null && !m.esPrimaria) result.add(m.nombre);
+            }
+        }
+        return result;
+    }
+
     public static MisionData getMisionPorNombre(String nombre) {
         if (nombre == null) return null;
         for (MisionData m : questConfig.misiones) {
@@ -76,7 +111,7 @@ public class Config {
     }
 
     private static void crearMisionesPorDefecto() {
-        questConfig.misiones = new ArrayList<>();
+        QuestConfig defaultConfig = new QuestConfig();
 
         MisionData g1 = new MisionData();
         g1.id = "granja_1_cosecha";
@@ -238,7 +273,14 @@ public class Config {
             null
         ));
 
-        questConfig.misiones.add(g1);
+        defaultConfig.misiones.add(g1);
+
+        File defaultFile = new File(CONFIG_DIR, "granjero.json");
+        try (FileWriter writer = new FileWriter(defaultFile)) {
+            GSON.toJson(defaultConfig, writer);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static class QuestConfig { public List<MisionData> misiones = new ArrayList<>(); }
