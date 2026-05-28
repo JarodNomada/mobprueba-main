@@ -51,6 +51,15 @@ public class EditorScreen extends Screen {
     private boolean drawingBrush = false;
     private GlobalGuiSettings.BrushStroke currentStroke = null;
 
+    // -- MODAL GESTOR DE GUIs --
+    private boolean mostrarModalGestorGuis = false;
+    private java.util.List<String> listaGuisDisponibles = new java.util.ArrayList<>();
+    private String selectedGuiForLoading = null;
+    private boolean mostrarPopupGuardar = false;
+    private net.minecraft.client.gui.components.EditBox inputGuardarNombre;
+    private Button btnGuardarConfirmar;
+    private Button btnGuardarCancelar;
+
     public EditorScreen(Screen lastScreen) {
         super(Component.literal("Editor 1.20.1"));
         this.lastScreen = lastScreen;
@@ -113,6 +122,42 @@ public class EditorScreen extends Screen {
         });
         this.buscadorTexturas.visible = false;
         this.addRenderableWidget(this.buscadorTexturas);
+
+        // Carga automática del layout seleccionado
+        questgrupo.questmod.client.GuiLayoutManager.cargarLayoutAutomatico();
+
+        // 4. ELEMENTOS PARA EL POPUP GUARDAR DEL GESTOR DE GUIs
+        int ppX = (this.width - 160) / 2, ppY = (this.height - 90) / 2;
+
+        this.inputGuardarNombre = new net.minecraft.client.gui.components.EditBox(this.font, ppX + 12, ppY + 24, 136, 12, net.minecraft.network.chat.Component.literal("Nombre")) {
+            @Override
+            public void render(net.minecraft.client.gui.GuiGraphics g, int mx, int my, float pt) {
+                if (!isVisible()) return;
+                String txt = font.plainSubstrByWidth(getValue(), getInnerWidth());
+                int tx = getX();
+                int ty = getY() + (getHeight() - 8) / 2;
+                g.drawString(font, txt, tx, ty, 0xFFFFFFFF, false);
+            }
+        };
+        this.inputGuardarNombre.setMaxLength(30);
+        this.inputGuardarNombre.setBordered(false);
+        this.inputGuardarNombre.setTextColor(0xFFFFFFFF);
+        this.inputGuardarNombre.visible = false;
+        this.addRenderableWidget(this.inputGuardarNombre);
+
+        this.btnGuardarConfirmar = Button.builder(net.minecraft.network.chat.Component.literal("Aceptar"), b -> {
+            String nombre = this.inputGuardarNombre.getValue().trim();
+            if (!nombre.isEmpty()) {
+                questgrupo.questmod.client.GuiLayoutManager.guardarLayout(nombre);
+                this.listaGuisDisponibles = questgrupo.questmod.client.GuiLayoutManager.obtenerListaLayouts();
+                this.selectedGuiForLoading = nombre;
+            }
+            this.mostrarPopupGuardar = false;
+            this.inputGuardarNombre.visible = false;
+            this.btnGuardarConfirmar.visible = false;
+        }).bounds(ppX + 50, ppY + 48, 60, 20).build();
+        this.btnGuardarConfirmar.visible = false;
+        this.addRenderableWidget(this.btnGuardarConfirmar);
 
         // 3. AHORA SÍ, LO DEMÁS
         this.inputColor = new EditBox(this.font, 0, 0, 60, 12, Component.literal(""));
@@ -623,6 +668,83 @@ this.inputColor.setResponder(s -> {
         if (menuRotarVisible) dibujarMenuRotar(g, mx, my);
         if (spacingPanelVisible) dibujarPanelEspaciado(g, mx, my);
 
+        // --- MODAL GESTOR DE GUIs ---
+        if (mostrarModalGestorGuis) {
+            int mgW = 260, mgH = 220;
+            int mgX = (this.width - mgW) / 2, mgY = (this.height - mgH) / 2;
+            g.fill(0, 0, this.width, this.height, 0x66000000);
+
+            drawRoundedRect(g, mgX - 1, mgY - 1, mgW + 2, mgH + 2, 0xFF555555);
+            drawRoundedRect(g, mgX, mgY, mgW, mgH, 0xFFC6C6C6);
+
+            String titulo = "Gestor GUI";
+            g.drawString(font, titulo, mgX + (mgW - font.width(titulo))/2, mgY + 15, 0xFF202020, false);
+
+            boolean hoverX = mx >= mgX + mgW - 20 && mx <= mgX + mgW - 6 && my >= mgY + 4 && my <= mgY + 18;
+            g.drawString(font, "X", mgX + mgW - 16, mgY + 14, hoverX ? 0xFF000000 : 0xFF555555, false);
+
+            int btnY = mgY + 30;
+            boolean hoverImportar = mx >= mgX + 30 && mx <= mgX + 90 && my >= btnY && my <= btnY + 18;
+            boolean hoverGuardar = mx >= mgX + 100 && mx <= mgX + 160 && my >= btnY && my <= btnY + 18;
+            boolean hoverEliminar = mx >= mgX + 170 && mx <= mgX + 230 && my >= btnY && my <= btnY + 18;
+            LeftSidebar.drawVanillaButtonHover(g, font, mgX + 30, btnY, 60, 18, "Importar", hoverImportar);
+            LeftSidebar.drawVanillaButtonHover(g, font, mgX + 100, btnY, 60, 18, "Guardar", hoverGuardar);
+            LeftSidebar.drawVanillaButtonHover(g, font, mgX + 170, btnY, 60, 18, "Eliminar", hoverEliminar);
+
+            int listY = btnY + 25;
+            int listH = 115;
+
+            g.fill(mgX + 10, listY, mgX + mgW - 10, listY + listH, 0xFF1E1E1E);
+
+            int itemH = 20;
+            int maxVisible = listH / itemH;
+            // Fase 1: highlights y texto
+            for (int i = 0; i < this.listaGuisDisponibles.size() && i < maxVisible; i++) {
+                String guiName = this.listaGuisDisponibles.get(i);
+                int itemY = listY + i * itemH;
+                boolean isActive = questgrupo.questmod.client.GuiLayoutManager.layoutSeleccionado.equals(guiName);
+                boolean isSel = guiName.equals(this.selectedGuiForLoading);
+
+                if (isActive) {
+                    g.fill(mgX + 11, itemY, mgX + mgW - 11, itemY + itemH, 0xFF00A000);
+                } else if (isSel) {
+                    g.fill(mgX + 11, itemY, mgX + mgW - 11, itemY + itemH, 0xFF0055FF);
+                }
+
+                g.drawString(font, guiName, mgX + 16, itemY + 6, isActive || isSel ? 0xFFFFFFFF : 0xFFAAAAAA, false);
+            }
+            // Fase 2: separadores (después de highlights)
+            for (int i = 0; i < this.listaGuisDisponibles.size() - 1 && i < maxVisible - 1; i++) {
+                int itemY = listY + (i + 1) * itemH;
+                g.fill(mgX + 11, itemY, mgX + mgW - 11, itemY + 1, 0xFF000000);
+            }
+            // Fase 3: outline negro (AL FINAL, sobre todo)
+            g.renderOutline(mgX + 10, listY, mgW - 20, listH, 0xFF000000);
+
+            int bottomY = mgY + mgH - 30;
+            boolean hoverCargar = mx >= mgX + 50 && mx <= mgX + 120 && my >= bottomY && my <= bottomY + 20;
+            boolean hoverCancelar = mx >= mgX + 140 && mx <= mgX + 210 && my >= bottomY && my <= bottomY + 20;
+            LeftSidebar.drawVanillaButtonHover(g, font, mgX + 50, bottomY, 70, 20, "Cargar", hoverCargar);
+            LeftSidebar.drawVanillaButtonHover(g, font, mgX + 140, bottomY, 70, 20, "Cancelar", hoverCancelar);
+        }
+
+        // --- POPUP GUARDAR (sobre el modal) ---
+        if (mostrarPopupGuardar) {
+            int ppW = 160, ppH = 90;
+            int ppX = (this.width - ppW) / 2, ppY = (this.height - ppH) / 2;
+            g.fill(0, 0, this.width, this.height, 0x44000000);
+            drawRoundedRect(g, ppX - 1, ppY - 1, ppW + 2, ppH + 2, 0xFF555555);
+            drawRoundedRect(g, ppX, ppY, ppW, ppH, 0xFFC6C6C6);
+            g.drawString(font, "Guardar como:", ppX + 10, ppY + 8, 0xFF202020, false);
+            g.fill(ppX + 9, ppY + 21, ppX + ppW - 9, ppY + 39, 0xFF333333);
+            g.renderOutline(ppX + 9, ppY + 21, ppW - 18, 18, 0xFF000000);
+            this.inputGuardarNombre.visible = true;
+            this.btnGuardarConfirmar.visible = true;
+        } else {
+            this.inputGuardarNombre.visible = false;
+            this.btnGuardarConfirmar.visible = false;
+        }
+
         // --- DIBUJO DE MODALES DE IMÁGENES (Z=400) ---
         g.pose().pushPose();
         g.pose().translate(0, 0, 400);
@@ -933,6 +1055,105 @@ this.inputColor.setResponder(s -> {
             return true; 
         }
 
+        // --- POPUP GUARDAR (atrapa clics antes que el modal) ---
+        if (mostrarPopupGuardar) {
+            int ppW = 160, ppH = 90;
+            int ppX = (this.width - ppW) / 2, ppY = (this.height - ppH) / 2;
+
+            if (this.btnGuardarConfirmar != null && this.btnGuardarConfirmar.isMouseOver(mx, my)) {
+                this.btnGuardarConfirmar.mouseClicked(mx, my, btn);
+                return true;
+            }
+            if (mx >= ppX + 9 && mx <= ppX + ppW - 9 && my >= ppY + 21 && my <= ppY + 39) {
+                this.inputGuardarNombre.setFocused(true);
+                this.inputGuardarNombre.mouseClicked(mx, my, btn);
+                return true;
+            } else {
+                this.inputGuardarNombre.setFocused(false);
+            }
+            // Clic fuera → cerrar popup
+            mostrarPopupGuardar = false;
+            this.inputGuardarNombre.visible = false;
+            this.btnGuardarConfirmar.visible = false;
+            return true;
+        }
+
+        // --- MANEJO DEL MODAL GESTOR DE GUIs ---
+        if (mostrarModalGestorGuis) {
+            int mgW = 260, mgH = 220;
+            int mgX = (this.width - mgW) / 2, mgY = (this.height - mgH) / 2;
+
+            // Cerrar (X)
+            if (mx >= mgX + mgW - 20 && mx <= mgX + mgW - 6 && my >= mgY + 4 && my <= mgY + 18) {
+                this.selectedGuiForLoading = null;
+                mostrarModalGestorGuis = false;
+                return true;
+            }
+
+            // Botón Importar — abre la carpeta en el explorador
+            if (mx >= mgX + 30 && mx <= mgX + 90 && my >= mgY + 30 && my <= mgY + 48) {
+                try {
+                    java.io.File dir = questgrupo.questmod.client.GuiLayoutManager.getGuiDir();
+                    Runtime.getRuntime().exec("xdg-open " + dir.getAbsolutePath());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return true;
+            }
+
+            // Botón Guardar — abre popup
+            if (mx >= mgX + 100 && mx <= mgX + 160 && my >= mgY + 30 && my <= mgY + 48) {
+                this.mostrarPopupGuardar = true;
+                this.inputGuardarNombre.setValue("");
+                this.inputGuardarNombre.setFocused(true);
+                return true;
+            }
+
+            // Botón Eliminar
+            if (mx >= mgX + 170 && mx <= mgX + 230 && my >= mgY + 30 && my <= mgY + 48) {
+                if (this.selectedGuiForLoading != null) {
+                    String nombreEliminar = this.selectedGuiForLoading;
+                    questgrupo.questmod.client.GuiLayoutManager.eliminarLayout(nombreEliminar);
+                    this.listaGuisDisponibles = questgrupo.questmod.client.GuiLayoutManager.obtenerListaLayouts();
+                    this.selectedGuiForLoading = null;
+                }
+                return true;
+            }
+
+            // Clic en la lista de items — selecciona
+            int listY = mgY + 55;
+            int itemH = 20;
+            int listH = 115;
+            for (int i = 0; i < this.listaGuisDisponibles.size(); i++) {
+                int itemY = listY + i * itemH;
+                if (my >= itemY && my <= itemY + itemH && mx >= mgX + 10 && mx <= mgX + mgW - 10) {
+                    this.selectedGuiForLoading = this.listaGuisDisponibles.get(i);
+                    return true;
+                }
+            }
+
+            // Botón Cargar
+            int bottomY = mgY + mgH - 30;
+            if (mx >= mgX + 50 && mx <= mgX + 120 && my >= bottomY && my <= bottomY + 20) {
+                if (this.selectedGuiForLoading != null) {
+                    questgrupo.questmod.client.GuiLayoutManager.cargarLayout(this.selectedGuiForLoading);
+                    this.init();
+                }
+                this.selectedGuiForLoading = null;
+                mostrarModalGestorGuis = false;
+                return true;
+            }
+
+            // Botón Cancelar
+            if (mx >= mgX + 140 && mx <= mgX + 210 && my >= bottomY && my <= bottomY + 20) {
+                this.selectedGuiForLoading = null;
+                mostrarModalGestorGuis = false;
+                return true;
+            }
+
+            return true;
+        }
+
 // --- LÓGICA DE CLICS DE MODALES ---
         if (mostrarModalGaleria || mostrarModalTexturas) {
             int modalW = 280, modalH = 210;
@@ -1179,6 +1400,12 @@ this.inputColor.setResponder(s -> {
                     this.mostrarModalTexturas = true;
                     this.paginaTexturas = 0;
                     this.buscadorTexturas.setValue(""); // Limpia la búsqueda anterior
+                } else if (LeftSidebar.showGestorGuisRequested) {
+                    LeftSidebar.showGestorGuisRequested = false;
+                    this.mostrarModalGestorGuis = true;
+                    this.selectedGuiForLoading = null;
+                    this.mostrarPopupGuardar = false;
+                    this.listaGuisDisponibles = questgrupo.questmod.client.GuiLayoutManager.obtenerListaLayouts();
                 } else {
                     if (GlobalGuiSettings.TEXTOS.size() > textosAnteriores) {
                         this.tSel = GlobalGuiSettings.TEXTOS.get(GlobalGuiSettings.TEXTOS.size() - 1);
@@ -1421,6 +1648,11 @@ this.inputColor.setResponder(s -> {
             return this.buscadorTexturas.charTyped(codePoint, modifiers);
         }
 
+        // Escribir en el input del gestor de GUIs
+        if (this.inputGuardarNombre != null && this.inputGuardarNombre.visible && this.inputGuardarNombre.isFocused()) {
+            return this.inputGuardarNombre.charTyped(codePoint, modifiers);
+        }
+
         // 1. PRIORIDAD: Escribir el nombre de una capa en la RightBar
         if (questgrupo.questmod.client.editor.RightBar.capaEditandoNombre != null) {
             questgrupo.questmod.client.editor.RightBar.capaEditandoNombre.nombre += codePoint;
@@ -1460,7 +1692,25 @@ this.inputColor.setResponder(s -> {
         if (this.buscadorTexturas != null && this.buscadorTexturas.visible && this.buscadorTexturas.isFocused()) {
             if (keyCode == 256) { this.buscadorTexturas.setFocused(false); return true; } // ESC para soltar el buscador
             return this.buscadorTexturas.keyPressed(keyCode, scanCode, modifiers);
-        } 
+        }
+
+        // Manejar teclado en el input del gestor de GUIs
+        if (this.inputGuardarNombre != null && this.inputGuardarNombre.visible && this.inputGuardarNombre.isFocused()) {
+            if (keyCode == 256) { this.inputGuardarNombre.setFocused(false); return true; }
+            if (keyCode == 257) {
+                String nombre = this.inputGuardarNombre.getValue().trim();
+                if (!nombre.isEmpty()) {
+                    questgrupo.questmod.client.GuiLayoutManager.guardarLayout(nombre);
+                    this.listaGuisDisponibles = questgrupo.questmod.client.GuiLayoutManager.obtenerListaLayouts();
+                    this.selectedGuiForLoading = nombre;
+                }
+                this.mostrarPopupGuardar = false;
+                this.inputGuardarNombre.visible = false;
+                this.btnGuardarConfirmar.visible = false;
+                return true;
+            }
+            return this.inputGuardarNombre.keyPressed(keyCode, scanCode, modifiers);
+        }
 
         // 1. PRIORIDAD: Borrar o Guardar nombre de capa en la RightBar
         if (questgrupo.questmod.client.editor.RightBar.capaEditandoNombre != null) {

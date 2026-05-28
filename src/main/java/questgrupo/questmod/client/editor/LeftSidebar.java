@@ -22,6 +22,7 @@ public class LeftSidebar {
     public static boolean editColorRequested = false;
     public static boolean showGaleriaRequested = false;
     public static boolean showTexturasRequested = false;
+    public static boolean showGestorGuisRequested = false;
 
     public static final int TAB_WIDTH = 26;
     public static final int TAB_HEIGHT = 26;
@@ -34,7 +35,6 @@ public class LeftSidebar {
     public static int colorBoxRectY = 0;
 
     public static int getSidebarY(int screenHeight) {
-        // Ahora multiplicamos por 5 botones y 4 espacios
         int totalHeight = 5 * TAB_HEIGHT + 4 * TAB_GAP;
         return (screenHeight - totalHeight) / 2;
     }
@@ -82,18 +82,34 @@ public class LeftSidebar {
         g.drawString(font, text, textX, textY, 0xFF202020, false);
     }
 
+    public static void drawVanillaButtonHover(GuiGraphics g, Font font, int x, int y, int w, int h, String text, boolean hovered) {
+        g.fill(x, y, x + w, y + h, 0xFF000000);
+        int bg = hovered ? 0xFFE8E8E8 : 0xFFC6C6C6;
+        g.fill(x + 1, y + 1, x + w - 1, y + h - 1, bg);
+        g.fill(x + 1, y + 1, x + w - 1, y + 2, 0xFFFFFFFF);
+        g.fill(x + 1, y + 1, x + 2, y + h - 1, 0xFFFFFFFF);
+        g.fill(x + 1, y + h - 2, x + w - 1, y + h - 1, 0xFF555555);
+        g.fill(x + w - 2, y + 1, x + w - 1, y + h - 1, 0xFF555555);
+        g.fill(x + 1, y + h - 2, x + 2, y + h - 1, bg);
+        g.fill(x + w - 2, y + 1, x + w - 1, y + 2, bg);
+        int tx = x + (w - font.width(text)) / 2;
+        int ty = y + (h - font.lineHeight) / 2;
+        g.drawString(font, text, tx, ty, 0xFF202020, false);
+    }
+
     public static void render(GuiGraphics g, int screenWidth, int screenHeight) {
         if (!sidebarVisible) return;
 
         Font font = Minecraft.getInstance().font;
         int startY = getSidebarY(screenHeight);
 
+        // BOTÓN SISTEMA (Menú Hamburguesa) - Fijo en esquina superior izquierda
+        drawVanillaButton(g, font, 6, 6, TAB_WIDTH, TAB_HEIGHT, "≡", selectedModule == 5);
+
         drawVanillaButton(g, font, START_X, startY, TAB_WIDTH, TAB_HEIGHT, "T", selectedModule == 0);
         drawVanillaButton(g, font, START_X, startY + TAB_HEIGHT + TAB_GAP, TAB_WIDTH, TAB_HEIGHT, "H", selectedModule == 1);
         drawVanillaButton(g, font, START_X, startY + 2 * (TAB_HEIGHT + TAB_GAP), TAB_WIDTH, TAB_HEIGHT, "F", selectedModule == 2);
-        // NUEVO BOTÓN: W (Widgets RPG)
         drawVanillaButton(g, font, START_X, startY + 3 * (TAB_HEIGHT + TAB_GAP), TAB_WIDTH, TAB_HEIGHT, "W", selectedModule == 3);
-        // NUEVO BOTÓN: Imágenes e Íconos (Renderiza un bloque de tierra real)
         drawVanillaButton(g, font, START_X, startY + 4 * (TAB_HEIGHT + TAB_GAP), TAB_WIDTH, TAB_HEIGHT, "", selectedModule == 4);
         g.renderFakeItem(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.GRASS_BLOCK), START_X + 5, startY + 4 * (TAB_HEIGHT + TAB_GAP) + 5);
 
@@ -200,6 +216,13 @@ public class LeftSidebar {
             drawVanillaButton(g, font, PANEL_X + 10, panelY + 20, 115, 18, "Galer\u00eda (PNGs)", false);
             drawVanillaButton(g, font, PANEL_X + 10, panelY + 40, 115, 18, "Texturas (Juego)", false);
         }
+        // --- MÓDULO DE SISTEMA (AHORA AL LADO DEL BOTÓN ≡) ---
+        else if (selectedModule == 5) {
+            int sysY = 6;
+            drawVanillaPanel(g, PANEL_X, sysY, 135, 45);
+            g.drawString(font, "Sistema GUI", PANEL_X + 10, sysY + 6, 0xFF404040, false);
+            drawVanillaButton(g, font, PANEL_X + 10, sysY + 20, 115, 18, "Gestor de GUIs", false);
+        }
     }
 
     private static boolean isHovered(double mx, double my, int x, int y, int w, int h) {
@@ -228,6 +251,11 @@ public class LeftSidebar {
 
         int startY = getSidebarY(screenHeight);
 
+        // Detección del botón Sistema en la esquina (≡)
+        if (isHovered(mx, my, 6, 6, TAB_WIDTH, TAB_HEIGHT)) {
+            toggleModule(5); return true;
+        }
+
         // Detección de clics en las pestañas principales
         if (isHovered(mx, my, START_X, startY, TAB_WIDTH, TAB_HEIGHT)) {
             toggleModule(0); return true;
@@ -239,10 +267,10 @@ public class LeftSidebar {
             toggleModule(2); return true;
         }
         if (isHovered(mx, my, START_X, startY + 3 * (TAB_HEIGHT + TAB_GAP), TAB_WIDTH, TAB_HEIGHT)) {
-            toggleModule(3); return true; // Clic en pestaña W
+            toggleModule(3); return true;
         }
         if (isHovered(mx, my, START_X, startY + 4 * (TAB_HEIGHT + TAB_GAP), TAB_WIDTH, TAB_HEIGHT)) {
-            toggleModule(4); return true; // Clic en pestaña Tierra
+            toggleModule(4); return true;
         }
 
         if (selectedModule >= 0) {
@@ -349,8 +377,18 @@ public class LeftSidebar {
                     showTexturasRequested = true; selectedModule = -1; return true; 
                 }
             }
+            // --- CLICS DE SISTEMA ---
+            else if (selectedModule == 5) {
+                panelWidth = 135; panelHeight = 45;
+                int sysY = 6;
+                if (isHovered(mx, my, PANEL_X + 10, sysY + 20, 115, 18)) {
+                    showGestorGuisRequested = true;
+                    selectedModule = -1;
+                    return true;
+                }
+            }
 
-            if (isHovered(mx, my, PANEL_X, panelY, panelWidth, panelHeight)) {
+            if (isHovered(mx, my, PANEL_X, selectedModule == 5 ? 6 : panelY, panelWidth, panelHeight)) {
                 return true;
             }
         }

@@ -1,0 +1,264 @@
+{
+  "misiones": [
+    {
+      "id": "granja_1_cosecha",
+      "nombre": "Problemas de Espalda",
+      "descripcion": "El granjero Bob necesita ayuda con su cosecha de trigo.",
+      "mob": "minecraft:villager",
+      "profession": "farmer",
+      "type": "plains",
+      "textura": "minecraft:textures/item/wheat.png",
+      "esPrimaria": true,
+      "requisitos": {
+        "misiones_completadas": []
+      },
+      "objetivos": [
+        {
+          "item": "minecraft:wheat",
+          "cantidad": 10,
+          "texto": "Trigo fresco"
+        }
+      ],
+      "recompensas": [
+        {
+          "item": "minecraft:emerald",
+          "cantidad": 2
+        }
+      ],
+      "puntos_de_entrada": {
+        "sin_aceptar": "nodo_inicio",
+        "en_progreso": "nodo_espera"
+      },
+      "nodos": {
+        "nodo_agradecimiento": {
+          "textoNPC": [
+            "¡Muchas gracias, muchacho! Eres todo un héroe.",
+            "Dios te bendiga, viajero. Vuelve cuando tengas el trigo.",
+            "Te lo agradezco de corazón. Ten cuidado por el camino."
+          ],
+          "opciones": []
+        },
+        "nodo_espera": {
+          "textoNPC": [
+            "¿Aún sin el trigo? El pan no se hace solo.",
+            "¿Sigues dando vueltas? Los tallos se secan.",
+            "No me hagas suplicar. El campo necesita manos, no promesas."
+          ],
+          "opciones": [
+            {
+              "texto": [
+                "Toma, ya lo tengo.",
+                "Aquí tienes tu trigo."
+              ],
+              "accion": "COMPROBAR_ENTREGA",
+              "destino": "nodo_entrega",
+              "destino_fallo": "nodo_mentira"
+            },
+            {
+              "texto": [
+                "Sigo en ello, ya casi."
+              ],
+              "accion": "CERRAR",
+              "destino": ""
+            }
+          ]
+        },
+        "nodo_mentira": {
+          "textoNPC": [
+            "¿Te crees muy gracioso? Tienes las manos vacías. ¡Ve a buscar el trigo!",
+            "No veo ningún trigo por aquí. No me hagas perder el tiempo, forastero.",
+            "¿Me estás viendo cara de tonto? Vuelve cuando tengas los materiales."
+          ],
+          "opciones": []
+        },
+        "nodo_entrega": {
+          "textoNPC": [
+            "¡Buen chico! Se ve sano y dorado. Justo lo que necesitaba para el molino.",
+            "Lo has traído a tiempo. El molino no para gracias a ti.",
+            "Dorado como el sol. Eres de fiar, muchacho."
+          ],
+          "opciones": []
+        },
+        "nodo_despedida_brusca": {
+          "textoNPC": [
+            "Bah, jóvenes sin corazón. Vete, no necesito tu ayuda.",
+            "Está bien, ya encontraré a alguien más. Buenos días."
+          ],
+          "opciones": []
+        },
+        "nodo_queja": {
+          "textoNPC": [
+            "¡Porque los jóvenes de hoy ya no respetan a sus mayores! ¿Vas a ayudarme o no?",
+            "El resto está ocupado. Tú eres el único que no parece tener prisa. ¿Y bien?"
+          ],
+          "opciones": [
+            {
+              "texto": [
+                "Está bien, lo haré."
+              ],
+              "accion": "ACEPTAR_MISION",
+              "destino": "nodo_aceptacion"
+            },
+            {
+              "texto": [
+                "Sigue quejándote, me voy."
+              ],
+              "accion": "NADA",
+              "destino": "nodo_historia_inicio"
+            }
+          ]
+        },
+        "nodo_aceptacion": {
+          "textoNPC": [
+            "¡Gracias a los cielos! La cosecha está al este. Tráemelo rápido.",
+            "Dios te lo pague. El huerto está al este, donde la tierra se agrieta.",
+            "Gracias, muchacho. Ve al este y cuida con los lobos."
+          ],
+          "opciones": [
+            {
+              "texto": [
+                "Entendido, voy ahora mismo."
+              ],
+              "accion": "NADA",
+              "destino": "nodo_agradecimiento"
+            }
+          ]
+        },
+        "nodo_historia_cont": {
+          "textoNPC": [
+            "Los esqueletos llegaron una noche fría. Prendieron fuego a todo.",
+            "El humo, los gritos... todavía los escucho en mis pesadillas."
+          ],
+          "opciones": [
+            {
+              "texto": [
+                "Te ayudaré con la cosecha. Por ellos."
+              ],
+              "accion": "ACEPTAR_MISION",
+              "destino": "nodo_aceptacion"
+            },
+            {
+              "texto": [
+                "No sé qué decir..."
+              ],
+              "accion": "NADA",
+              "destino": "nodo_historia_final"
+            }
+          ]
+        },
+        "nodo_inicio": {
+          "textoNPC": [
+            "¡Uf, mi espalda! ¿Podrías traerme 10 de trigo? No me puedo ni agachar.",
+            "Ay, mi lumbalgia... Oye, forastero, ¿me echas una mano con la cosecha?",
+            "El sol quema y mis huesos crujen. ¿Me traes 10 de trigo del huerto?"
+          ],
+          "opciones": [
+            {
+              "texto": [
+                "Claro, yo te ayudo.",
+                "Cuenta conmigo, abuelo."
+              ],
+              "accion": "ACEPTAR_MISION",
+              "destino": "nodo_aceptacion"
+            },
+            {
+              "texto": [
+                "¿Y si te ayudo, me das algo a cambio?"
+              ],
+              "accion": "NADA",
+              "destino": "nodo_negociacion"
+            },
+            {
+              "texto": [
+                "¿Por qué no le pides a otro?"
+              ],
+              "accion": "NADA",
+              "destino": "nodo_queja"
+            },
+            {
+              "texto": [
+                "No tengo tiempo, viejo."
+              ],
+              "accion": "NADA",
+              "destino": "nodo_despedida_brusca"
+            }
+          ]
+        },
+        "nodo_historia_final": {
+          "textoNPC": [
+            "No hace falta que digas nada. El silencio a veces es la mejor compañía.",
+            "Basta de charla. Si quieres ayudar, el trigo no se cosecha solo."
+          ],
+          "opciones": [
+            {
+              "texto": [
+                "Está bien, iré a cosechar."
+              ],
+              "accion": "ACEPTAR_MISION",
+              "destino": "nodo_aceptacion"
+            },
+            {
+              "texto": [
+                "Solo quería escuchar. Adiós."
+              ],
+              "accion": "CERRAR",
+              "destino": ""
+            }
+          ]
+        },
+        "nodo_despedida": {
+          "textoNPC": [
+            "Vuelve luego. Puede que necesite ayuda con otra cosa. Que la tierra te sea fértil.",
+            "Si pasas por aquí, mi puerta estará abierta. Cuida esa espalda.",
+            "Gracias de nuevo. Los tiempos son duros, pero la gente buena aún queda."
+          ],
+          "opciones": []
+        },
+        "nodo_historia_inicio": {
+          "textoNPC": [
+            "Tenía una familia... esposa, un hijo. Cuando la guerra llegó, lo perdí todo.",
+            "Mi hijo soñaba con ser granjero como yo. Ahora solo tengo recuerdos..."
+          ],
+          "opciones": [
+            {
+              "texto": [
+                "¿Qué pasó con ellos?"
+              ],
+              "accion": "NADA",
+              "destino": "nodo_historia_cont"
+            },
+            {
+              "texto": [
+                "Lo siento, no sabía..."
+              ],
+              "accion": "NADA",
+              "destino": "nodo_historia_final"
+            }
+          ]
+        },
+        "nodo_negociacion": {
+          "textoNPC": [
+            "¡Ja! Si traes el trigo rápido, te doy dos hogazas encima. ¿Trato?",
+            "Listo para regatear, ¿eh? Trigo rápido, pan gratis. ¿Cerrado?"
+          ],
+          "opciones": [
+            {
+              "texto": [
+                "Acepto el trato."
+              ],
+              "accion": "ACEPTAR_MISION",
+              "destino": "nodo_aceptacion"
+            },
+            {
+              "texto": [
+                "Prefiero solo las esmeraldas."
+              ],
+              "accion": "ACEPTAR_MISION",
+              "destino": "nodo_aceptacion"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
