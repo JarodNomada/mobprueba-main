@@ -41,15 +41,15 @@ public class QuestScreen extends Screen {
     private static final int BOX_H = 125;
     private static final int BOX_MARGIN_BOTTOM = 20;
 
-    private static final int C_MAIN_BG      = 0xFFA79F94;
-    private static final int C_OUTER_BG     = 0xFF938A82;
-    private static final int C_TRAZO_NEGRO  = 0xFF1B1610;
-    private static final int C_TEXTO_NP     = 0xFF1E1E1E;
-    private static final int C_SEPARATOR    = 0xFF625D54;
+    private static final int C_MAIN_BG      = 0xFF4C4238;
+    private static final int C_OUTER_BG     = 0xFF655746;
+    private static final int C_TRAZO_NEGRO  = 0xFF403A30;
+    private static final int C_TEXTO_NP     = 0xFFCECECF;
+    private static final int C_SEPARATOR    = 0xFF312D26;
 
-    private static final int C_BTN_LIGHT    = 0xFF76736E;
-    private static final int C_BTN_DARK     = 0xFF353631;
-    private static final int C_BTN_BG_NORM  = 0xFF505050;
+    private static final int C_BTN_LIGHT    = 0xFF837563;
+    private static final int C_BTN_DARK     = 0xFF383028;
+    private static final int C_BTN_BG_NORM  = 0xFF665A48;
     private static final int C_BTN_TEXT     = 0xFFF2F2F2;
     private static final int C_HOVER_GREEN  = 0xFF4A792A;
     private static final int C_HOVER_LIGHT  = 0xFF73BD42;
@@ -106,7 +106,6 @@ public class QuestScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(g);
         int rx = bx(), ry = by();
 
         renderEstructuraContenedor(g, rx, ry);
@@ -140,6 +139,10 @@ public class QuestScreen extends Screen {
         g.fill(outX, outY + 3, outX + outW, outY + outH - 3, C_OUTER_BG);
         g.fill(outX + 1, outY + 1, outX + outW - 1, outY + outH - 1, C_OUTER_BG);
         g.fill(outX + 2, outY + 2, outX + outW - 2, outY + outH - 2, C_OUTER_BG);
+        g.fill(outX + 4, outY, outX + outW - 3, outY + 1, 0xFF7D7060);
+        g.fill(outX, outY + 4, outX + 1, outY + outH - 3, 0xFF7D7060);
+        g.fill(outX + 2, outY + 1, outX + 4, outY + 2, 0xFF7D7060);
+        g.fill(outX + 1, outY + 2, outX + 2, outY + 4, 0xFF7D7060);
 
         int inX = rx; int inY = ry; int inW = BOX_W; int inH = BOX_H;
         g.fill(inX + 3, inY - 1, inX + inW - 3, inY + inH + 1, C_TRAZO_NEGRO);
@@ -151,6 +154,11 @@ public class QuestScreen extends Screen {
         g.fill(inX, inY + 3, inX + inW, inY + inH - 3, C_MAIN_BG);
         g.fill(inX + 1, inY + 1, inX + inW - 1, inY + inH - 1, C_MAIN_BG);
         g.fill(inX + 2, inY + 2, inX + inW - 2, inY + inH - 2, C_MAIN_BG);
+
+        g.fill(inX + 4, inY, inX + inW - 3, inY + 1, 0xFF736351);
+        g.fill(inX, inY + 4, inX + 1, inY + inH - 3, 0xFF736351);
+        g.fill(inX + 2, inY + 1, inX + 4, inY + 2, 0xFF736351);
+        g.fill(inX + 1, inY + 2, inX + 2, inY + 4, 0xFF736351);
     }
 
     private void renderRespuestasGrid(GuiGraphics g, int mx, int my, int rx, int ry) {
@@ -168,7 +176,10 @@ public class QuestScreen extends Screen {
 
             boolean hov = mx >= bX && mx <= bX + bW && my >= bY && my <= bY + btnH;
 
-            g.renderOutline(bX - 1, bY - 1, bW + 2, btnH + 2, C_TRAZO_NEGRO);
+            g.fill(bX, bY - 1, bX + bW, bY, 0xFF201C17);
+            g.fill(bX, bY + btnH, bX + bW, bY + btnH + 1, 0xFF201C17);
+            g.fill(bX - 1, bY, bX, bY + btnH, 0xFF201C17);
+            g.fill(bX + bW, bY, bX + bW + 1, bY + btnH, 0xFF201C17);
 
             int cFondo = hov ? C_HOVER_GREEN : C_BTN_BG_NORM;
             g.fill(bX, bY, bX + bW, bY + btnH, cFondo);
@@ -178,7 +189,7 @@ public class QuestScreen extends Screen {
             g.fill(bX, bY, bX + 1, bY + btnH, cLight);
 
             int cDark = hov ? C_HOVER_DARK : C_BTN_DARK;
-            g.fill(bX, bY + btnH - 1, bX + bW, bY + btnH, cDark);
+            g.fill(bX, bY + btnH - 2, bX + bW, bY + btnH, cDark);
             g.fill(bX + bW - 1, bY, bX + bW, bY + btnH, cDark);
 
             String texto = getTextoOpcion(i);

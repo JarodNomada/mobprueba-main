@@ -124,3 +124,13 @@ Para evitar repetir errores pasados durante el desarrollo, ten en cuenta lo sigu
     *   El estado desplegado/colapsado se gestiona mediante las banderas `principalesAbierto` y `secundariasAbierto` en `GlobalGuiSettings.PanelConfig`.
     *   El renderizado de estas secciones se controla en `EditorScreen.java` (líneas ~800-812) mediante comprobaciones de coordenadas y actualización de las banderas correspondientes.
     *   Esta funcionalidad permite a los usuarios ver u ocultar detalles de misiones en modo visualización sin entrar al modo edición.
+
+7.  **Biselado de Bordes con 4 Fills (`QuestScreen.java`)**: Para crear un borde con esquinas biseladas tipo Minecraft (efecto escalera diagonal de ~4px), se usan exactamente 4 fills de `GuiGraphics` en lugar de líneas simples. El orden de renderizado es: sombra → caja exterior (C_OUTER_BG) → trazo recuadro (#423C31) → fondo principal (C_MAIN_BG) → trazo interior (#736351).
+    *   *Patrón de 4 fills para trazo recuadro en `renderEstructuraContenedor`:*
+        ```java
+        g.fill(inX + 3, inY - 1, inX + inW - 3, inY + inH + 1, cTrazoRecuadro);
+        g.fill(inX - 1, inY + 3, inX + inW + 1, inY + inH - 3, cTrazoRecuadro);
+        g.fill(inX + 1, inY, inX + inW - 1, inY + inH, cTrazoRecuadro);
+        g.fill(inX, inY + 1, inX + inW, inY + inH - 1, cTrazoRecuadro);
+        ```
+    *   **Clave**: `GuiGraphics.fill(x1, y1, x2, y2, color)` es exclusivo en x2/y2. Los pares `(x+3, y-1)` y `(x-1, y+3)` extienden 1px hacia afuera creando el escalón diagonal. El cuarto fill tapa el interior. El píxel de esquina `(inX, inY)` queda deliberadamente transparente para que lo rellene la capa inferior (caja exterior).
