@@ -121,6 +121,7 @@ public class QuestScreen extends Screen {
 
         int separatorY = ry + 55;
         g.fill(rx + 8, separatorY, rx + BOX_W - 8, separatorY + 1, C_SEPARATOR);
+        g.fill(rx + 8, separatorY + 1, rx + BOX_W - 8, separatorY + 2, 0xFF5A4D42);
 
         renderRespuestasGrid(g, mouseX, mouseY, rx, separatorY + 8);
 
