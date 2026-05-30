@@ -23,6 +23,7 @@ public class LeftSidebar {
     public static boolean showGaleriaRequested = false;
     public static boolean showTexturasRequested = false;
     public static boolean showGestorGuisRequested = false;
+    public static boolean showInterfaceEditorRequested = false;
 
     public static final int TAB_WIDTH = 26;
     public static final int TAB_HEIGHT = 26;
@@ -219,9 +220,10 @@ public class LeftSidebar {
         // --- MÓDULO DE SISTEMA (AHORA AL LADO DEL BOTÓN ≡) ---
         else if (selectedModule == 5) {
             int sysY = 6;
-            drawVanillaPanel(g, PANEL_X, sysY, 135, 45);
+            drawVanillaPanel(g, PANEL_X, sysY, 135, 65);
             g.drawString(font, "Sistema GUI", PANEL_X + 10, sysY + 6, 0xFF404040, false);
             drawVanillaButton(g, font, PANEL_X + 10, sysY + 20, 115, 18, "Gestor de GUIs", false);
+            drawVanillaButton(g, font, PANEL_X + 10, sysY + 40, 115, 18, "Interface", false);
         }
     }
 
@@ -379,10 +381,15 @@ public class LeftSidebar {
             }
             // --- CLICS DE SISTEMA ---
             else if (selectedModule == 5) {
-                panelWidth = 135; panelHeight = 45;
+                panelWidth = 135; panelHeight = 65;
                 int sysY = 6;
                 if (isHovered(mx, my, PANEL_X + 10, sysY + 20, 115, 18)) {
                     showGestorGuisRequested = true;
+                    selectedModule = -1;
+                    return true;
+                }
+                if (isHovered(mx, my, PANEL_X + 10, sysY + 40, 115, 18)) {
+                    showInterfaceEditorRequested = true;
                     selectedModule = -1;
                     return true;
                 }

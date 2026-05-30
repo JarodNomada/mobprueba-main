@@ -9,7 +9,9 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import questgrupo.questmod.Config;
+import questgrupo.questmod.client.DialogueColors;
 import questgrupo.questmod.client.GlobalGuiSettings;
+import questgrupo.questmod.client.InterfaceManager;
 import questgrupo.questmod.client.gui.FigurasEdit;
 import questgrupo.questmod.client.gui.TextoEdit;
 
@@ -59,6 +61,30 @@ public class EditorScreen extends Screen {
     private net.minecraft.client.gui.components.EditBox inputGuardarNombre;
     private Button btnGuardarConfirmar;
     private Button btnGuardarCancelar;
+
+    // -- MODO EDITOR DE INTERFACE --
+    private boolean modoInterface = false;
+    private boolean savedTopBarVisible = false;
+    private String interfazColorTarget = null;
+    private int savedColorHerramientas = 0;
+    private boolean mostrarPopupGuardarInterface = false;
+    private net.minecraft.client.gui.components.EditBox inputNomInterface;
+    private Button btnGuardarInterface;
+    private int selectedTab = 0;
+    private int interfazColorFocused = -1;
+    private boolean mostrarPopupImportarInterface = false;
+    private java.util.List<String> listaInterfaces = new java.util.ArrayList<>();
+    private String selectedImportName = null;
+    private boolean modoSeleccionElemento = false;
+    private int dialogRX, dialogRY, dialogW, dialogH;
+
+    private static final int HEADER_H = 40;
+    private static final int TAB_BAR_H = 25;
+    private static final int TAB_BTN_W = 90;
+    private static final int ROW_H = 28;
+    private static final int ROW_SWATCH = 18;
+    private static final int TIP_H = 20;
+    private static final int RIGHT_PANEL_W = 210;
 
     public EditorScreen(Screen lastScreen) {
         super(Component.literal("Editor 1.20.1"));
@@ -158,6 +184,34 @@ public class EditorScreen extends Screen {
         }).bounds(ppX + 50, ppY + 48, 60, 20).build();
         this.btnGuardarConfirmar.visible = false;
         this.addRenderableWidget(this.btnGuardarConfirmar);
+
+        // 5. ELEMENTOS PARA EL POPUP GUARDAR INTERFACE
+        int ipX = (this.width - 200) / 2, ipY = (this.height - 90) / 2;
+        this.inputNomInterface = new net.minecraft.client.gui.components.EditBox(this.font, ipX + 12, ipY + 24, 176, 12, net.minecraft.network.chat.Component.literal("Nombre")) {
+            @Override
+            public void render(net.minecraft.client.gui.GuiGraphics g, int mx, int my, float pt) {
+                if (!isVisible()) return;
+                String txt = font.plainSubstrByWidth(getValue(), getInnerWidth());
+                g.drawString(font, txt, getX(), getY() + (getHeight() - 8) / 2, 0xFFFFFFFF, false);
+            }
+        };
+        this.inputNomInterface.setMaxLength(30);
+        this.inputNomInterface.setBordered(false);
+        this.inputNomInterface.setTextColor(0xFFFFFFFF);
+        this.inputNomInterface.visible = false;
+        this.addRenderableWidget(this.inputNomInterface);
+
+        this.btnGuardarInterface = Button.builder(net.minecraft.network.chat.Component.literal("Aceptar"), b -> {
+            String nombre = this.inputNomInterface.getValue().trim();
+            if (!nombre.isEmpty()) {
+                questgrupo.questmod.client.InterfaceManager.guardarColoresInterface(nombre);
+            }
+            this.mostrarPopupGuardarInterface = false;
+            this.inputNomInterface.visible = false;
+            this.btnGuardarInterface.visible = false;
+        }).bounds(ipX + 70, ipY + 48, 60, 20).build();
+        this.btnGuardarInterface.visible = false;
+        this.addRenderableWidget(this.btnGuardarInterface);
 
         // 3. AHORA SÍ, LO DEMÁS
         this.inputColor = new EditBox(this.font, 0, 0, 60, 12, Component.literal(""));
@@ -568,6 +622,41 @@ this.inputColor.setResponder(s -> {
 
     @Override
     public void render(GuiGraphics g, int mx, int my, float pt) {
+        if (interfazColorTarget != null) {
+            if (TopBar.colorPickerVisible) {
+                DialogueColors.apply(interfazColorTarget, GlobalGuiSettings.colorHerramientas);
+            } else {
+                DialogueColors.apply(interfazColorTarget, GlobalGuiSettings.colorHerramientas);
+                GlobalGuiSettings.colorHerramientas = savedColorHerramientas;
+                interfazColorTarget = null;
+            }
+        }
+
+        if (modoInterface) {
+            Font font = this.font;
+            renderInterfaceEditor(g, mx, my);
+
+            // --- POPUP GUARDAR INTERFACE ---
+            if (mostrarPopupGuardarInterface) {
+                int epW = 200, epH = 90;
+                int epX = (this.width - epW) / 2, epY = (this.height - epH) / 2;
+                g.fill(0, 0, this.width, this.height, 0x44000000);
+                drawRoundedRect(g, epX - 1, epY - 1, epW + 2, epH + 2, 0xFF555555);
+                drawRoundedRect(g, epX, epY, epW, epH, 0xFFC6C6C6);
+                g.drawString(font, "Nombre de la Interface:", epX + 10, epY + 8, 0xFF202020, false);
+                g.fill(epX + 9, epY + 21, epX + epW - 9, epY + 39, 0xFF333333);
+                g.renderOutline(epX + 9, epY + 21, epW - 18, 18, 0xFF000000);
+                this.inputNomInterface.visible = true;
+                this.btnGuardarInterface.visible = true;
+            } else {
+                this.inputNomInterface.visible = false;
+                this.btnGuardarInterface.visible = false;
+            }
+
+            super.render(g, mx, my, pt);
+            return;
+        }
+
         int sidebarReserved = LeftSidebar.getSidebarWidth();
         int viewportY = 0;
         int viewportWidth = this.width - sidebarReserved;
@@ -743,6 +832,23 @@ this.inputColor.setResponder(s -> {
         } else {
             this.inputGuardarNombre.visible = false;
             this.btnGuardarConfirmar.visible = false;
+        }
+
+        // --- POPUP GUARDAR INTERFACE ---
+        if (mostrarPopupGuardarInterface) {
+            int epW = 200, epH = 90;
+            int epX = (this.width - epW) / 2, epY = (this.height - epH) / 2;
+            g.fill(0, 0, this.width, this.height, 0x44000000);
+            drawRoundedRect(g, epX - 1, epY - 1, epW + 2, epH + 2, 0xFF555555);
+            drawRoundedRect(g, epX, epY, epW, epH, 0xFFC6C6C6);
+            g.drawString(font, "Nombre de la Interface:", epX + 10, epY + 8, 0xFF202020, false);
+            g.fill(epX + 9, epY + 21, epX + epW - 9, epY + 39, 0xFF333333);
+            g.renderOutline(epX + 9, epY + 21, epW - 18, 18, 0xFF000000);
+            this.inputNomInterface.visible = true;
+            this.btnGuardarInterface.visible = true;
+        } else {
+            this.inputNomInterface.visible = false;
+            this.btnGuardarInterface.visible = false;
         }
 
         // --- DIBUJO DE MODALES DE IMÁGENES (Z=400) ---
@@ -995,6 +1101,494 @@ this.inputColor.setResponder(s -> {
         TextoEdit.actualizarEstadoBotones(tSel, pSel);
     }
 
+    // ─── EDITOR DE INTERFACE (MODO INTERFAZ) ───
+    private static final String[] TAB_LABELS = {"INTERFAZ", "BOTONES", "HOVER"};
+
+    private static class ColorEntry {
+        String label, target;
+        int tab;
+        ColorEntry(String label, String target, int tab) {
+            this.label = label; this.target = target; this.tab = tab;
+        }
+    }
+
+    private static final ColorEntry[] COLORES = {
+        new ColorEntry("Fondo Exterior", "outerBg", 0),
+        new ColorEntry("Fondo Principal", "mainBg", 0),
+        new ColorEntry("Trazo Exterior", "trazoExterior", 0),
+        new ColorEntry("Trazo Recuadro", "trazoRecuadro", 0),
+        new ColorEntry("Trazo Interior", "trazoInterior", 0),
+        new ColorEntry("Separador", "separator", 0),
+        new ColorEntry("Sombra Separador", "separatorSombra", 0),
+        new ColorEntry("Texto NPC", "textNPC", 0),
+        new ColorEntry("Boton Fondo", "btnBgNorm", 1),
+        new ColorEntry("Boton Claro", "btnLight", 1),
+        new ColorEntry("Boton Oscuro", "btnDark", 1),
+        new ColorEntry("Boton Texto", "btnText", 1),
+        new ColorEntry("Boton Contorno", "btnOutline", 1),
+        new ColorEntry("Hover Fondo", "hoverGreen", 2),
+        new ColorEntry("Hover Claro", "hoverLight", 2),
+        new ColorEntry("Hover Oscuro", "hoverDark", 2),
+    };
+
+    private static final int SWATCH_SIZE = 18;
+
+    private void renderInterfaceEditor(GuiGraphics g, int mx, int my) {
+        renderInterfaceHeader(g, mx, my);
+        renderInterfaceMain(g, mx, my);
+
+        // 5px gap between preview area and bottom container
+        int bm = calcBottomStart();
+        g.fill(8, bm - 5, this.width - 8, bm, 0xFF1E1E1E);
+
+        renderInterfaceBottom(g, mx, my);
+
+        // ─── Preview area borders (left, right, bottom) ───
+        g.fill(8, HEADER_H, 9, bm - 4, 0xFF949494);
+        g.fill(this.width - 9, HEADER_H, this.width - 8, bm - 4, 0xFF949494);
+        g.fill(8, bm - 5, this.width - 8, bm - 4, 0xFF949494);
+
+        // 8px side bars
+        g.fill(0, 0, 8, this.height, 0xFF1E1E1E);
+        g.fill(this.width - 8, 0, this.width, this.height, 0xFF1E1E1E);
+
+        if (mostrarPopupImportarInterface) {
+            renderImportPopup(g, mx, my);
+        }
+
+        // ─── COLOR PICKER ───
+        if (TopBar.colorPickerVisible) {
+            g.fill(0, 0, this.width, this.height, 0x44000000);
+            TopBar.render(g, this.width, 5, null, null);
+        }
+    }
+
+    private void renderInterfaceHeader(GuiGraphics g, int mx, int my) {
+        Font font = this.font;
+        g.fill(0, 0, this.width, HEADER_H, 0xFF1E1E1E);
+        g.fill(0, HEADER_H - 1, this.width, HEADER_H, 0xFF949494);
+
+        g.drawString(font, "§lEDITOR DE INTERFAZ", 8, (HEADER_H - 8) / 2, 0xFFCCCCCC, false);
+
+        int btnW = 76, btnH = 26, btnY = (HEADER_H - btnH) / 2;
+        int gap = 6;
+        int rightEdge = this.width - 10;
+        int exportX = rightEdge - btnW;
+        int importX = exportX - btnW - gap;
+
+        // EXPORTAR
+        boolean hovExport = mx >= exportX && mx <= exportX + btnW && my >= btnY && my <= btnY + btnH;
+        g.fill(exportX, btnY, exportX + btnW, btnY + btnH, hovExport ? 0xCC4A4A4A : 0xCC333333);
+        g.renderOutline(exportX, btnY, btnW, btnH, 0xFF555555);
+        g.drawString(font, "§lEXPORTAR", exportX + (btnW - font.width("EXPORTAR")) / 2, btnY + (btnH - 8) / 2, 0xFFCCCCCC, false);
+
+        // IMPORTAR
+        boolean hovImport = mx >= importX && mx <= importX + btnW && my >= btnY && my <= btnY + btnH;
+        g.fill(importX, btnY, importX + btnW, btnY + btnH, hovImport ? 0xCC4A4A4A : 0xCC333333);
+        g.renderOutline(importX, btnY, btnW, btnH, 0xFF555555);
+        g.drawString(font, "§lIMPORTAR", importX + (btnW - font.width("IMPORTAR")) / 2, btnY + (btnH - 8) / 2, 0xFFCCCCCC, false);
+    }
+
+    private void renderInterfaceMain(GuiGraphics g, int mx, int my) {
+        int bottomStart = calcBottomStart();
+
+        g.fill(0, HEADER_H, this.width, bottomStart, 0xFF2D2D2D);
+
+        int boxW = 250, boxH = 90;
+        int rx = (this.width - boxW) / 2;
+        int ry = HEADER_H + (bottomStart - HEADER_H - boxH) / 2;
+        renderPreviewDialogoAt(g, rx, ry, boxW, boxH);
+
+        // Save dialog coordinates for mouse hit-testing
+        this.dialogRX = rx; this.dialogRY = ry;
+        this.dialogW = boxW; this.dialogH = boxH;
+    }
+
+    private void renderInterfaceBottom(GuiGraphics g, int mx, int my) {
+        Font font = this.font;
+        int bottomStart = calcBottomStart();
+        int lastRowY = bottomStart + TAB_BAR_H;
+        int contentEndY = this.height - TIP_H;
+        int vistaW = 130;
+
+        // Container background with border
+        g.fill(8, bottomStart, this.width - 8, contentEndY, 0xFF303030);
+        g.fill(8, bottomStart, this.width - 8, bottomStart + 1, 0xFF696969);
+        g.fill(8, contentEndY - 1, this.width - 8, contentEndY, 0xFF696969);
+        g.fill(8, bottomStart, 9, contentEndY, 0xFF696969);
+        g.fill(this.width - 9, bottomStart, this.width - 8, contentEndY, 0xFF696969);
+
+        int tabY = bottomStart;
+        int tabH = TAB_BAR_H;
+        int tabStartX = 8;
+        int tabsEndX = tabStartX + TAB_LABELS.length * TAB_BTN_W;
+
+        // Tab backgrounds (no hover glow)
+        for (int i = 0; i < TAB_LABELS.length; i++) {
+            int tx = tabStartX + i * TAB_BTN_W;
+            int cBg = (i == selectedTab) ? 0xFF3A3A3A : 0xFF1E1E1E;
+            g.fill(tx, tabY, tx + TAB_BTN_W, tabY + tabH, cBg);
+        }
+
+        // Outer border (#696969)
+        int bc = 0xFF696969;
+        int aStart = tabStartX + selectedTab * TAB_BTN_W;
+        g.fill(tabStartX, tabY, tabsEndX, tabY + 1, bc);
+        g.fill(tabStartX, tabY, tabStartX + 1, tabY + tabH, bc);
+        g.fill(tabsEndX - 1, tabY, tabsEndX, tabY + tabH, bc);
+        g.fill(tabsEndX - 1, tabY + tabH - 1, this.width - 8, tabY + tabH, 0xFF696969);
+
+        // Internal vertical dividers (1px between tabs, no doubling)
+        for (int i = 0; i < TAB_LABELS.length - 1; i++) {
+            int divX = tabStartX + (i + 1) * TAB_BTN_W;
+            g.fill(divX - 1, tabY, divX, tabY + tabH, bc);
+        }
+
+        // Active tab: green top + left boundary
+        g.fill(aStart, tabY, aStart + TAB_BTN_W, tabY + 1, 0xFF40990B);
+        if (selectedTab == 0) {
+            g.fill(tabStartX, tabY, tabStartX + 1, tabY + tabH, 0xFF40990B);
+        } else {
+            int divX = tabStartX + selectedTab * TAB_BTN_W;
+            g.fill(divX - 1, tabY, divX, tabY + tabH, 0xFF40990B);
+        }
+
+        // Tab labels
+        for (int i = 0; i < TAB_LABELS.length; i++) {
+            int tx = tabStartX + i * TAB_BTN_W;
+            boolean active = i == selectedTab;
+            g.drawString(font, "§l" + TAB_LABELS[i], tx + (TAB_BTN_W - font.width(TAB_LABELS[i])) / 2, tabY + (tabH - 8) / 2, active ? 0xFFFFFFFF : 0xFF888888, false);
+        }
+
+        // ─── 3-COLUMN COLOR GRID ───
+        int gridX = 17;
+        int gridY = lastRowY + 8;
+        int gridW = this.width - vistaW - gridX * 2 - 4;
+        int cols = 3;
+        int cellSlot = gridW / cols;
+        int cellW = cellSlot - 2;
+        int BORDER_GRAY = 0xFF696969;
+
+        int itemIdx = 0;
+        for (int idx = 0; idx < COLORES.length; idx++) {
+            ColorEntry ce = COLORES[idx];
+            if (ce.tab != selectedTab) continue;
+
+            int col = itemIdx % cols;
+            int row = itemIdx / cols;
+            int cx = gridX + col * cellSlot;
+            int cy = gridY + row * ROW_H;
+
+            int currentColor = DialogueColors.get(ce.target);
+            boolean focused = idx == interfazColorFocused;
+            boolean hovered = mx >= cx && mx <= cx + cellW - 2 && my >= cy && my <= cy + ROW_H;
+            int rowBg = focused ? 0xFF2A3A2A : (hovered ? 0xFF333333 : 0xFF1A1A1A);
+            g.fill(cx, cy, cx + cellW - 2, cy + ROW_H, rowBg);
+            g.fill(cx, cy, cx + 1, cy + ROW_H, BORDER_GRAY);
+            g.fill(cx + cellW - 3, cy, cx + cellW - 2, cy + ROW_H, BORDER_GRAY);
+            if (row == 0) g.fill(cx, cy, cx + cellW - 2, cy + 1, BORDER_GRAY);
+            g.fill(cx, cy + ROW_H - 1, cx + cellW - 2, cy + ROW_H, BORDER_GRAY);
+
+            int swY = cy + (ROW_H - SWATCH_SIZE) / 2;
+            g.fill(cx + 6, swY, cx + 6 + SWATCH_SIZE, swY + SWATCH_SIZE, currentColor);
+            g.renderOutline(cx + 5, swY - 1, SWATCH_SIZE + 2, SWATCH_SIZE + 2, focused ? 0xFF4A792A : 0xFF555555);
+
+            int textX = cx + 6 + SWATCH_SIZE + 6;
+            int maxLabelW = cellW - SWATCH_SIZE - 22;
+            String shortLabel = font.width(ce.label) > maxLabelW ? ce.label.substring(0, Math.min(ce.label.length(), 10)) + ".." : ce.label;
+            g.drawString(font, shortLabel, textX, cy + (ROW_H - 8) / 2, 0xFFCCCCCC, false);
+
+            itemIdx++;
+        }
+
+        // ─── VISTA PREVIA (bottom-right corner) ───
+        int vistaX = this.width - vistaW - 14;
+        int vistaY = lastRowY + 8;
+        int vistaH = contentEndY - vistaY - 6;
+
+        g.fill(vistaX, vistaY, vistaX + vistaW, vistaY + vistaH, 0xFF1A1A1A);
+        g.renderOutline(vistaX, vistaY, vistaW, vistaH, 0xFF696969);
+
+        int centerX = vistaX + vistaW / 2;
+
+        g.drawString(font, "§lVISTA PREVIA", vistaX + 6, vistaY + 6, 0xFFCCCCCC, false);
+
+        String[] vpLines = {
+            "Aqui puedes ver",
+            "el dialogo con",
+            "los colores",
+            "actuales en",
+            "tiempo real."
+        };
+        int vpTy = vistaY + 22;
+        for (String line : vpLines) {
+            g.drawString(font, line, vistaX + 6, vpTy, 0xFFAAAAAA, false);
+            vpTy += 10;
+        }
+
+        int divY = vpTy + 3;
+        g.fill(vistaX + 6, divY, vistaX + vistaW - 6, divY + 1, 0xFF696969);
+
+        int btnSelY = divY + 6;
+        boolean hovSel = mx >= vistaX + 6 && mx <= vistaX + vistaW - 6 && my >= btnSelY && my <= btnSelY + 22;
+        g.fill(vistaX + 6, btnSelY, vistaX + vistaW - 6, btnSelY + 22, hovSel || modoSeleccionElemento ? 0xCC4A792A : 0xCC333333);
+        g.renderOutline(vistaX + 6, btnSelY, vistaW - 12, 22, modoSeleccionElemento ? 0xFF6A9A4A : 0xFF555555);
+        String btnLabel = modoSeleccionElemento ? "§lClick en dialogo..." : "Seleccionar elemento";
+        g.drawString(font, btnLabel, centerX - font.width(btnLabel) / 2, btnSelY + 7, modoSeleccionElemento ? 0xFFFFFF88 : 0xFFCCCCCC, false);
+
+        // Tip
+        g.fill(0, this.height - TIP_H, this.width, this.height, 0xFF1E1E1E);
+        g.fill(0, this.height - TIP_H, this.width, this.height - TIP_H + 1, 0xFF949494);
+        g.drawString(font, "§eUsa colores y contrastes similares a Minecraft para mantener la armonia visual.", 10, this.height - TIP_H + 6, 0xFFFFCC00, false);
+    }
+
+    private void renderImportPopup(GuiGraphics g, int mx, int my) {
+        Font font = this.font;
+        int pw = 240, ph = 200;
+        int px = (this.width - pw) / 2, py = (this.height - ph) / 2;
+
+        g.fill(0, 0, this.width, this.height, 0x66000000);
+        g.fill(px, py, px + pw, py + ph, 0xFF1E1E1E);
+        g.renderOutline(px, py, pw, ph, 0xFF555555);
+
+        g.drawString(font, "§lImportar Interface", px + 10, py + 8, 0xFFCCCCCC, false);
+        g.fill(px + 6, py + 20, px + pw - 6, py + 21, 0xFF444444);
+
+        if (listaInterfaces.isEmpty()) {
+            g.drawString(font, "No hay interfaces guardadas.", px + 10, py + 40, 0xFF888888, false);
+        } else {
+            int iy = py + 30;
+            for (String name : listaInterfaces) {
+                boolean hov = mx >= px + 6 && mx <= px + pw - 6 && my >= iy && my <= iy + 20;
+                g.fill(px + 6, iy, px + pw - 6, iy + 20, hov ? 0xFF3A3A3A : 0xFF252525);
+                if (hov) g.renderOutline(px + 6, iy, pw - 12, 20, 0xFF555555);
+                g.drawString(font, name, px + 12, iy + 6, 0xFFAAAAAA, false);
+                iy += 22;
+            }
+        }
+    }
+
+    private int calcBottomStart() {
+        int count = 0;
+        for (ColorEntry ce : COLORES) {
+            if (ce.tab == selectedTab) count++;
+        }
+        int rows = (count + 2) / 3; // ceil(count / 3)
+        int minVistaH = 120;
+        int gridH = Math.max(rows * ROW_H + 16, minVistaH);
+        return this.height - TIP_H - TAB_BAR_H - gridH;
+    }
+
+    private void renderPreviewDialogoAt(GuiGraphics g, int rx, int ry, int boxW, int boxH) {
+
+        int outX = rx - 4; int outY = ry - 4; int outW = boxW + 8; int outH = boxH + 8;
+        g.fill(outX + 4, outY + 4, outX + outW + 4, outY + outH + 4, 0x55000000);
+        g.fill(outX + 3, outY, outX + outW - 3, outY + outH, DialogueColors.outerBg);
+        g.fill(outX, outY + 3, outX + outW, outY + outH - 3, DialogueColors.outerBg);
+        g.fill(outX + 1, outY + 1, outX + outW - 1, outY + outH - 1, DialogueColors.outerBg);
+        g.fill(outX + 2, outY + 2, outX + outW - 2, outY + outH - 2, DialogueColors.outerBg);
+        g.fill(outX + 4, outY, outX + outW - 3, outY + 1, DialogueColors.trazoExterior);
+        g.fill(outX, outY + 4, outX + 1, outY + outH - 3, DialogueColors.trazoExterior);
+        g.fill(outX + 2, outY + 1, outX + 4, outY + 2, DialogueColors.trazoExterior);
+        g.fill(outX + 1, outY + 2, outX + 2, outY + 4, DialogueColors.trazoExterior);
+
+        int inX = rx; int inY = ry; int inW = boxW; int inH = boxH;
+        g.fill(inX + 3, inY - 1, inX + inW - 3, inY + inH + 1, DialogueColors.trazoRecuadro);
+        g.fill(inX - 1, inY + 3, inX + inW + 1, inY + inH - 3, DialogueColors.trazoRecuadro);
+        g.fill(inX + 1, inY, inX + inW - 1, inY + inH, DialogueColors.trazoRecuadro);
+        g.fill(inX, inY + 1, inX + inW, inY + inH - 1, DialogueColors.trazoRecuadro);
+
+        g.fill(inX + 3, inY, inX + inW - 3, inY + inH, DialogueColors.mainBg);
+        g.fill(inX, inY + 3, inX + inW, inY + inH - 3, DialogueColors.mainBg);
+        g.fill(inX + 1, inY + 1, inX + inW - 1, inY + inH - 1, DialogueColors.mainBg);
+        g.fill(inX + 2, inY + 2, inX + inW - 2, inY + inH - 2, DialogueColors.mainBg);
+
+        g.fill(inX + 4, inY, inX + inW - 3, inY + 1, DialogueColors.trazoInterior);
+        g.fill(inX, inY + 4, inX + 1, inY + inH - 3, DialogueColors.trazoInterior);
+        g.fill(inX + 2, inY + 1, inX + 4, inY + 2, DialogueColors.trazoInterior);
+        g.fill(inX + 1, inY + 2, inX + 2, inY + 4, DialogueColors.trazoInterior);
+
+        g.drawString(this.font, "§lAldeano de Prueba", rx + 12, ry + 10, DialogueColors.textNPC, false);
+
+        String previewText = "Hola viajero, necesito que me ayudes con una tarea muy importante...";
+        g.drawWordWrap(this.font, Component.literal(previewText), rx + 12, ry + 26, boxW - 24, DialogueColors.textNPC);
+
+        int sepY = ry + 55;
+        g.fill(rx + 8, sepY, rx + boxW - 8, sepY + 1, DialogueColors.separator);
+        g.fill(rx + 8, sepY + 1, rx + boxW - 8, sepY + 2, DialogueColors.separatorSombra);
+
+        int pad = 12, gap = 6, btnH = 22;
+        int halfW = (boxW - pad * 2 - gap) / 2;
+        String[] ops = {"Aceptar", "Rechazar"};
+        for (int i = 0; i < 2; i++) {
+            int bX = rx + pad + i * (halfW + gap);
+            int bY = sepY + 8;
+            int bW = halfW;
+            boolean hov = i == 0;
+            g.fill(bX, bY - 1, bX + bW, bY, DialogueColors.btnOutline);
+            g.fill(bX, bY + btnH, bX + bW, bY + btnH + 1, DialogueColors.btnOutline);
+            g.fill(bX - 1, bY, bX, bY + btnH, DialogueColors.btnOutline);
+            g.fill(bX + bW, bY, bX + bW + 1, bY + btnH, DialogueColors.btnOutline);
+
+            int cFondo = hov ? DialogueColors.hoverGreen : DialogueColors.btnBgNorm;
+            g.fill(bX, bY, bX + bW, bY + btnH, cFondo);
+
+            int cLight = hov ? DialogueColors.hoverLight : DialogueColors.btnLight;
+            g.fill(bX, bY, bX + bW, bY + 1, cLight);
+            g.fill(bX, bY, bX + 1, bY + btnH, cLight);
+
+            int cDark = hov ? DialogueColors.hoverDark : DialogueColors.btnDark;
+            g.fill(bX, bY + btnH - 2, bX + bW, bY + btnH, cDark);
+            g.fill(bX + bW - 1, bY, bX + bW, bY + btnH, cDark);
+
+            g.drawString(this.font, ops[i], bX + (bW - this.font.width(ops[i])) / 2, bY + (btnH - 8) / 2, DialogueColors.btnText, false);
+        }
+    }
+
+    private boolean mouseClickedInterface(double mx, double my) {
+        int bottomStart = calcBottomStart();
+        int contentEndY = this.height - TIP_H;
+        int vistaW = 130;
+        int lastRowY = bottomStart + TAB_BAR_H;
+
+        // ─── HEADER BUTTONS ───
+        if (my < HEADER_H) {
+            int btnW = 76, btnH = 26, btnY = (HEADER_H - btnH) / 2;
+            int gap = 6;
+            int rightEdge = this.width - 10;
+            int exportX = rightEdge - btnW;
+            int importX = exportX - btnW - gap;
+
+            if (mx >= importX && mx <= importX + btnW && my >= btnY && my <= btnY + btnH) {
+                listaInterfaces = questgrupo.questmod.client.InterfaceManager.obtenerListaInterfaces();
+                mostrarPopupImportarInterface = true;
+                selectedImportName = null;
+                return true;
+            }
+
+            if (mx >= exportX && mx <= exportX + btnW && my >= btnY && my <= btnY + btnH) {
+                mostrarPopupGuardarInterface = true;
+                this.inputNomInterface.setValue("");
+                this.inputNomInterface.setFocused(true);
+                return true;
+            }
+            return false;
+        }
+
+        // ─── MAIN PREVIEW AREA (dialog zone detection) ───
+        if (my >= HEADER_H && my < bottomStart) {
+            if (modoSeleccionElemento && mx >= dialogRX && mx <= dialogRX + dialogW && my >= dialogRY && my <= dialogRY + dialogH) {
+                int rx = dialogRX, ry = dialogRY, boxW = dialogW;
+                int sepY = ry + 55;
+                int pad = 12, gap = 6, btnH = 22;
+                int halfW = (boxW - pad * 2 - gap) / 2;
+                String target = null;
+                int tab = -1;
+
+                if (my >= ry + 10 && my < ry + 24) {
+                    target = "textNPC"; tab = 0;
+                } else if (my >= ry + 26 && my < ry + 54) {
+                    target = "textNPC"; tab = 0;
+                } else if (my >= sepY && my < sepY + 2) {
+                    target = "separator"; tab = 0;
+                } else if (my >= sepY + 8 && my < sepY + 8 + btnH) {
+                    if (mx < rx + pad + halfW) {
+                        target = "btnBgNorm"; tab = 1;
+                    } else {
+                        target = "hoverGreen"; tab = 2;
+                    }
+                }
+
+                if (target != null) {
+                    selectedTab = tab;
+                    for (int idx = 0; idx < COLORES.length; idx++) {
+                        if (COLORES[idx].target.equals(target)) {
+                            interfazColorFocused = idx;
+                            abrirPickerColor(target);
+                            break;
+                        }
+                    }
+                }
+                modoSeleccionElemento = false;
+                return true;
+            }
+            // Click in main area but not on dialog → cancel selection mode
+            if (modoSeleccionElemento) {
+                modoSeleccionElemento = false;
+                return true;
+            }
+            return false;
+        }
+
+        // ─── TABS ───
+        if (my >= bottomStart && my < lastRowY) {
+            int tabY = bottomStart + 4;
+            int tabH = TAB_BAR_H - 6;
+            int tabStartX = 8;
+            for (int i = 0; i < TAB_LABELS.length; i++) {
+                if (mx >= tabStartX && mx <= tabStartX + TAB_BTN_W && my >= tabY && my <= tabY + tabH) {
+                    selectedTab = i;
+                    return true;
+                }
+                tabStartX += TAB_BTN_W;
+            }
+            return false;
+        }
+
+        // ─── BOTTOM CONTENT AREA ───
+        if (my >= lastRowY && my < contentEndY) {
+
+            // VISTA PREVIA button
+            int vistaX = this.width - vistaW - 14;
+            int vistaY = lastRowY + 8;
+            if (mx >= vistaX && mx < vistaX + vistaW) {
+                int btnSelY = vistaY + 81;
+                if (mx >= vistaX + 6 && mx <= vistaX + vistaW - 6 && my >= btnSelY && my <= btnSelY + 22) {
+                    modoSeleccionElemento = !modoSeleccionElemento;
+                    return true;
+                }
+                return false;
+            }
+
+            // 3-column color grid
+            int gridX = 17;
+            int gridY = lastRowY + 8;
+            int gridW = this.width - vistaW - gridX * 2 - 4;
+            int cols = 3;
+            int cellSlot = gridW / cols;
+            int cellW = cellSlot - 2;
+
+            int itemIdx = 0;
+            for (int idx = 0; idx < COLORES.length; idx++) {
+                ColorEntry ce = COLORES[idx];
+                if (ce.tab != selectedTab) continue;
+
+                int col = itemIdx % cols;
+                int row = itemIdx / cols;
+                int cx = gridX + col * cellSlot;
+                int cy = gridY + row * ROW_H;
+
+                if (mx >= cx && mx <= cx + cellW - 2 && my >= cy && my <= cy + ROW_H) {
+                    interfazColorFocused = idx;
+                    abrirPickerColor(ce.target);
+                    return true;
+                }
+
+                itemIdx++;
+            }
+            return false;
+        }
+
+        return false;
+    }
+
+    private void abrirPickerColor(String target) {
+        this.interfazColorTarget = target;
+        this.savedColorHerramientas = GlobalGuiSettings.colorHerramientas;
+        int currentColor = DialogueColors.get(target);
+        TopBar.openPicker(currentColor, TopBar.BTN_TOOL_COLOR, null, null);
+    }
+
     private void renderBrushStroke(GuiGraphics g, GlobalGuiSettings.BrushStroke stroke) {
         int prevX = -1, prevY = -1;
         int grosor = Math.max(1, stroke.grosor);
@@ -1015,6 +1609,50 @@ this.inputColor.setResponder(s -> {
 
     @Override
     public boolean mouseClicked(double mx, double my, int btn) {
+        if (modoInterface) {
+            if (TopBar.colorPickerVisible) {
+                if (super.mouseClicked(mx, my, btn)) return true;
+                if (TopBar.handleModalClick(mx, my)) return true;
+                return true;
+            }
+            if (mostrarPopupImportarInterface) {
+                int pw = 240, ph = 200;
+                int px = (this.width - pw) / 2, py = (this.height - ph) / 2;
+                if (mx < px || mx > px + pw || my < py || my > py + ph) {
+                    mostrarPopupImportarInterface = false;
+                    return true;
+                }
+                int iy = py + 30;
+                for (String name : listaInterfaces) {
+                    if (mx >= px + 6 && mx <= px + pw - 6 && my >= iy && my <= iy + 20) {
+                        questgrupo.questmod.client.InterfaceManager.cargarColoresInterface(name);
+                        mostrarPopupImportarInterface = false;
+                        return true;
+                    }
+                    iy += 22;
+                }
+                return true;
+            }
+            if (mostrarPopupGuardarInterface) {
+                int ipW = 200, ipH = 90;
+                int ipX = (this.width - ipW) / 2, ipY = (this.height - ipH) / 2;
+                if (this.btnGuardarInterface != null && this.btnGuardarInterface.isMouseOver(mx, my)) {
+                    this.btnGuardarInterface.mouseClicked(mx, my, btn); return true;
+                }
+                if (mx >= ipX + 9 && mx <= ipX + ipW - 9 && my >= ipY + 21 && my <= ipY + 39) {
+                    this.inputNomInterface.setFocused(true);
+                    this.inputNomInterface.mouseClicked(mx, my, btn);
+                    return true;
+                }
+                this.inputNomInterface.setFocused(false);
+                mostrarPopupGuardarInterface = false;
+                this.inputNomInterface.visible = false;
+                this.btnGuardarInterface.visible = false;
+                return true;
+            }
+            return mouseClickedInterface(mx, my);
+        }
+
         if (GlobalGuiSettings.editorActivo && DownBar.handleClick(mx, my, this.width, this.height)) return true;
         if (RightBar.handleClick(mx, my, this.width, this.height)) {
             this.pSel = GlobalGuiSettings.panelSeleccionado;
@@ -1075,6 +1713,28 @@ this.inputColor.setResponder(s -> {
             mostrarPopupGuardar = false;
             this.inputGuardarNombre.visible = false;
             this.btnGuardarConfirmar.visible = false;
+            return true;
+        }
+
+        // --- POPUP GUARDAR INTERFACE ---
+        if (mostrarPopupGuardarInterface) {
+            int ipW = 200, ipH = 90;
+            int ipX = (this.width - ipW) / 2, ipY = (this.height - ipH) / 2;
+
+            if (this.btnGuardarInterface != null && this.btnGuardarInterface.isMouseOver(mx, my)) {
+                this.btnGuardarInterface.mouseClicked(mx, my, btn);
+                return true;
+            }
+            if (mx >= ipX + 9 && mx <= ipX + ipW - 9 && my >= ipY + 21 && my <= ipY + 39) {
+                this.inputNomInterface.setFocused(true);
+                this.inputNomInterface.mouseClicked(mx, my, btn);
+                return true;
+            } else {
+                this.inputNomInterface.setFocused(false);
+            }
+            mostrarPopupGuardarInterface = false;
+            this.inputNomInterface.visible = false;
+            this.btnGuardarInterface.visible = false;
             return true;
         }
 
@@ -1406,6 +2066,15 @@ this.inputColor.setResponder(s -> {
                     this.selectedGuiForLoading = null;
                     this.mostrarPopupGuardar = false;
                     this.listaGuisDisponibles = questgrupo.questmod.client.GuiLayoutManager.obtenerListaLayouts();
+                } else if (LeftSidebar.showInterfaceEditorRequested) {
+                    LeftSidebar.showInterfaceEditorRequested = false;
+                    this.modoInterface = true;
+                    this.modoSeleccionElemento = false;
+                    this.selectedTab = 0;
+                    this.interfazColorFocused = -1;
+                    savedTopBarVisible = TopBar.isVisible();
+                    TopBar.setVisible(false);
+                    DialogueColors.restaurarDefaults();
                 } else {
                     if (GlobalGuiSettings.TEXTOS.size() > textosAnteriores) {
                         this.tSel = GlobalGuiSettings.TEXTOS.get(GlobalGuiSettings.TEXTOS.size() - 1);
@@ -1601,6 +2270,10 @@ this.inputColor.setResponder(s -> {
 
     @Override
     public boolean mouseScrolled(double mx, double my, double scrollDelta) {
+        if (modoInterface) {
+            return false;
+        }
+
         if (RightBar.handleScroll(mx, my, scrollDelta, this.width, this.height)) return true;
 
         for (int i = GlobalGuiSettings.PANELES.size() - 1; i >= 0; i--) {
@@ -1688,6 +2361,26 @@ this.inputColor.setResponder(s -> {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (modoInterface) {
+            if (keyCode == 256) {
+                modoInterface = false;
+                TopBar.setVisible(savedTopBarVisible);
+                if (TopBar.colorPickerVisible) TopBar.closePicker(false);
+                return true;
+            }
+            if (keyCode == 257 && mostrarPopupGuardarInterface && this.inputNomInterface.isFocused()) {
+                String nombre = this.inputNomInterface.getValue().trim();
+                if (!nombre.isEmpty()) {
+                    InterfaceManager.guardarColoresInterface(nombre);
+                }
+                mostrarPopupGuardarInterface = false;
+                this.inputNomInterface.visible = false;
+                this.btnGuardarInterface.visible = false;
+                return true;
+            }
+            return super.keyPressed(keyCode, scanCode, modifiers);
+        }
+
         // PRIORIDAD CERO: Manejar teclado en el buscador de texturas
         if (this.buscadorTexturas != null && this.buscadorTexturas.visible && this.buscadorTexturas.isFocused()) {
             if (keyCode == 256) { this.buscadorTexturas.setFocused(false); return true; } // ESC para soltar el buscador

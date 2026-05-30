@@ -142,10 +142,21 @@ public class GuiLayoutManager {
         }
     }
 
-    private static class LayoutData {
+    public static class LayoutData {
         public java.util.List<GlobalGuiSettings.PanelConfig> paneles = new ArrayList<>();
         public java.util.List<GlobalGuiSettings.TextConfig> textos = new ArrayList<>();
         public java.util.List<GlobalGuiSettings.GrupoDibujo> dibujos = new ArrayList<>();
+    }
+
+    public static LayoutData cargarLayoutPuro(String nombre) {
+        File file = getFile(nombre);
+        if (!file.exists()) return null;
+        try (FileReader reader = new FileReader(file)) {
+            return GSON.fromJson(reader, LayoutData.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private static class ResourceLocationAdapter implements JsonSerializer<ResourceLocation>, JsonDeserializer<ResourceLocation> {

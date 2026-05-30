@@ -95,6 +95,8 @@ public class GlobalGuiSettings {
         public boolean visible = true;
         public boolean bloqueado = false;
 
+        public String ancla = "ANCLA_CENTRO";
+
         public boolean desplegado = true;
         public boolean principalesAbierto = true;
         public boolean secundariasAbierto = true;

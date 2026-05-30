@@ -289,6 +289,7 @@ public class Config {
         public String id; public String nombre; public String descripcion;
         public String mob; public String profession; public String type; public String textura;
         public boolean esPrimaria;
+        public String interfaceName;
         
         public transient net.minecraft.resources.ResourceLocation iconoRL;
 

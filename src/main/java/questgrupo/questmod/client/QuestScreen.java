@@ -20,19 +20,19 @@ public class QuestScreen extends Screen {
     private final UUID entidadUUID;
     private final boolean yaAceptada;
     private static final Random RANDOM = new Random();
-    
+
     private String nodoActualId;
     private Config.NodoDialogo nodoActual;
-    
+
     private String textoNPCSeleccionado = "...";
     private final List<String> textosOpcionesSeleccionados = new ArrayList<>();
-    
+
     private final List<Integer> textScrollOffsets = new ArrayList<>();
     private final List<Integer> scrollPauseTicks = new ArrayList<>();
     private static final int SCROLL_SPEED = 2;
     private static final int SCROLL_PAUSE = 60;
     private static final int INITIAL_SCROLL_PAUSE = 30;
-    
+
     private int caracteresVisibles = 0;
     private int ticksTranscurridos = 0;
     private static final int VELOCIDAD_TEXTO = 1;
@@ -40,20 +40,6 @@ public class QuestScreen extends Screen {
     private static final int BOX_W = 345;
     private static final int BOX_H = 125;
     private static final int BOX_MARGIN_BOTTOM = 20;
-
-    private static final int C_MAIN_BG      = 0xFF4C4238;
-    private static final int C_OUTER_BG     = 0xFF655746;
-    private static final int C_TRAZO_NEGRO  = 0xFF403A30;
-    private static final int C_TEXTO_NP     = 0xFFCECECF;
-    private static final int C_SEPARATOR    = 0xFF312D26;
-
-    private static final int C_BTN_LIGHT    = 0xFF837563;
-    private static final int C_BTN_DARK     = 0xFF383028;
-    private static final int C_BTN_BG_NORM  = 0xFF665A48;
-    private static final int C_BTN_TEXT     = 0xFFF2F2F2;
-    private static final int C_HOVER_GREEN  = 0xFF4A792A;
-    private static final int C_HOVER_LIGHT  = 0xFF73BD42;
-    private static final int C_HOVER_DARK   = 0xFF36591F;
 
     public QuestScreen(Config.MisionData mision, String nombreNPC, boolean yaAceptada, UUID entidadUUID) {
         super(Component.literal("Dialogo Quest"));
@@ -66,16 +52,21 @@ public class QuestScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+        if (mision.interfaceName != null && !mision.interfaceName.isEmpty()) {
+            questgrupo.questmod.client.InterfaceManager.cargarColoresInterface(mision.interfaceName);
+        } else {
+            DialogueColors.restaurarDefaults();
+        }
         if (!yaAceptada) {
             this.nodoActualId = mision.puntos_de_entrada.getOrDefault("sin_aceptar", "nodo_inicio");
         } else {
             this.nodoActualId = mision.puntos_de_entrada.getOrDefault("en_progreso", "nodo_espera");
         }
-        
+
         this.nodoActual = mision.nodos.get(this.nodoActualId);
         seleccionarVariantes();
     }
-    
+
     private void seleccionarVariantes() {
         textosOpcionesSeleccionados.clear();
         if (this.nodoActual != null) {
@@ -109,7 +100,7 @@ public class QuestScreen extends Screen {
         int rx = bx(), ry = by();
 
         renderEstructuraContenedor(g, rx, ry);
-        g.drawString(this.font, "§l" + nombreNPC, rx + 12, ry + 10, C_TEXTO_NP, false);
+        g.drawString(this.font, "§l" + nombreNPC, rx + 12, ry + 10, DialogueColors.textNPC, false);
 
         int ex = rx + BOX_W - 20, ey = ry + 10;
         boolean hovExit = mouseX >= ex && mouseX <= ex + 10 && mouseY >= ey && mouseY <= ey + 10;
@@ -117,11 +108,11 @@ public class QuestScreen extends Screen {
 
         String completo = getTextoActual();
         String mostrar = completo.substring(0, Math.min(caracteresVisibles, completo.length()));
-        g.drawWordWrap(this.font, Component.literal(mostrar), rx + 12, ry + 26, BOX_W - 24, C_TEXTO_NP);
+        g.drawWordWrap(this.font, Component.literal(mostrar), rx + 12, ry + 26, BOX_W - 24, DialogueColors.textNPC);
 
         int separatorY = ry + 55;
-        g.fill(rx + 8, separatorY, rx + BOX_W - 8, separatorY + 1, C_SEPARATOR);
-        g.fill(rx + 8, separatorY + 1, rx + BOX_W - 8, separatorY + 2, 0xFF5A4D42);
+        g.fill(rx + 8, separatorY, rx + BOX_W - 8, separatorY + 1, DialogueColors.separator);
+        g.fill(rx + 8, separatorY + 1, rx + BOX_W - 8, separatorY + 2, DialogueColors.separatorSombra);
 
         renderRespuestasGrid(g, mouseX, mouseY, rx, separatorY + 8);
 
@@ -136,30 +127,30 @@ public class QuestScreen extends Screen {
     private void renderEstructuraContenedor(GuiGraphics g, int rx, int ry) {
         int outX = rx - 4; int outY = ry - 4; int outW = BOX_W + 8; int outH = BOX_H + 8;
         g.fill(outX + 4, outY + 4, outX + outW + 4, outY + outH + 4, 0x55000000);
-        g.fill(outX + 3, outY, outX + outW - 3, outY + outH, C_OUTER_BG);
-        g.fill(outX, outY + 3, outX + outW, outY + outH - 3, C_OUTER_BG);
-        g.fill(outX + 1, outY + 1, outX + outW - 1, outY + outH - 1, C_OUTER_BG);
-        g.fill(outX + 2, outY + 2, outX + outW - 2, outY + outH - 2, C_OUTER_BG);
-        g.fill(outX + 4, outY, outX + outW - 3, outY + 1, 0xFF7D7060);
-        g.fill(outX, outY + 4, outX + 1, outY + outH - 3, 0xFF7D7060);
-        g.fill(outX + 2, outY + 1, outX + 4, outY + 2, 0xFF7D7060);
-        g.fill(outX + 1, outY + 2, outX + 2, outY + 4, 0xFF7D7060);
+        g.fill(outX + 3, outY, outX + outW - 3, outY + outH, DialogueColors.outerBg);
+        g.fill(outX, outY + 3, outX + outW, outY + outH - 3, DialogueColors.outerBg);
+        g.fill(outX + 1, outY + 1, outX + outW - 1, outY + outH - 1, DialogueColors.outerBg);
+        g.fill(outX + 2, outY + 2, outX + outW - 2, outY + outH - 2, DialogueColors.outerBg);
+        g.fill(outX + 4, outY, outX + outW - 3, outY + 1, DialogueColors.trazoExterior);
+        g.fill(outX, outY + 4, outX + 1, outY + outH - 3, DialogueColors.trazoExterior);
+        g.fill(outX + 2, outY + 1, outX + 4, outY + 2, DialogueColors.trazoExterior);
+        g.fill(outX + 1, outY + 2, outX + 2, outY + 4, DialogueColors.trazoExterior);
 
         int inX = rx; int inY = ry; int inW = BOX_W; int inH = BOX_H;
-        g.fill(inX + 3, inY - 1, inX + inW - 3, inY + inH + 1, C_TRAZO_NEGRO);
-        g.fill(inX - 1, inY + 3, inX + inW + 1, inY + inH - 3, C_TRAZO_NEGRO);
-        g.fill(inX + 1, inY, inX + inW - 1, inY + inH, C_TRAZO_NEGRO);
-        g.fill(inX, inY + 1, inX + inW, inY + inH - 1, C_TRAZO_NEGRO);
+        g.fill(inX + 3, inY - 1, inX + inW - 3, inY + inH + 1, DialogueColors.trazoRecuadro);
+        g.fill(inX - 1, inY + 3, inX + inW + 1, inY + inH - 3, DialogueColors.trazoRecuadro);
+        g.fill(inX + 1, inY, inX + inW - 1, inY + inH, DialogueColors.trazoRecuadro);
+        g.fill(inX, inY + 1, inX + inW, inY + inH - 1, DialogueColors.trazoRecuadro);
 
-        g.fill(inX + 3, inY, inX + inW - 3, inY + inH, C_MAIN_BG);
-        g.fill(inX, inY + 3, inX + inW, inY + inH - 3, C_MAIN_BG);
-        g.fill(inX + 1, inY + 1, inX + inW - 1, inY + inH - 1, C_MAIN_BG);
-        g.fill(inX + 2, inY + 2, inX + inW - 2, inY + inH - 2, C_MAIN_BG);
+        g.fill(inX + 3, inY, inX + inW - 3, inY + inH, DialogueColors.mainBg);
+        g.fill(inX, inY + 3, inX + inW, inY + inH - 3, DialogueColors.mainBg);
+        g.fill(inX + 1, inY + 1, inX + inW - 1, inY + inH - 1, DialogueColors.mainBg);
+        g.fill(inX + 2, inY + 2, inX + inW - 2, inY + inH - 2, DialogueColors.mainBg);
 
-        g.fill(inX + 4, inY, inX + inW - 3, inY + 1, 0xFF736351);
-        g.fill(inX, inY + 4, inX + 1, inY + inH - 3, 0xFF736351);
-        g.fill(inX + 2, inY + 1, inX + 4, inY + 2, 0xFF736351);
-        g.fill(inX + 1, inY + 2, inX + 2, inY + 4, 0xFF736351);
+        g.fill(inX + 4, inY, inX + inW - 3, inY + 1, DialogueColors.trazoInterior);
+        g.fill(inX, inY + 4, inX + 1, inY + inH - 3, DialogueColors.trazoInterior);
+        g.fill(inX + 2, inY + 1, inX + 4, inY + 2, DialogueColors.trazoInterior);
+        g.fill(inX + 1, inY + 2, inX + 2, inY + 4, DialogueColors.trazoInterior);
     }
 
     private void renderRespuestasGrid(GuiGraphics g, int mx, int my, int rx, int ry) {
@@ -177,19 +168,19 @@ public class QuestScreen extends Screen {
 
             boolean hov = mx >= bX && mx <= bX + bW && my >= bY && my <= bY + btnH;
 
-            g.fill(bX, bY - 1, bX + bW, bY, 0xFF201C17);
-            g.fill(bX, bY + btnH, bX + bW, bY + btnH + 1, 0xFF201C17);
-            g.fill(bX - 1, bY, bX, bY + btnH, 0xFF201C17);
-            g.fill(bX + bW, bY, bX + bW + 1, bY + btnH, 0xFF201C17);
+            g.fill(bX, bY - 1, bX + bW, bY, DialogueColors.btnOutline);
+            g.fill(bX, bY + btnH, bX + bW, bY + btnH + 1, DialogueColors.btnOutline);
+            g.fill(bX - 1, bY, bX, bY + btnH, DialogueColors.btnOutline);
+            g.fill(bX + bW, bY, bX + bW + 1, bY + btnH, DialogueColors.btnOutline);
 
-            int cFondo = hov ? C_HOVER_GREEN : C_BTN_BG_NORM;
+            int cFondo = hov ? DialogueColors.hoverGreen : DialogueColors.btnBgNorm;
             g.fill(bX, bY, bX + bW, bY + btnH, cFondo);
 
-            int cLight = hov ? C_HOVER_LIGHT : C_BTN_LIGHT;
+            int cLight = hov ? DialogueColors.hoverLight : DialogueColors.btnLight;
             g.fill(bX, bY, bX + bW, bY + 1, cLight);
             g.fill(bX, bY, bX + 1, bY + btnH, cLight);
 
-            int cDark = hov ? C_HOVER_DARK : C_BTN_DARK;
+            int cDark = hov ? DialogueColors.hoverDark : DialogueColors.btnDark;
             g.fill(bX, bY + btnH - 2, bX + bW, bY + btnH, cDark);
             g.fill(bX + bW - 1, bY, bX + bW, bY + btnH, cDark);
 
@@ -199,11 +190,11 @@ public class QuestScreen extends Screen {
             if (textFullWidth > maxTextW) {
                 int offset = i < textScrollOffsets.size() ? textScrollOffsets.get(i) : 0;
                 g.enableScissor(bX, bY, bX + bW, bY + btnH);
-                g.drawString(this.font, texto, bX + 4 - offset, bY + (btnH - 8) / 2, C_BTN_TEXT, false);
+                g.drawString(this.font, texto, bX + 4 - offset, bY + (btnH - 8) / 2, DialogueColors.btnText, false);
                 g.disableScissor();
             } else {
                 int textX = bX + (bW - textFullWidth) / 2;
-                g.drawString(this.font, texto, textX, bY + (btnH - 8) / 2, C_BTN_TEXT, false);
+                g.drawString(this.font, texto, textX, bY + (btnH - 8) / 2, DialogueColors.btnText, false);
             }
         }
     }
@@ -223,9 +214,9 @@ public class QuestScreen extends Screen {
     private void ejecutarOpcion(int i) {
         if (nodoActual != null && nodoActual.opciones != null && i < nodoActual.opciones.size()) {
             Config.OpcionDialogo opcion = nodoActual.opciones.get(i);
-            
+
             String sigDestino = opcion.destino;
-            
+
             if ("COMPROBAR_ENTREGA".equals(opcion.accion)) {
                 if (!verificarObjetivos()) {
                     sigDestino = (opcion.destino_fallo != null && !opcion.destino_fallo.isEmpty()) ? opcion.destino_fallo : "CERRAR";
@@ -233,11 +224,11 @@ public class QuestScreen extends Screen {
                     Messages.sendToServer(new PacketAceptarMision(this.entidadUUID, this.mision.nombre));
                 }
             }
-            
+
             if ("ACEPTAR_MISION".equals(opcion.accion)) {
                 Messages.sendToServer(new PacketAceptarMision(this.entidadUUID, this.mision.nombre));
             }
-            
+
             if ("CERRAR".equals(sigDestino) || "ACEPTAR_Y_CERRAR".equals(opcion.accion)) {
                 this.onClose();
             } else if (sigDestino != null && !sigDestino.isEmpty()) {
