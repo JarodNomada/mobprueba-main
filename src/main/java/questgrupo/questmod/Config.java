@@ -122,6 +122,7 @@ public class Config {
         g1.type = "plains";
         g1.textura = "minecraft:textures/item/wheat.png";
         g1.esPrimaria = true;
+        g1.interfaceName = "default";
 
         Objetivo objG1 = new Objetivo(); 
         objG1.item = "minecraft:wheat"; 
@@ -275,11 +276,179 @@ public class Config {
 
         defaultConfig.misiones.add(g1);
 
+        // ─── MISIÓN 2: Plaga Nocturna (requiere completar la primera) ───
+        MisionData g2 = new MisionData();
+        g2.id = "granja_2_zombies";
+        g2.nombre = "Plaga Nocturna";
+        g2.descripcion = "Los zombies acechan los cultivos del granjero Bob.";
+        g2.mob = "minecraft:villager";
+        g2.profession = "farmer";
+        g2.type = "plains";
+        g2.textura = "minecraft:textures/item/rotten_flesh.png";
+        g2.esPrimaria = false;
+        g2.interfaceName = "default";
+
+        g2.requisitos.misiones_completadas.add("granja_1_cosecha");
+
+        Objetivo objG2 = new Objetivo();
+        objG2.entidad = "minecraft:zombie";
+        objG2.cantidad = 8;
+        objG2.texto = "Zombies eliminados";
+        g2.objetivos.add(objG2);
+
+        Recompensa recG2 = new Recompensa();
+        recG2.item = "minecraft:emerald";
+        recG2.cantidad = 3;
+        g2.recompensas.add(recG2);
+
+        g2.puntos_de_entrada.put("sin_aceptar", "nodo_inicio");
+        g2.puntos_de_entrada.put("en_progreso", "nodo_espera");
+
+        g2.nodos.put("nodo_inicio", new NodoDialogo(
+            List.of(
+                "Otra vez tú, muchacho. Esta noche los zombies no me dejaron dormir.",
+                "¿Has oído esos gruñidos? Los zombies están pisoteando todo al este.",
+                "Necesito a alguien con valor. Los zombies merodean desde el bosque."
+            ),
+            List.of(
+                new OpcionDialogo(List.of("¡Los eliminaré!", "Dime dónde y voy."), "ACEPTAR_MISION", "nodo_aceptacion"),
+                new OpcionDialogo(List.of("¿Cuánto pagas?"), "NADA", "nodo_negociacion"),
+                new OpcionDialogo(List.of("Un zombie no me asusta."), "NADA", "nodo_fanfarron"),
+                new OpcionDialogo(List.of("Ni loco salgo de noche."), "NADA", "nodo_miedo")
+            )
+        ));
+
+        g2.nodos.put("nodo_fanfarron", new NodoDialogo(
+            List.of(
+                "¡Ja! Ojalá te vea en acción. 8 zombies han bajado del cerro.",
+                "El valiente habla, pero el sabio actúa. Demuéstralo."
+            ),
+            List.of(
+                new OpcionDialogo(List.of("Acepto el reto."), "ACEPTAR_MISION", "nodo_aceptacion"),
+                new OpcionDialogo(List.of("Bueno, quizás mejor no..."), "NADA", "nodo_inicio")
+            )
+        ));
+
+        g2.nodos.put("nodo_negociacion", new NodoDialogo(
+            List.of(
+                "3 esmeraldas por la tranquilidad. ¿Te parece justo?",
+                "Las cosechas valen más que las esmeraldas. Acepto tu trato."
+            ),
+            List.of(
+                new OpcionDialogo(List.of("Trato hecho."), "ACEPTAR_MISION", "nodo_aceptacion"),
+                new OpcionDialogo(List.of("Sigue buscando, viejo."), "CERRAR", "")
+            )
+        ));
+
+        g2.nodos.put("nodo_miedo", new NodoDialogo(
+            List.of(
+                "Si no los paras, mañana no habrá pan para nadie. Ni para ti.",
+                "No digo que vayas solo. Consíguete una armadura y vuelve."
+            ),
+            List.of(
+                new OpcionDialogo(List.of("Está bien, lo haré."), "ACEPTAR_MISION", "nodo_aceptacion"),
+                new OpcionDialogo(List.of("No insistas, me voy."), "CERRAR", "")
+            )
+        ));
+
+        g2.nodos.put("nodo_aceptacion", new NodoDialogo(
+            List.of(
+                "Busca al este, donde el bosque se espesa. Ten cuidado.",
+                "¡Eso es! Acaba con ellos y vuelve con la recompensa.",
+                "Ve con cuidado. He oído que se juntan en el claro del este."
+            ),
+            List.of(
+                new OpcionDialogo(List.of("Vuelvo en seguida."), "NADA", "nodo_agradecimiento")
+            )
+        ));
+
+        g2.nodos.put("nodo_agradecimiento", new NodoDialogo(
+            List.of(
+                "Buena suerte, muchacho. Te espero con las esmeraldas.",
+                "Cuídate ahí fuera."
+            ),
+            null
+        ));
+
+        g2.nodos.put("nodo_espera", new NodoDialogo(
+            List.of(
+                "¿Ya acabaste con los zombies? El este aún gruñe.",
+                "Todavía se oyen por la noche. ¿Seguro que los eliminaste?"
+            ),
+            List.of(
+                new OpcionDialogo(List.of("Todos muertos. Aquí está la prueba.", "He acabado con todos."), "COMPROBAR_ENTREGA", "nodo_entrega", "nodo_mentira"),
+                new OpcionDialogo(List.of("Todavía no, vuelvo luego."), "CERRAR", "")
+            )
+        ));
+
+        g2.nodos.put("nodo_mentira", new NodoDialogo(
+            List.of(
+                "No me mientas. Aún se oyen gruñidos al este.",
+                "Tus botas no tienen barro de bosque. Vuelve cuando sea cierto."
+            ),
+            null
+        ));
+
+        g2.nodos.put("nodo_entrega", new NodoDialogo(
+            List.of(
+                "¡Bien hecho! La granja respira tranquila gracias a ti.",
+                "Eres más valiente de lo que aparentas. Toma tus esmeraldas.",
+                "Los cultivos están a salvo. Bob te lo agradece."
+            ),
+            List.of(
+                new OpcionDialogo(List.of("Siempre a tu servicio.", "Un placer, Bob."), "NADA", "nodo_despedida")
+            )
+        ));
+
+        g2.nodos.put("nodo_despedida", new NodoDialogo(
+            List.of(
+                "Vuelve cuando quieras, siempre hay trabajo en la granja.",
+                "Cuídate, muchacho. Y no dudes en visitarme."
+            ),
+            null
+        ));
+
+        defaultConfig.misiones.add(g2);
+
         File defaultFile = new File(CONFIG_DIR, "granjero.json");
         try (FileWriter writer = new FileWriter(defaultFile)) {
             GSON.toJson(defaultConfig, writer);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+
+        // Generar interface por defecto
+        File interfaceDir = new File(CONFIG_DIR.getParentFile(), "interface");
+        if (!interfaceDir.exists()) interfaceDir.mkdirs();
+        File defInterfaceFile = new File(interfaceDir, "default.json");
+        if (!defInterfaceFile.exists()) {
+            try (FileWriter w = new FileWriter(defInterfaceFile)) {
+                Map<String, Object> def = new HashMap<>();
+                def.put("outerBg", 0xFF655746);
+                def.put("mainBg", 0xFF4C4238);
+                def.put("trazoExterior", 0xFF7D7060);
+                def.put("trazoRecuadro", 0xFF403A30);
+                def.put("trazoInterior", 0xFF736351);
+                def.put("separator", 0xFF312D26);
+                def.put("separatorSombra", 0xFF5A4D42);
+                def.put("textNPC", 0xFFCECECF);
+                def.put("btnBgNorm", 0xFF665A48);
+                def.put("btnLight", 0xFF837563);
+                def.put("btnDark", 0xFF383028);
+                def.put("btnText", 0xFFF2F2F2);
+                def.put("btnOutline", 0xFF201C17);
+                def.put("hoverGreen", 0xFF4A792A);
+                def.put("hoverLight", 0xFF73BD42);
+                def.put("hoverDark", 0xFF36591F);
+                def.put("nameX", 12);
+                def.put("nameY", 10);
+                def.put("textX", 12);
+                def.put("textY", 26);
+                def.put("textWrapWidth", 226);
+                GSON.toJson(def, w);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 

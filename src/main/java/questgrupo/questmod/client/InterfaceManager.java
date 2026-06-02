@@ -4,6 +4,7 @@ import com.google.gson.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.fml.loading.FMLPaths;
+import questgrupo.questmod.client.DialogueLayout;
 
 import java.io.File;
 import java.io.FileReader;
@@ -65,6 +66,11 @@ public class InterfaceManager {
             data.hoverGreen = DialogueColors.hoverGreen;
             data.hoverLight = DialogueColors.hoverLight;
             data.hoverDark = DialogueColors.hoverDark;
+            data.nameX = DialogueLayout.nameX;
+            data.nameY = DialogueLayout.nameY;
+            data.textX = DialogueLayout.textX;
+            data.textY = DialogueLayout.textY;
+            data.textWrapWidth = DialogueLayout.textWrapWidth;
 
             try (FileWriter writer = new FileWriter(file)) {
                 GSON.toJson(data, writer);
@@ -102,6 +108,11 @@ public class InterfaceManager {
             DialogueColors.hoverGreen = data.hoverGreen;
             DialogueColors.hoverLight = data.hoverLight;
             DialogueColors.hoverDark = data.hoverDark;
+            DialogueLayout.nameX = data.nameX;
+            DialogueLayout.nameY = data.nameY;
+            DialogueLayout.textX = data.textX;
+            DialogueLayout.textY = data.textY;
+            DialogueLayout.textWrapWidth = data.textWrapWidth;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -124,5 +135,10 @@ public class InterfaceManager {
         public int hoverGreen = 0xFF4A792A;
         public int hoverLight = 0xFF73BD42;
         public int hoverDark = 0xFF36591F;
+        public int nameX = 12;
+        public int nameY = 10;
+        public int textX = 12;
+        public int textY = 26;
+        public int textWrapWidth = 226;
     }
 }

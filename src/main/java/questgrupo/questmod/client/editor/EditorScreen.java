@@ -10,6 +10,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import questgrupo.questmod.Config;
 import questgrupo.questmod.client.DialogueColors;
+import questgrupo.questmod.client.DialogueLayout;
 import questgrupo.questmod.client.GlobalGuiSettings;
 import questgrupo.questmod.client.InterfaceManager;
 import questgrupo.questmod.client.gui.FigurasEdit;
@@ -76,6 +77,10 @@ public class EditorScreen extends Screen {
     private java.util.List<String> listaInterfaces = new java.util.ArrayList<>();
     private String selectedImportName = null;
     private boolean modoSeleccionElemento = false;
+    private String elementoSeleccionado = null;
+    private boolean arrastrandoElemento = false;
+    private boolean redimensionandoAncho = false;
+    private int dragOffX, dragOffY;
     private int dialogRX, dialogRY, dialogW, dialogH;
 
     private static final int HEADER_H = 40;
@@ -1158,7 +1163,6 @@ this.inputColor.setResponder(s -> {
 
         // ─── COLOR PICKER ───
         if (TopBar.colorPickerVisible) {
-            g.fill(0, 0, this.width, this.height, 0x44000000);
             TopBar.render(g, this.width, 5, null, null);
         }
     }
@@ -1180,13 +1184,13 @@ this.inputColor.setResponder(s -> {
         boolean hovExport = mx >= exportX && mx <= exportX + btnW && my >= btnY && my <= btnY + btnH;
         g.fill(exportX, btnY, exportX + btnW, btnY + btnH, hovExport ? 0xCC4A4A4A : 0xCC333333);
         g.renderOutline(exportX, btnY, btnW, btnH, 0xFF555555);
-        g.drawString(font, "§lEXPORTAR", exportX + (btnW - font.width("EXPORTAR")) / 2, btnY + (btnH - 8) / 2, 0xFFCCCCCC, false);
+        g.drawString(font, "§lEXPORTAR", exportX + (btnW - font.width("§lEXPORTAR")) / 2, btnY + (btnH - 8) / 2, 0xFFCCCCCC, false);
 
         // IMPORTAR
         boolean hovImport = mx >= importX && mx <= importX + btnW && my >= btnY && my <= btnY + btnH;
         g.fill(importX, btnY, importX + btnW, btnY + btnH, hovImport ? 0xCC4A4A4A : 0xCC333333);
         g.renderOutline(importX, btnY, btnW, btnH, 0xFF555555);
-        g.drawString(font, "§lIMPORTAR", importX + (btnW - font.width("IMPORTAR")) / 2, btnY + (btnH - 8) / 2, 0xFFCCCCCC, false);
+        g.drawString(font, "§lIMPORTAR", importX + (btnW - font.width("§lIMPORTAR")) / 2, btnY + (btnH - 8) / 2, 0xFFCCCCCC, false);
     }
 
     private void renderInterfaceMain(GuiGraphics g, int mx, int my) {
@@ -1223,13 +1227,6 @@ this.inputColor.setResponder(s -> {
         int tabStartX = 8;
         int tabsEndX = tabStartX + TAB_LABELS.length * TAB_BTN_W;
 
-        // Tab backgrounds (no hover glow)
-        for (int i = 0; i < TAB_LABELS.length; i++) {
-            int tx = tabStartX + i * TAB_BTN_W;
-            int cBg = (i == selectedTab) ? 0xFF3A3A3A : 0xFF1E1E1E;
-            g.fill(tx, tabY, tx + TAB_BTN_W, tabY + tabH, cBg);
-        }
-
         // Outer border (#696969)
         int bc = 0xFF696969;
         int aStart = tabStartX + selectedTab * TAB_BTN_W;
@@ -1237,6 +1234,9 @@ this.inputColor.setResponder(s -> {
         g.fill(tabStartX, tabY, tabStartX + 1, tabY + tabH, bc);
         g.fill(tabsEndX - 1, tabY, tabsEndX, tabY + tabH, bc);
         g.fill(tabsEndX - 1, tabY + tabH - 1, this.width - 8, tabY + tabH, 0xFF696969);
+        // Bottom border — skip active tab so it blends with content
+        if (aStart > tabStartX) g.fill(tabStartX, tabY + tabH - 1, aStart, tabY + tabH, bc);
+        if (aStart + TAB_BTN_W < tabsEndX) g.fill(aStart + TAB_BTN_W, tabY + tabH - 1, tabsEndX, tabY + tabH, bc);
 
         // Internal vertical dividers (1px between tabs, no doubling)
         for (int i = 0; i < TAB_LABELS.length - 1; i++) {
@@ -1257,7 +1257,7 @@ this.inputColor.setResponder(s -> {
         for (int i = 0; i < TAB_LABELS.length; i++) {
             int tx = tabStartX + i * TAB_BTN_W;
             boolean active = i == selectedTab;
-            g.drawString(font, "§l" + TAB_LABELS[i], tx + (TAB_BTN_W - font.width(TAB_LABELS[i])) / 2, tabY + (tabH - 8) / 2, active ? 0xFFFFFFFF : 0xFF888888, false);
+            g.drawString(font, "§l" + TAB_LABELS[i], tx + (TAB_BTN_W - font.width("§l" + TAB_LABELS[i])) / 2, tabY + (tabH - 8) / 2, active ? 0xFFFFFFFF : 0xFF888888, false);
         }
 
         // ─── 3-COLUMN COLOR GRID ───
@@ -1313,17 +1313,31 @@ this.inputColor.setResponder(s -> {
 
         g.drawString(font, "§lVISTA PREVIA", vistaX + 6, vistaY + 6, 0xFFCCCCCC, false);
 
-        String[] vpLines = {
-            "Aqui puedes ver",
-            "el dialogo con",
-            "los colores",
-            "actuales en",
-            "tiempo real."
-        };
         int vpTy = vistaY + 22;
-        for (String line : vpLines) {
-            g.drawString(font, line, vistaX + 6, vpTy, 0xFFAAAAAA, false);
+        if (modoSeleccionElemento && elementoSeleccionado != null) {
+            String elemLabel = "name".equals(elementoSeleccionado) ? "Nombre NPC" : "Texto cuerpo";
+            int ex = "name".equals(elementoSeleccionado) ? DialogueLayout.nameX : DialogueLayout.textX;
+            int ey = "name".equals(elementoSeleccionado) ? DialogueLayout.nameY : DialogueLayout.textY;
+            g.drawString(font, "§l" + elemLabel, vistaX + 6, vpTy, 0xFFCCCCCC, false);
             vpTy += 10;
+            String posStr = "X: " + ex + "  Y: " + ey;
+            if ("text".equals(elementoSeleccionado)) {
+                posStr += "  W: " + DialogueLayout.textWrapWidth;
+            }
+            g.drawString(font, posStr, vistaX + 6, vpTy, 0xFFAAAAAA, false);
+            vpTy += 10;
+        } else {
+            String[] vpLines = {
+                "Activa Seleccionar",
+                "elemento para mover",
+                "nombre y texto,",
+                "o arrastra el",
+                "borde del texto."
+            };
+            for (String line : vpLines) {
+                g.drawString(font, line, vistaX + 6, vpTy, 0xFFAAAAAA, false);
+                vpTy += 10;
+            }
         }
 
         int divY = vpTy + 3;
@@ -1333,7 +1347,7 @@ this.inputColor.setResponder(s -> {
         boolean hovSel = mx >= vistaX + 6 && mx <= vistaX + vistaW - 6 && my >= btnSelY && my <= btnSelY + 22;
         g.fill(vistaX + 6, btnSelY, vistaX + vistaW - 6, btnSelY + 22, hovSel || modoSeleccionElemento ? 0xCC4A792A : 0xCC333333);
         g.renderOutline(vistaX + 6, btnSelY, vistaW - 12, 22, modoSeleccionElemento ? 0xFF6A9A4A : 0xFF555555);
-        String btnLabel = modoSeleccionElemento ? "§lClick en dialogo..." : "Seleccionar elemento";
+        String btnLabel = modoSeleccionElemento ? "§lClick y arrastra" : "Seleccionar elemento";
         g.drawString(font, btnLabel, centerX - font.width(btnLabel) / 2, btnSelY + 7, modoSeleccionElemento ? 0xFFFFFF88 : 0xFFCCCCCC, false);
 
         // Tip
@@ -1408,10 +1422,10 @@ this.inputColor.setResponder(s -> {
         g.fill(inX + 2, inY + 1, inX + 4, inY + 2, DialogueColors.trazoInterior);
         g.fill(inX + 1, inY + 2, inX + 2, inY + 4, DialogueColors.trazoInterior);
 
-        g.drawString(this.font, "§lAldeano de Prueba", rx + 12, ry + 10, DialogueColors.textNPC, false);
+        g.drawString(this.font, "§lAldeano de Prueba", rx + DialogueLayout.nameX, ry + DialogueLayout.nameY, DialogueColors.textNPC, false);
 
         String previewText = "Hola viajero, necesito que me ayudes con una tarea muy importante...";
-        g.drawWordWrap(this.font, Component.literal(previewText), rx + 12, ry + 26, boxW - 24, DialogueColors.textNPC);
+        g.drawWordWrap(this.font, Component.literal(previewText), rx + DialogueLayout.textX, ry + DialogueLayout.textY, DialogueLayout.textWrapWidth, DialogueColors.textNPC);
 
         int sepY = ry + 55;
         g.fill(rx + 8, sepY, rx + boxW - 8, sepY + 1, DialogueColors.separator);
@@ -1442,6 +1456,22 @@ this.inputColor.setResponder(s -> {
             g.fill(bX + bW - 1, bY, bX + bW, bY + btnH, cDark);
 
             g.drawString(this.font, ops[i], bX + (bW - this.font.width(ops[i])) / 2, bY + (btnH - 8) / 2, DialogueColors.btnText, false);
+        }
+
+        // Highlight elemento seleccionado
+        if (modoSeleccionElemento && elementoSeleccionado != null) {
+            if ("name".equals(elementoSeleccionado)) {
+                int nw = this.font.width("§lAldeano de Prueba");
+                g.renderOutline(rx + DialogueLayout.nameX - 2, ry + DialogueLayout.nameY - 2, nw + 4, 14, 0xFFFFAA00);
+            } else if ("text".equals(elementoSeleccionado)) {
+                int hx = rx + DialogueLayout.textX - 2;
+                int hy = ry + DialogueLayout.textY - 2;
+                int hw = DialogueLayout.textWrapWidth + 4;
+                int hh = 44;
+                g.renderOutline(hx, hy, hw, hh, 0xFFFFAA00);
+                int handleX = hx + hw;
+                g.fill(handleX - 5, hy + hh / 2 - 2, handleX - 1, hy + hh / 2 + 2, 0xFFCC6600);
+            }
         }
     }
 
@@ -1475,46 +1505,45 @@ this.inputColor.setResponder(s -> {
             return false;
         }
 
-        // ─── MAIN PREVIEW AREA (dialog zone detection) ───
+        // ─── MAIN PREVIEW AREA (element selection / drag-to-move) ───
         if (my >= HEADER_H && my < bottomStart) {
             if (modoSeleccionElemento && mx >= dialogRX && mx <= dialogRX + dialogW && my >= dialogRY && my <= dialogRY + dialogH) {
                 int rx = dialogRX, ry = dialogRY, boxW = dialogW;
-                int sepY = ry + 55;
-                int pad = 12, gap = 6, btnH = 22;
-                int halfW = (boxW - pad * 2 - gap) / 2;
-                String target = null;
-                int tab = -1;
 
-                if (my >= ry + 10 && my < ry + 24) {
-                    target = "textNPC"; tab = 0;
-                } else if (my >= ry + 26 && my < ry + 54) {
-                    target = "textNPC"; tab = 0;
-                } else if (my >= sepY && my < sepY + 2) {
-                    target = "separator"; tab = 0;
-                } else if (my >= sepY + 8 && my < sepY + 8 + btnH) {
-                    if (mx < rx + pad + halfW) {
-                        target = "btnBgNorm"; tab = 1;
-                    } else {
-                        target = "hoverGreen"; tab = 2;
-                    }
+                int nw = this.font.width("§lAldeano de Prueba");
+                if (mx >= rx + DialogueLayout.nameX && mx <= rx + DialogueLayout.nameX + nw + 4 && my >= ry + DialogueLayout.nameY - 2 && my <= ry + DialogueLayout.nameY + 12) {
+                    elementoSeleccionado = "name";
+                    arrastrandoElemento = true;
+                    dragOffX = (int)mx - (rx + DialogueLayout.nameX);
+                    dragOffY = (int)my - (ry + DialogueLayout.nameY);
+                    return true;
                 }
 
-                if (target != null) {
-                    selectedTab = tab;
-                    for (int idx = 0; idx < COLORES.length; idx++) {
-                        if (COLORES[idx].target.equals(target)) {
-                            interfazColorFocused = idx;
-                            abrirPickerColor(target);
-                            break;
-                        }
+                int textZoneLeft = rx + DialogueLayout.textX - 2;
+                int textZoneRight = rx + DialogueLayout.textX + DialogueLayout.textWrapWidth + 4;
+                int textZoneTop = ry + DialogueLayout.textY - 2;
+                int textZoneBottom = ry + DialogueLayout.textY + 42;
+                if (mx >= textZoneLeft && mx <= textZoneRight && my >= textZoneTop && my <= textZoneBottom) {
+                    int handleZone = textZoneRight - 8;
+                    if (mx >= handleZone) {
+                        redimensionandoAncho = true;
+                        dragOffX = (int)mx;
+                        return true;
                     }
+                    elementoSeleccionado = "text";
+                    arrastrandoElemento = true;
+                    dragOffX = (int)mx - (rx + DialogueLayout.textX);
+                    dragOffY = (int)my - (ry + DialogueLayout.textY);
+                    return true;
                 }
+
                 modoSeleccionElemento = false;
+                elementoSeleccionado = null;
                 return true;
             }
-            // Click in main area but not on dialog → cancel selection mode
             if (modoSeleccionElemento) {
                 modoSeleccionElemento = false;
+                elementoSeleccionado = null;
                 return true;
             }
             return false;
@@ -1587,6 +1616,9 @@ this.inputColor.setResponder(s -> {
         this.savedColorHerramientas = GlobalGuiSettings.colorHerramientas;
         int currentColor = DialogueColors.get(target);
         TopBar.openPicker(currentColor, TopBar.BTN_TOOL_COLOR, null, null);
+        if (modoInterface) {
+            TopBar.setModalPosition(14, HEADER_H + 5);
+        }
     }
 
     private void renderBrushStroke(GuiGraphics g, GlobalGuiSettings.BrushStroke stroke) {
@@ -1636,18 +1668,14 @@ this.inputColor.setResponder(s -> {
             if (mostrarPopupGuardarInterface) {
                 int ipW = 200, ipH = 90;
                 int ipX = (this.width - ipW) / 2, ipY = (this.height - ipH) / 2;
-                if (this.btnGuardarInterface != null && this.btnGuardarInterface.isMouseOver(mx, my)) {
-                    this.btnGuardarInterface.mouseClicked(mx, my, btn); return true;
-                }
-                if (mx >= ipX + 9 && mx <= ipX + ipW - 9 && my >= ipY + 21 && my <= ipY + 39) {
-                    this.inputNomInterface.setFocused(true);
-                    this.inputNomInterface.mouseClicked(mx, my, btn);
+                if (super.mouseClicked(mx, my, btn)) return true;
+                if (mx < ipX || mx > ipX + ipW || my < ipY || my > ipY + ipH) {
+                    this.inputNomInterface.setFocused(false);
+                    mostrarPopupGuardarInterface = false;
+                    this.inputNomInterface.visible = false;
+                    this.btnGuardarInterface.visible = false;
                     return true;
                 }
-                this.inputNomInterface.setFocused(false);
-                mostrarPopupGuardarInterface = false;
-                this.inputNomInterface.visible = false;
-                this.btnGuardarInterface.visible = false;
                 return true;
             }
             return mouseClickedInterface(mx, my);
@@ -2075,6 +2103,7 @@ this.inputColor.setResponder(s -> {
                     savedTopBarVisible = TopBar.isVisible();
                     TopBar.setVisible(false);
                     DialogueColors.restaurarDefaults();
+                    DialogueLayout.restaurarDefaults();
                 } else {
                     if (GlobalGuiSettings.TEXTOS.size() > textosAnteriores) {
                         this.tSel = GlobalGuiSettings.TEXTOS.get(GlobalGuiSettings.TEXTOS.size() - 1);
@@ -2225,6 +2254,8 @@ this.inputColor.setResponder(s -> {
             return true;
         }
 
+        if (arrastrandoElemento) { arrastrandoElemento = false; return true; }
+        if (redimensionandoAncho) { redimensionandoAncho = false; return true; }
         arrastrando = false; redimensionando = false;
         return super.mouseReleased(mx, my, btn);
     }
@@ -2265,6 +2296,30 @@ this.inputColor.setResponder(s -> {
             if (tSel != null) { tSel.x = (int)(mx - dragX); tSel.y = (int)(my - dragY); return true; }
             if (pSel != null) { pSel.x = (int)(mx - dragX); pSel.y = (int)(my - dragY); return true; }
         }
+
+        if (modoInterface && redimensionandoAncho) {
+            int minW = 40, maxW = dialogW - 8;
+            int newW = (int)mx - (dialogRX + DialogueLayout.textX);
+            DialogueLayout.textWrapWidth = Math.max(minW, Math.min(newW, maxW));
+            return true;
+        }
+
+        if (modoInterface && arrastrandoElemento && elementoSeleccionado != null) {
+            int rx = dialogRX, ry = dialogRY, boxW = dialogW;
+            int newX = (int)mx - rx - dragOffX;
+            int newY = (int)my - ry - dragOffY;
+            newX = Math.max(4, Math.min(newX, boxW - 40));
+            newY = Math.max(4, Math.min(newY, dialogH - 20));
+            if ("name".equals(elementoSeleccionado)) {
+                DialogueLayout.nameX = newX;
+                DialogueLayout.nameY = newY;
+            } else if ("text".equals(elementoSeleccionado)) {
+                DialogueLayout.textX = newX;
+                DialogueLayout.textY = newY;
+            }
+            return true;
+        }
+
         return super.mouseDragged(mx, my, btn, dx, dy);
     }
 
@@ -2321,6 +2376,11 @@ this.inputColor.setResponder(s -> {
             return this.buscadorTexturas.charTyped(codePoint, modifiers);
         }
 
+        // PRIORIDAD: Escribir en el input de nombre de interface (modo interface)
+        if (this.inputNomInterface != null && this.inputNomInterface.visible && this.inputNomInterface.isFocused()) {
+            return this.inputNomInterface.charTyped(codePoint, modifiers);
+        }
+
         // Escribir en el input del gestor de GUIs
         if (this.inputGuardarNombre != null && this.inputGuardarNombre.visible && this.inputGuardarNombre.isFocused()) {
             return this.inputGuardarNombre.charTyped(codePoint, modifiers);
@@ -2363,6 +2423,16 @@ this.inputColor.setResponder(s -> {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (modoInterface) {
             if (keyCode == 256) {
+                if (mostrarPopupGuardarInterface) {
+                    mostrarPopupGuardarInterface = false;
+                    this.inputNomInterface.visible = false;
+                    this.btnGuardarInterface.visible = false;
+                    return true;
+                }
+                if (mostrarPopupImportarInterface) {
+                    mostrarPopupImportarInterface = false;
+                    return true;
+                }
                 modoInterface = false;
                 TopBar.setVisible(savedTopBarVisible);
                 if (TopBar.colorPickerVisible) TopBar.closePicker(false);

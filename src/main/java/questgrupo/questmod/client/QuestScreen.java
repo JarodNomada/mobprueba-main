@@ -4,6 +4,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import questgrupo.questmod.Config;
+import questgrupo.questmod.client.DialogueLayout;
 import questgrupo.questmod.client.gui.FigurasEdit;
 import questgrupo.questmod.events.ClickAldeano;
 import questgrupo.questmod.network.Messages;
@@ -52,6 +53,7 @@ public class QuestScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+        DialogueLayout.restaurarDefaults();
         if (mision.interfaceName != null && !mision.interfaceName.isEmpty()) {
             questgrupo.questmod.client.InterfaceManager.cargarColoresInterface(mision.interfaceName);
         } else {
@@ -100,7 +102,7 @@ public class QuestScreen extends Screen {
         int rx = bx(), ry = by();
 
         renderEstructuraContenedor(g, rx, ry);
-        g.drawString(this.font, "§l" + nombreNPC, rx + 12, ry + 10, DialogueColors.textNPC, false);
+        g.drawString(this.font, "§l" + nombreNPC, rx + DialogueLayout.nameX, ry + DialogueLayout.nameY, DialogueColors.textNPC, false);
 
         int ex = rx + BOX_W - 20, ey = ry + 10;
         boolean hovExit = mouseX >= ex && mouseX <= ex + 10 && mouseY >= ey && mouseY <= ey + 10;
@@ -108,7 +110,7 @@ public class QuestScreen extends Screen {
 
         String completo = getTextoActual();
         String mostrar = completo.substring(0, Math.min(caracteresVisibles, completo.length()));
-        g.drawWordWrap(this.font, Component.literal(mostrar), rx + 12, ry + 26, BOX_W - 24, DialogueColors.textNPC);
+        g.drawWordWrap(this.font, Component.literal(mostrar), rx + DialogueLayout.textX, ry + DialogueLayout.textY, DialogueLayout.textWrapWidth, DialogueColors.textNPC);
 
         int separatorY = ry + 55;
         g.fill(rx + 8, separatorY, rx + BOX_W - 8, separatorY + 1, DialogueColors.separator);

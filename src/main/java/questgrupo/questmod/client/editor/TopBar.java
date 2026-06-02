@@ -56,8 +56,8 @@ public class TopBar {
     private static final int MODAL_W = 160;
     private static final int MODAL_H = 120;
     private static final int SLIDER_W = 140;
-    private static int modalX = 0;
-    private static int modalY = 0;
+    public static int modalX = 0;
+    public static int modalY = 0;
 
     // --- COMPONENTES NATIVOS ---
     private static EditBox hexInput;
@@ -96,6 +96,23 @@ public class TopBar {
                 .bounds(modalX + 85, modalY + 92, 65, 20).build();
         btnCancel.visible = colorPickerVisible;
         adder.accept(btnCancel);
+    }
+
+    public static void setModalPosition(int x, int y) {
+        modalX = x;
+        modalY = y;
+        if (hexInput != null) {
+            hexInput.setX(modalX + 32);
+            hexInput.setY(modalY + 31);
+        }
+        if (btnAccept != null) {
+            btnAccept.setX(modalX + 10);
+            btnAccept.setY(modalY + 92);
+        }
+        if (btnCancel != null) {
+            btnCancel.setX(modalX + 85);
+            btnCancel.setY(modalY + 92);
+        }
     }
 
     private static void onHexChanged(String text) {
